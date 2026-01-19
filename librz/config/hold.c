@@ -1,110 +1,57 @@
 // SPDX-FileCopyrightText: 2006-2021 pancake <pancake@nopcode.org>
 // SPDX-License-Identifier: LGPL-3.0-only
 
-#include <rz_config.h>
-
-static void rz_config_hold_char_free(RzConfigHoldChar *hc) {
-	free(hc->key);
-	free(hc->value);
-	free(hc);
-}
-
-static void rz_config_hold_num_free(RzConfigHoldNum *hc) {
-	free(hc->key);
-	free(hc);
-}
-
-static int key_cmp_hold_s(const void *a, const void *b, void *user) {
-	const char *a_s = (const char *)a;
-	const RzConfigHoldChar *b_s = (const RzConfigHoldChar *)b;
-	return strcmp(a_s, b_s->key);
-}
-
-static int key_cmp_hold_i(const void *a, const void *b, void *user) {
-	const char *a_s = (const char *)a;
-	const RzConfigHoldNum *b_s = (const RzConfigHoldNum *)b;
-	return strcmp(a_s, b_s->key);
-}
+#include "config_internal.h"
 
 /**
- * \brief Save the current values of a list of config options that have string values.
+ * \brief Save a copy of the current config options.
  *
- * Get the current values of a list of config variables (terminated by NULL) and
- * save them in the RzConfigHold object \p h . \p rz_config_get is used to
- * retrieve the current config values.
+ * Get the current values of the config and save them in the RzConfigHold object \p h .
  *
- * \param h Reference to RzConfigHold instance
- * \param ... List of config variables to save, terminated by NULL.
- * \return true if at least one variable is correctly saved, false otherwise
+ * \param hold  Reference to RzConfigHold instance
+ * \param ...   List of config variables to save, terminated by NULL.
+ * \return      Returns true if at least one variable is correctly saved, false otherwise
  */
-RZ_API bool rz_config_hold_s(RzConfigHold *h, ...) {
+RZ_API bool rz_config_hold_variable(RZ_NONNULL RzConfigHold *hold, ...) {
+	rz_return_val_if_fail(hold, false);
+
 	va_list ap;
-	char *key;
-	va_start(ap, h);
-	if (!h->list_char) {
-		h->list_char = rz_list_newf((RzListFree)rz_config_hold_char_free);
-		if (!h->list_char) {
-			va_end(ap);
-			return false;
-		}
-	}
-	while ((key = va_arg(ap, char *))) {
-		if (rz_list_find(h->list_char, key, key_cmp_hold_s, NULL)) {
+	const char *name;
+	va_start(ap, hold);
+
+	while ((name = va_arg(ap, const char *))) {
+		RzConfigNode *node = rz_config_node_get(hold->cfg, name);
+		if (!node) {
+			RZ_LOG_WARN("config-hold: failed to get node named '%s'\n", name);
 			continue;
 		}
-		const char *val = rz_config_get(h->cfg, key);
-		if (!val) {
-			continue;
+
+		ConfigValue cv = { 0 };
+
+		cv.name = rz_str_dup(name);
+		cv.flags = node->flags;
+		if (node->flags & CN_BOOL) {
+			cv.value.boolean = rz_config_node_get_boolean(hold->cfg, node);
+		} else if (node->flags & CN_STR) {
+			const char *str = rz_config_node_get_string(hold->cfg, node);
+			cv.value.string = rz_str_dup(str);
+		} else {
+			cv.value.integer = rz_config_node_get_integer(hold->cfg, node);
 		}
-		RzConfigHoldChar *hc = RZ_NEW0(RzConfigHoldChar);
-		if (hc) {
-			hc->key = rz_str_dup(key);
-			hc->value = rz_str_dup(val);
-			rz_list_append(h->list_char, hc);
-		}
+
+		rz_vector_push(&hold->variables, &cv);
 	}
+
 	va_end(ap);
-	return true;
+	return rz_vector_len(&hold->variables) > 0;
 }
 
-/**
- * \brief Save the current values of a list of config options that have integer values.
- *
- * Get the current values of a list of config variables (terminated by NULL) and
- * save them in the RzConfigHold object \p h . \p rz_config_get_i is used to
- * retrieve the current config values.
- *
- * \param h Reference to RzConfigHold instance
- * \param ... List of config variables to save, terminated by NULL.
- * \return true if at least one variable is correctly saved, false otherwise
- */
-RZ_API bool rz_config_hold_i(RzConfigHold *h, ...) {
-	va_list ap;
-	char *key;
-	if (!h) {
-		return false;
+static void config_value_free(void *e, void *user) {
+	ConfigValue *cv = (ConfigValue *)e;
+	if (cv->flags & CN_STR) {
+		free(cv->value.string);
 	}
-	if (!h->list_num) {
-		h->list_num = rz_list_newf((RzListFree)rz_config_hold_num_free);
-		if (!h->list_num) {
-			return false;
-		}
-	}
-	va_start(ap, h);
-	while ((key = va_arg(ap, char *))) {
-		if (rz_list_find(h->list_num, key, key_cmp_hold_i, NULL)) {
-			continue;
-		}
-		RzConfigHoldNum *hc = RZ_NEW0(RzConfigHoldNum);
-		if (!hc) {
-			continue;
-		}
-		hc->key = rz_str_dup(key);
-		hc->value = rz_config_get_i(h->cfg, key);
-		rz_list_append(h->list_num, hc);
-	}
-	va_end(ap);
-	return true;
+	free(cv->name);
 }
 
 /**
@@ -113,15 +60,16 @@ RZ_API bool rz_config_hold_i(RzConfigHold *h, ...) {
  * \param cfg RzConfig reference
  * \return RzConfigHold allocated object
  */
-RZ_API RzConfigHold *rz_config_hold_new(RzConfig *cfg) {
-	if (cfg) {
-		RzConfigHold *hold = RZ_NEW0(RzConfigHold);
-		if (hold) {
-			hold->cfg = cfg;
-			return hold;
-		}
+RZ_API RzConfigHold *rz_config_hold_new(RZ_NONNULL RzConfig *cfg) {
+	rz_return_val_if_fail(cfg, NULL);
+
+	RzConfigHold *hold = RZ_NEW0(RzConfigHold);
+	if (!hold) {
+		return false;
 	}
-	return NULL;
+	hold->cfg = cfg;
+	rz_vector_init(&hold->variables, sizeof(ConfigValue), config_value_free, NULL);
+	return hold;
 }
 
 /**
@@ -129,17 +77,29 @@ RZ_API RzConfigHold *rz_config_hold_new(RzConfig *cfg) {
  *
  * \param h Reference to RzConfigHold
  */
-RZ_API void rz_config_hold_restore(RzConfigHold *h) {
-	RzListIter *iter;
-	RzConfigHoldChar *hchar;
-	RzConfigHoldNum *hnum;
-	if (h) {
-		RzConfig *cfg = h->cfg;
-		rz_list_foreach (h->list_num, iter, hnum) {
-			(void)rz_config_set_i(cfg, hnum->key, hnum->value);
+RZ_API void rz_config_hold_restore(RZ_NULLABLE RzConfigHold *hold) {
+	if (!hold) {
+		return;
+	}
+
+	ConfigValue *cv;
+	rz_vector_foreach (&hold->variables, cv) {
+		if (!cv->name) {
+			continue;
 		}
-		rz_list_foreach (h->list_char, iter, hchar) {
-			(void)rz_config_set(cfg, hchar->key, hchar->value);
+
+		RzConfigNode *node = rz_config_node_get(hold->cfg, cv->name);
+		if (!node) {
+			RZ_LOG_WARN("config-hold: failed to get node named '%s'\n", cv->name);
+			continue;
+		}
+
+		if (node->flags & CN_BOOL) {
+			rz_config_node_set_boolean(hold->cfg, node, cv->value.boolean);
+		} else if (node->flags & CN_STR) {
+			rz_config_node_set_string(hold->cfg, node, cv->value.string);
+		} else {
+			rz_config_node_set_integer(hold->cfg, node, cv->value.integer);
 		}
 	}
 }
@@ -149,10 +109,10 @@ RZ_API void rz_config_hold_restore(RzConfigHold *h) {
  *
  * \param h Reference to RzConfigHold
  */
-RZ_API void rz_config_hold_free(RzConfigHold *h) {
-	if (h) {
-		rz_list_free(h->list_num);
-		rz_list_free(h->list_char);
-		RZ_FREE(h);
+RZ_API void rz_config_hold_free(RZ_NULLABLE RzConfigHold *h) {
+	if (!h) {
+		return;
 	}
+	rz_vector_fini(&h->variables);
+	RZ_FREE(h);
 }

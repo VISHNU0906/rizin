@@ -537,7 +537,7 @@ static void hex_set_pkt_info(RZ_INOUT HexInsnContainer *hic, const HexPkt *pkt, 
 	rz_return_if_fail(hic && pkt && state);
 	bool is_first = (k == 0);
 	HexPktInfo *hi_pi = &hic->pkt_info;
-	bool sdk_form = rz_config_get_b(state->cfg, "plugins.hexagon.sdk");
+	bool sdk_form = state->sdk;
 
 	strncpy(hi_pi->text_postfix, "", 16);
 	// Parse instr. position in pkt

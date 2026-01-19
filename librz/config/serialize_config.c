@@ -39,13 +39,17 @@ static bool apply_config_from_sdb(void *user, const SdbKv *kv) {
 	}
 
 	const char *value = sdbkv_value(kv);
-	if (node->flags & CN_BOOL) {
-		rz_config_node_set_boolean(config, node, rz_str_is_true(value));
-	} else if (node->flags & CN_STR) {
+	if (node->flags & RZ_CONFIG_VAR_BOOL) {
+		rz_config_node_set_bool(config, node, rz_str_is_true(value));
+	} else if (node->flags & RZ_CONFIG_VAR_STR) {
 		rz_config_node_set_string(config, node, value);
-	} else {
+	} else if (node->flags & RZ_CONFIG_VAR_INT) {
 		ut64 uvalue = rz_num_get(NULL, value);
 		rz_config_node_set_integer(config, node, uvalue);
+	} else {
+		RzList *list = rz_str_split_duplist(value, ",", false);
+		rz_config_node_set_list(config, node, list);
+		rz_list_free(list);
 	}
 	return true;
 }
@@ -95,16 +99,21 @@ RZ_API void rz_serialize_config_save(RZ_NONNULL Sdb *db, RZ_NONNULL RzConfig *cf
 	RzListIter *iter;
 	RzConfigNode *node;
 	rz_list_foreach (cfg->nodes, iter, node) {
-		if (node->flags & CN_BOOL) {
-			bool boolean = rz_config_node_get_boolean(cfg, node);
+		if (node->flags & RZ_CONFIG_VAR_BOOL) {
+			bool boolean = rz_config_node_get_bool(cfg, node);
 			sdb_set(db, node->name, rz_str_bool(boolean));
-		} else if (node->flags & CN_STR) {
+		} else if (node->flags & RZ_CONFIG_VAR_STR) {
 			const char *str = rz_config_node_get_string(cfg, node);
 			sdb_set(db, node->name, str);
-		} else {
+		} else if (node->flags & RZ_CONFIG_VAR_INT) {
 			ut64 uvalue = rz_config_node_get_integer(cfg, node);
 			rz_strf(temp, "0x%" PFMT64x, uvalue);
 			sdb_set(db, node->name, temp);
+		} else {
+			const RzList *list = rz_config_node_get_list(cfg, node);
+			char *str_list = rz_str_list_join(list, ",");
+			sdb_set(db, node->name, str_list);
+			free(str_list);
 		}
 	}
 }

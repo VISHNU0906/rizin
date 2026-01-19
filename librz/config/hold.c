@@ -3,6 +3,29 @@
 
 #include "config_internal.h"
 
+static void config_hold_variable_add(RzConfigHold *hold, const char *name) {
+	RzConfigNode *node = rz_config_node_get(hold->cfg, name);
+	if (!node) {
+		RZ_LOG_WARN("config-hold: failed to get node named '%s'\n", name);
+		return;
+	}
+
+	ConfigValue cv = { 0 };
+
+	cv.name = rz_str_dup(name);
+	cv.flags = node->flags;
+	if (node->flags & RZ_CONFIG_VAR_BOOL) {
+		cv.value.boolean = rz_config_node_get_bool(hold->cfg, node);
+	} else if (node->flags & RZ_CONFIG_VAR_STR) {
+		const char *str = rz_config_node_get_string(hold->cfg, node);
+		cv.value.string = rz_str_dup(str);
+	} else {
+		cv.value.integer = rz_config_node_get_integer(hold->cfg, node);
+	}
+
+	rz_vector_push(&hold->variables, &cv);
+}
+
 /**
  * \brief Save a copy of the current config options.
  *
@@ -20,26 +43,7 @@ RZ_API bool rz_config_hold_variable(RZ_NONNULL RzConfigHold *hold, ...) {
 	va_start(ap, hold);
 
 	while ((name = va_arg(ap, const char *))) {
-		RzConfigNode *node = rz_config_node_get(hold->cfg, name);
-		if (!node) {
-			RZ_LOG_WARN("config-hold: failed to get node named '%s'\n", name);
-			continue;
-		}
-
-		ConfigValue cv = { 0 };
-
-		cv.name = rz_str_dup(name);
-		cv.flags = node->flags;
-		if (node->flags & CN_BOOL) {
-			cv.value.boolean = rz_config_node_get_boolean(hold->cfg, node);
-		} else if (node->flags & CN_STR) {
-			const char *str = rz_config_node_get_string(hold->cfg, node);
-			cv.value.string = rz_str_dup(str);
-		} else {
-			cv.value.integer = rz_config_node_get_integer(hold->cfg, node);
-		}
-
-		rz_vector_push(&hold->variables, &cv);
+		config_hold_variable_add(hold, name);
 	}
 
 	va_end(ap);
@@ -48,7 +52,7 @@ RZ_API bool rz_config_hold_variable(RZ_NONNULL RzConfigHold *hold, ...) {
 
 static void config_value_free(void *e, void *user) {
 	ConfigValue *cv = (ConfigValue *)e;
-	if (cv->flags & CN_STR) {
+	if (cv->flags & RZ_CONFIG_VAR_STR) {
 		free(cv->value.string);
 	}
 	free(cv->name);
@@ -69,6 +73,38 @@ RZ_API RzConfigHold *rz_config_hold_new(RZ_NONNULL RzConfig *cfg) {
 	}
 	hold->cfg = cfg;
 	rz_vector_init(&hold->variables, sizeof(ConfigValue), config_value_free, NULL);
+	return hold;
+}
+
+/**
+ * \brief Create an opaque object to save/restore some configuration options and saves the given variables.
+ *
+ * \param cfg RzConfig reference
+ * \param ...   List of config variables to save, terminated by NULL.
+ * \return RzConfigHold allocated object
+ */
+RZ_API RzConfigHold *rz_config_hold_new2(RZ_NONNULL RzConfig *cfg, ...) {
+	rz_return_val_if_fail(cfg, NULL);
+	RzConfigHold *hold = rz_config_hold_new(cfg);
+	if (!hold) {
+		return NULL;
+	}
+
+	va_list ap;
+	const char *name;
+	va_start(ap, cfg);
+
+	while ((name = va_arg(ap, const char *))) {
+		config_hold_variable_add(hold, name);
+	}
+
+	va_end(ap);
+
+	if (rz_vector_len(&hold->variables) < 1) {
+		rz_config_hold_free(hold);
+		return NULL;
+	}
+
 	return hold;
 }
 
@@ -94,9 +130,9 @@ RZ_API void rz_config_hold_restore(RZ_NULLABLE RzConfigHold *hold) {
 			continue;
 		}
 
-		if (node->flags & CN_BOOL) {
-			rz_config_node_set_boolean(hold->cfg, node, cv->value.boolean);
-		} else if (node->flags & CN_STR) {
+		if (node->flags & RZ_CONFIG_VAR_BOOL) {
+			rz_config_node_set_bool(hold->cfg, node, cv->value.boolean);
+		} else if (node->flags & RZ_CONFIG_VAR_STR) {
 			rz_config_node_set_string(hold->cfg, node, cv->value.string);
 		} else {
 			rz_config_node_set_integer(hold->cfg, node, cv->value.integer);
@@ -114,5 +150,13 @@ RZ_API void rz_config_hold_free(RZ_NULLABLE RzConfigHold *h) {
 		return;
 	}
 	rz_vector_fini(&h->variables);
-	RZ_FREE(h);
+	free(h);
+}
+
+RZ_API void rz_config_hold_restore_and_free(RZ_NULLABLE RzConfigHold *hold) {
+	if (!hold) {
+		return;
+	}
+	rz_config_hold_restore(hold);
+	rz_config_hold_free(hold);
 }

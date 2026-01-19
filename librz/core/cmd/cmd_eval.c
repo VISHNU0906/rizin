@@ -541,7 +541,7 @@ RZ_IPI RzCmdStatus rz_eval_bool_invert_handler(RzCore *core, int argc, const cha
 		print_all_plugin_configs(core);
 		return RZ_CMD_STATUS_OK;
 	}
-	if (!rz_config_toggle(cfg, argv[1])) {
+	if (!rz_config_toggle_boolean(cfg, argv[1])) {
 		RZ_LOG_ERROR("core: Cannot toggle config key '%s'\n", argv[1]);
 		return RZ_CMD_STATUS_ERROR;
 	}

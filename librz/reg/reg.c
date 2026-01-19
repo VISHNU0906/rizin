@@ -326,6 +326,8 @@ RZ_API RzReg *rz_reg_new(void) {
 	for (i = 0; i < RZ_REG_TYPE_LAST; i++) {
 		reg->regset[i].cur = rz_list_tail(reg->regset[i].pool);
 	}
+
+	reg->roregs = rz_str_split_duplist("gp,zero", ",", true);
 	return reg;
 }
 
@@ -342,6 +344,30 @@ RZ_API bool rz_reg_is_readonly(RzReg *reg, RzRegItem *item) {
 		}
 	}
 	return false;
+}
+
+/**
+ * \brief      Sets the read only registers (string list)
+ *
+ * \param      reg     The RzReg to modify
+ * \param      reg_ro  The string list of read only registers
+ */
+RZ_API void rz_reg_set_readonly(RZ_NONNULL RzReg *reg, RZ_NULLABLE RZ_OWN RzList /*<char *>*/ *reg_ro) {
+	rz_return_if_fail(reg);
+	rz_list_free(reg->roregs);
+	reg->roregs = reg_ro;
+}
+
+/**
+ * \brief      Gets the read only registers (string list)
+ *
+ * \param      reg     The RzReg to modify
+ *
+ * \return     On success return the internal pointer to the read only registers (can be NULL)
+ */
+RZ_API RZ_BORROW RzList /*<char *>*/ *rz_reg_get_readonly(RZ_NONNULL RzReg *reg) {
+	rz_return_val_if_fail(reg, NULL);
+	return reg->roregs;
 }
 
 RZ_API ut64 rz_reg_setv(RzReg *reg, const char *name, ut64 val) {

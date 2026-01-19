@@ -1507,7 +1507,7 @@ static char *basic_block_opcodes(RzCore *core, RzAnalysisBlock *bbi) {
 	if (!(hc = rz_config_hold_new(core->config))) {
 		return NULL;
 	}
-	rz_config_hold_i(hc, "scr.color", "scr.utf8", "asm.offset", "asm.lines", "asm.cmt.right", "asm.lines.fcn", "asm.bytes", "asm.comments", NULL);
+	rz_config_hold_variable(hc, "scr.color", "scr.utf8", "asm.offset", "asm.lines", "asm.cmt.right", "asm.lines.fcn", "asm.bytes", "asm.comments", NULL);
 	rz_config_set_i(core->config, "scr.utf8", 0);
 	rz_config_set_i(core->config, "asm.offset", 0);
 	rz_config_set_i(core->config, "asm.lines", 0);

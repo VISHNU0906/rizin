@@ -2460,7 +2460,7 @@ RZ_IPI RzCmdStatus rz_cmd_debug_process_profile_handler(RzCore *core, int argc, 
 		rz_list_append(list, (void *)argv[i]);
 		rz_list_free(l);
 	}
-	char *str = rz_list_to_str(list, '\n');
+	char *str = rz_str_list_join(list, "\n");
 	set_profile_string(core, str);
 	free(str);
 	rz_list_free(list);

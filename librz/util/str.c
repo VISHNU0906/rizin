@@ -3919,16 +3919,21 @@ RZ_API int rz_snprintf(char *string, int len, const char *fmt, ...) {
 	return ret;
 }
 
-RZ_API char *rz_str_list_join(RzList /*<char *>*/ *str, const char *sep) {
-	RzStrBuf *sb = rz_strbuf_new("");
+RZ_API char *rz_str_list_join(const RzList /*<char *>*/ *str, const char *sep) {
 	const char *p;
-	while ((p = rz_list_pop_head(str))) {
-		if (rz_strbuf_length(sb) != 0) {
-			rz_strbuf_append(sb, sep);
+	const RzListIter *it;
+	const size_t len = sep ? strlen(sep) : 0;
+	RzStrBuf sb;
+	rz_strbuf_init(&sb);
+
+	rz_list_foreach(str, it, p) {
+		if (rz_strbuf_length(&sb) != 0) {
+			rz_strbuf_append_n(&sb, sep, len);
 		}
-		rz_strbuf_append(sb, p);
+		rz_strbuf_append(&sb, p);
 	}
-	return rz_strbuf_drain(sb);
+
+	return rz_strbuf_drain_nofree(&sb);
 }
 
 RZ_API char *rz_str_array_join(const char **a, size_t n, const char *sep) {

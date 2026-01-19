@@ -75,16 +75,16 @@ RZ_IPI void rz_core_visual_applyHexMode(RzCore *core, int hexMode) {
 
 RZ_IPI void rz_core_visual_toggle_hints(RzCore *core) {
 	if (rz_config_get_b(core->config, "asm.hint.call")) {
-		rz_config_toggle(core->config, "asm.hint.call");
+		rz_config_toggle_boolean(core->config, "asm.hint.call");
 		rz_config_set_b(core->config, "asm.hint.jmp", true);
 	} else if (rz_config_get_b(core->config, "asm.hint.jmp")) {
-		rz_config_toggle(core->config, "asm.hint.jmp");
+		rz_config_toggle_boolean(core->config, "asm.hint.jmp");
 		rz_config_set_b(core->config, "asm.hint.emu", true);
 	} else if (rz_config_get_b(core->config, "asm.hint.emu")) {
-		rz_config_toggle(core->config, "asm.hint.emu");
+		rz_config_toggle_boolean(core->config, "asm.hint.emu");
 		rz_config_set_b(core->config, "asm.hint.lea", true);
 	} else if (rz_config_get_b(core->config, "asm.hint.lea")) {
-		rz_config_toggle(core->config, "asm.hint.lea");
+		rz_config_toggle_boolean(core->config, "asm.hint.lea");
 		rz_config_set_b(core->config, "asm.hint.call", true);
 	} else {
 		rz_config_set_b(core->config, "asm.hint.call", true);
@@ -105,7 +105,7 @@ RZ_IPI void rz_core_visual_toggle_decompiler_disasm(RzCore *core, bool for_graph
 		return;
 	}
 	hold = rz_config_hold_new(core->config);
-	rz_config_hold_s(hold, "asm.hint.pos", "asm.cmt.col", "asm.offset", "asm.lines",
+	rz_config_hold_variable(hold, "asm.hint.pos", "asm.cmt.col", "asm.offset", "asm.lines",
 		"asm.indent", "asm.bytes", "asm.comments", "asm.debuginfo", "asm.usercomments", "asm.instr", NULL);
 	if (for_graph) {
 		rz_config_set(core->config, "asm.hint.pos", "-2");
@@ -1263,7 +1263,7 @@ repeat:
 					if (!hc) {
 						return RZ_CMD_STATUS_ERROR;
 					}
-					rz_config_hold_i(hc, "asm.flags.limit", NULL);
+					rz_config_hold_variable(hc, "asm.flags.limit", NULL);
 					rz_config_set_i(core->config, "asm.flags.limit", 1);
 					char *res = rz_core_print_cons_disassembly(core, xaddr2, 4, 0);
 					rz_config_hold_restore(hc);
@@ -2820,7 +2820,7 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 			}
 			break;
 		case '"':
-			rz_config_toggle(core->config, "scr.dumpcols");
+			rz_config_toggle_boolean(core->config, "scr.dumpcols");
 			break;
 		case 'p':
 			rz_core_visual_toggle_decompiler_disasm(core, false, true);

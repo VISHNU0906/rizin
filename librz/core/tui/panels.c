@@ -3285,7 +3285,7 @@ int __config_toggle_cb(void *user) {
 	RzPanelsMenuItem *child = panels_menu_item_get_selected_sub(parent);
 	RzStrBuf *tmp = rz_strbuf_new(child->name);
 	(void)rz_str_split(rz_strbuf_get(tmp), ':');
-	rz_config_toggle(core->config, rz_strbuf_get(tmp));
+	rz_config_toggle_boolean(core->config, rz_strbuf_get(tmp));
 	rz_strbuf_free(tmp);
 	free(parent->p->model->title);
 	parent->p->model->title = rz_strbuf_drain(__draw_menu(core, parent));
@@ -6310,12 +6310,12 @@ void __handle_tab_next(RzCore *core) {
 
 void __handle_print_rotate(RzCore *core) {
 	if (rz_config_get_b(core->config, "asm.pseudo")) {
-		rz_config_toggle(core->config, "asm.pseudo");
-		rz_config_toggle(core->config, "asm.esil");
+		rz_config_toggle_boolean(core->config, "asm.pseudo");
+		rz_config_toggle_boolean(core->config, "asm.esil");
 	} else if (rz_config_get_b(core->config, "asm.esil")) {
-		rz_config_toggle(core->config, "asm.esil");
+		rz_config_toggle_boolean(core->config, "asm.esil");
 	} else {
-		rz_config_toggle(core->config, "asm.pseudo");
+		rz_config_toggle_boolean(core->config, "asm.pseudo");
 	}
 }
 

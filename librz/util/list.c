@@ -777,6 +777,17 @@ RZ_API void rz_list_sorted_uniq(RZ_NONNULL RzList *list, RZ_NONNULL RzListCompar
 }
 
 /**
+ * \brief Returns the next RzList node in the list.
+ *
+ * \deprecated Use the rz_list_next() macro instead. Function is retained only
+ *             until rz-bindgen wraps the aforementioned macro.
+ **/
+RZ_DEPRECATE RZ_API RZ_BORROW RzListIter *rz_list_get_next(RZ_NONNULL RzListIter *iter) {
+	rz_return_val_if_fail(iter, NULL);
+	return iter->next;
+}
+
+/**
  * \brief Casts a RzList containg strings into a concatenated string
  *
  * \param list The list of strings to concatenate.

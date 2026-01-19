@@ -807,12 +807,12 @@ static int __core_analysis_fcn(RzCore *core, ut64 at, ut64 from, int reftype, in
 		//		rz_sys_backtrace ();
 		return false;
 	}
-	int has_next = rz_config_get_i(core->config, "analysis.hasnext");
+	int has_next = rz_config_get_b(core->config, "analysis.hasnext");
 	RzAnalysisHint *hint = NULL;
 	ut64 next = UT64_MAX;
 	int fcnlen;
 	RzAnalysisFunction *fcn = rz_analysis_function_new(core->analysis);
-	const char *fcnpfx = rz_config_get(core->config, "analysis.fcnprefix");
+	const char *fcnpfx = rz_config_get_s(core->config, "analysis.fcnprefix");
 	if (!fcnpfx) {
 		fcnpfx = "fcn";
 	}
@@ -900,7 +900,7 @@ static int __core_analysis_fcn(RzCore *core, ut64 at, ut64 from, int reftype, in
 				RZ_FREE(fcn->name);
 				const char *fcnpfx = rz_analysis_fcntype_tostring(fcn->type);
 				if (!fcnpfx || !*fcnpfx || !strcmp(fcnpfx, "fcn")) {
-					fcnpfx = rz_config_get(core->config, "analysis.fcnprefix");
+					fcnpfx = rz_config_get_s(core->config, "analysis.fcnprefix");
 				}
 				fcn->name = rz_str_newf("%s.%08" PFMT64x, fcnpfx, fcn->addr);
 				autoname_imp_trampoline(core, fcn);
@@ -1402,7 +1402,7 @@ RZ_API int rz_core_analysis_fcn(RzCore *core, ut64 at, ut64 from, int reftype, i
 		return 0;
 	}
 
-	const bool use_esil = rz_config_get_i(core->config, "analysis.esil");
+	const bool use_esil = rz_config_get_b(core->config, "analysis.esil");
 	RzAnalysisFunction *fcn;
 
 	// update bits based on the core->offset otherwise we could have the
@@ -1960,7 +1960,7 @@ RZ_API bool rz_core_analysis_refs(RZ_NONNULL RzCore *core, size_t nbytes) {
 	RzListIter *iter;
 	RzIOMap *map;
 	if (!list) {
-		RZ_LOG_ERROR("Cannot get xrefs boundaries when analysis.in=%s.\n", rz_config_get(core->config, "analysis.in"));
+		RZ_LOG_ERROR("Cannot get xrefs boundaries when analysis.in=%s.\n", rz_config_get_s(core->config, "analysis.in"));
 		return false;
 	}
 
@@ -2259,7 +2259,7 @@ RZ_API int rz_core_analysis_all(RzCore *core) {
 	RzBinAddr *entry;
 	RzBinSymbol *symbol;
 	int depth = core->analysis->opt.depth;
-	bool analysis_vars = rz_config_get_i(core->config, "analysis.vars");
+	bool analysis_vars = rz_config_get_b(core->config, "analysis.vars");
 
 	/* Analyze Functions */
 	/* Entries */
@@ -3863,7 +3863,7 @@ static bool is_unknown_file(RzCore *core) {
 }
 
 static bool is_apple_target(RzCore *core) {
-	const char *arch = rz_config_get(core->config, "asm.arch");
+	const char *arch = rz_config_get_s(core->config, "asm.arch");
 	if (!strstr(arch, "ppc") && !strstr(arch, "arm") && !strstr(arch, "x86")) {
 		return false;
 	}
@@ -3901,7 +3901,7 @@ RZ_API bool rz_core_analysis_everything(RzCore *core, bool experimental, char *d
 	bool plugin_supports_esil = core->analysis->cur->esil;
 	bool is_apple = is_apple_target(core);
 
-	if (rz_str_startswith(rz_config_get(core->config, "bin.lang"), "go")) {
+	if (rz_str_startswith(rz_config_get_s(core->config, "bin.lang"), "go")) {
 		rz_core_notify_done(core, "Find function and symbol names from golang binaries");
 		if (rz_core_analysis_recover_golang_functions(core)) {
 			rz_core_analysis_resolve_golang_strings(core);
@@ -3926,12 +3926,12 @@ RZ_API bool rz_core_analysis_everything(RzCore *core, bool experimental, char *d
 	rz_core_task_yield(&core->tasks);
 	if (!cfg_debug) {
 		if (dh_orig && strcmp(dh_orig, "esil")) {
-			rz_config_set(core->config, "dbg.backend", "esil");
+			rz_config_set_s(core->config, "dbg.backend", "esil");
 			rz_core_task_yield(&core->tasks);
 		}
 	}
-	int c = rz_config_get_i(core->config, "analysis.calls");
-	rz_config_set_i(core->config, "analysis.calls", 1);
+	bool c = rz_config_get_b(core->config, "analysis.calls");
+	rz_config_set_b(core->config, "analysis.calls", true);
 	ut64 t = rz_num_math(core->num, "$S");
 	rz_core_seek(core, t, true);
 	if (rz_cons_is_breaked()) {
@@ -3948,7 +3948,7 @@ RZ_API bool rz_core_analysis_everything(RzCore *core, bool experimental, char *d
 		return false;
 	}
 
-	if (!rz_str_startswith(rz_config_get(core->config, "asm.arch"), "x86")) {
+	if (!rz_str_startswith(rz_config_get_s(core->config, "asm.arch"), "x86")) {
 		notify = "find and analyze function preludes";
 		rz_core_notify_begin(core, "%s", notify);
 		(void)rz_core_search_preludes(core, false); // "aap"
@@ -3977,13 +3977,13 @@ RZ_API bool rz_core_analysis_everything(RzCore *core, bool experimental, char *d
 	}
 	rz_core_task_yield(&core->tasks);
 
-	rz_config_set_i(core->config, "analysis.calls", c);
+	rz_config_set_b(core->config, "analysis.calls", c);
 	rz_core_task_yield(&core->tasks);
 	if (rz_cons_is_breaked()) {
 		return false;
 	}
 
-	if (!rz_str_startswith(rz_config_get(core->config, "asm.arch"), "x86")) {
+	if (!rz_str_startswith(rz_config_get_s(core->config, "asm.arch"), "x86")) {
 		rz_core_analysis_value_pointers(core, RZ_OUTPUT_MODE_STANDARD);
 		rz_core_task_yield(&core->tasks);
 		bool pcache = rz_config_get_b(core->config, "io.pcache");
@@ -4001,7 +4001,7 @@ RZ_API bool rz_core_analysis_everything(RzCore *core, bool experimental, char *d
 		}
 	}
 
-	if (rz_config_get_i(core->config, "analysis.autoname")) {
+	if (rz_config_get_b(core->config, "analysis.autoname")) {
 		notify = "Speculatively constructing a function name "
 			 "for fcn.* and sym.func.* functions (aan)";
 		rz_core_notify_begin(core, "%s", notify);
@@ -4086,7 +4086,7 @@ RZ_API bool rz_core_analysis_everything(RzCore *core, bool experimental, char *d
 		}
 		notify = "Enable constraint types analysis for variables";
 		rz_core_notify_begin(core, "%s", notify);
-		rz_config_set(core->config, "analysis.types.constraint", "true");
+		rz_config_set_b(core->config, "analysis.types.constraint", true);
 		rz_core_notify_done(core, "%s", notify);
 	} else {
 		rz_core_notify_done(core, "Use -AA or aaaa to perform additional experimental analysis.");
@@ -4094,7 +4094,7 @@ RZ_API bool rz_core_analysis_everything(RzCore *core, bool experimental, char *d
 
 	rz_core_seek_undo(core);
 	if (dh_orig) {
-		rz_config_set(core->config, "dbg.backend", dh_orig);
+		rz_config_set_s(core->config, "dbg.backend", dh_orig);
 		rz_core_task_yield(&core->tasks);
 	}
 
@@ -4159,7 +4159,7 @@ RZ_API RZ_OWN RzList /*<RzSigDBEntry *>*/ *rz_core_analysis_sigdb_list(RZ_NONNUL
 		free(extra_sigdb);
 	}
 
-	const char *user_sigdb = rz_config_get(core->config, "flirt.sigdb.path");
+	const char *user_sigdb = rz_config_get_s(core->config, "flirt.sigdb.path");
 	analysis_sigdb_add(sigs, user_sigdb, with_details);
 
 	RzList *lst = rz_sign_sigdb_list(sigs);
@@ -4235,7 +4235,7 @@ RZ_API bool rz_core_analysis_sigdb_apply(RZ_NONNULL RzCore *core, RZ_NULLABLE in
 		}
 	}
 
-	arch = rz_config_get(core->config, "asm.arch");
+	arch = rz_config_get_s(core->config, "asm.arch");
 	bits = rz_config_get_i(core->config, "asm.bits");
 	arch_id = rz_core_flirt_arch_from_name(arch);
 	if (RZ_STR_ISEMPTY(filter) && arch_id >= RZ_FLIRT_SIG_ARCH_ANY) {
@@ -4506,8 +4506,7 @@ RZ_IPI bool rz_core_analysis_types_propagation(RzCore *core) {
 		RZ_LOG_WARN("core: analysis propagation type can't be exectured when in debugger mode.\n");
 		return false;
 	}
-	RzConfigHold *hold = rz_config_hold_new(core->config);
-	rz_config_hold_i(hold, "io.va", "io.pcache.write", NULL);
+	RzConfigHold *hold = rz_config_hold_new2(core->config, "io.va", "io.pcache.write", NULL);
 	bool io_cache = rz_config_get_b(core->config, "io.pcache.write");
 	if (!io_cache) {
 		// XXX. we shouldnt need this, but it breaks 'rizin -c aaa -w ls'
@@ -4546,8 +4545,7 @@ RZ_IPI bool rz_core_analysis_types_propagation(RzCore *core) {
 	rz_core_seek(core, seek, true);
 	rz_reg_arena_pop(core->analysis->reg);
 	rz_core_analysis_esil_init_mem_del(core, NULL, UT64_MAX, UT32_MAX);
-	rz_config_hold_restore(hold);
-	rz_config_hold_free(hold);
+	rz_config_hold_restore_and_free(hold);
 	free(saved_arena);
 	ht_uu_free(loop_table);
 	return true;
@@ -4603,13 +4601,13 @@ RZ_IPI void rz_core_analysis_function_until(RzCore *core, ut64 addr_end) {
 	ut64 addr = core->offset;
 	int depth = 1;
 	ut64 a, b;
-	const char *c;
+	bool c;
 	a = rz_config_get_i(core->config, "analysis.from");
 	b = rz_config_get_i(core->config, "analysis.to");
-	c = rz_config_get(core->config, "analysis.limits");
+	c = rz_config_get_b(core->config, "analysis.limits");
 	rz_config_set_i(core->config, "analysis.from", addr);
 	rz_config_set_i(core->config, "analysis.to", addr_end);
-	rz_config_set(core->config, "analysis.limits", "true");
+	rz_config_set_b(core->config, "analysis.limits", true);
 
 	RzAnalysisFunction *fcn = rz_analysis_get_fcn_in(core->analysis, addr, 0);
 	if (fcn) {
@@ -4623,7 +4621,7 @@ RZ_IPI void rz_core_analysis_function_until(RzCore *core, ut64 addr_end) {
 	}
 	rz_config_set_i(core->config, "analysis.from", a);
 	rz_config_set_i(core->config, "analysis.to", b);
-	rz_config_set(core->config, "analysis.limits", c ? c : "");
+	rz_config_set_b(core->config, "analysis.limits", c);
 }
 
 static void cb_in_range_aav(RzCore *core, ut64 from, ut64 to, int vsize, void *user) {
@@ -4663,14 +4661,14 @@ static void cb_in_range_aav(RzCore *core, ut64 from, ut64 to, int vsize, void *u
 
 RZ_IPI void rz_core_analysis_value_pointers(RzCore *core, RzOutputMode mode) {
 	ut64 o_align = rz_config_get_i(core->config, "search.align");
-	const char *analysisin = rz_config_get(core->config, "analysis.in");
+	const char *analysisin = rz_config_get_s(core->config, "analysis.in");
 	char *tmp = rz_str_dup(analysisin);
 	bool is_debug = rz_config_get_b(core->config, "cfg.debug");
 	int archAlign = rz_analysis_archinfo(core->analysis, RZ_ANALYSIS_ARCHINFO_TEXT_ALIGN);
 	rz_config_set_i(core->config, "search.align", archAlign < 1 ? 1 : archAlign);
-	rz_config_set(core->config, "analysis.in", "io.maps.x");
+	rz_config_set_s(core->config, "analysis.in", "io.maps.x");
 	rz_core_notify_done(core, "Finding xrefs in noncode section with analysis.in=io.maps");
-	const char *arch = rz_config_get(core->config, "asm.arch");
+	const char *arch = rz_config_get_s(core->config, "asm.arch");
 
 	if (RZ_STR_EQ(arch, "mips")) {
 		// forbid aav on mips
@@ -4746,7 +4744,7 @@ RZ_IPI void rz_core_analysis_value_pointers(RzCore *core, RzOutputMode mode) {
 beach:
 	rz_cons_break_pop();
 	// end
-	rz_config_set(core->config, "analysis.in", tmp);
+	rz_config_set_s(core->config, "analysis.in", tmp);
 	free(tmp);
 	rz_config_set_i(core->config, "search.align", o_align < 1 ? 1 : o_align);
 }
@@ -4782,8 +4780,8 @@ RZ_API int rz_core_get_stacksz(RzCore *core, ut64 from, ut64 to) {
 RZ_API void rz_core_analysis_type_init(RzCore *core) {
 	rz_return_if_fail(core && core->analysis);
 	int bits = core->rasm->bits;
-	const char *analysis_arch = rz_config_get(core->config, "analysis.arch");
-	const char *os = rz_config_get(core->config, "asm.os");
+	const char *analysis_arch = rz_config_get_s(core->config, "analysis.arch");
+	const char *os = rz_config_get_s(core->config, "asm.os");
 	char *types_dir = rz_path_system(core->sys_path, RZ_SDB_TYPES);
 	if (!types_dir) {
 		return;
@@ -4800,7 +4798,7 @@ static void sdb_concat_by_path(Sdb *s, const char *path) {
 }
 
 RZ_API void rz_core_analysis_cc_init_by_path(RzCore *core, RZ_NULLABLE const char *path, RZ_NULLABLE const char *homepath) {
-	const char *analysis_arch = rz_config_get(core->config, "analysis.arch");
+	const char *analysis_arch = rz_config_get_s(core->config, "analysis.arch");
 	Sdb *cc = core->analysis->sdb_cc;
 	if (!strcmp(analysis_arch, "null")) {
 		sdb_reset(cc);
@@ -4938,7 +4936,7 @@ RZ_API bool rz_core_analysis_esil_trace_start(RzCore *core) {
 	if (!esil->trace) {
 		return false;
 	}
-	rz_config_set_i(core->config, "dbg.trace", true);
+	rz_config_set_b(core->config, "dbg.trace", true);
 	return true;
 }
 
@@ -4960,7 +4958,7 @@ RZ_API bool rz_core_analysis_esil_trace_stop(RzCore *core) {
 	}
 	rz_analysis_esil_trace_free(esil->trace);
 	esil->trace = NULL;
-	rz_config_set_i(core->config, "dbg.trace", false);
+	rz_config_set_b(core->config, "dbg.trace", false);
 	return true;
 }
 
@@ -5222,12 +5220,12 @@ RZ_API RZ_OWN RzIterator *rz_core_analysis_bytes(
 	static const int mask = RZ_ANALYSIS_OP_MASK_ESIL | RZ_ANALYSIS_OP_MASK_IL | RZ_ANALYSIS_OP_MASK_OPEX | RZ_ANALYSIS_OP_MASK_HINT;
 	int min_op_size = rz_analysis_archinfo(core->analysis, RZ_ANALYSIS_ARCHINFO_MIN_OP_SIZE);
 
-	core->parser->subrel = rz_config_get_i(core->config, "asm.sub.rel");
-	core->parser->localvar_only = rz_config_get_i(core->config, "asm.sub.varonly");
+	core->parser->subrel = rz_config_get_b(core->config, "asm.sub.rel");
+	core->parser->localvar_only = rz_config_get_b(core->config, "asm.sub.varonly");
 
 	AnalysisBytesContext *ctx = RZ_NEW0(AnalysisBytesContext);
 	ctx->bigendian = rz_config_get_b(core->config, "cfg.bigendian");
-	ctx->asm_sub_var = rz_config_get_i(core->config, "asm.sub.var");
+	ctx->asm_sub_var = rz_config_get_b(core->config, "asm.sub.var");
 	ctx->min_op_size = min_op_size;
 	ctx->buf = buf;
 

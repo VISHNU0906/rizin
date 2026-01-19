@@ -282,7 +282,7 @@ RZ_IPI int rz_core_visual_classes(RzCore *core) {
 		ch = rz_cons_arrow_to_hjkl(ch); // get ESC+char, return 'hjkl' char
 		switch (ch) {
 		case 'C':
-			rz_config_toggle(core->config, "scr.color");
+			rz_config_toggle_boolean(core->config, "scr.color");
 			break;
 		case '_':
 			if (rz_core_visual_hudclasses(core)) {
@@ -526,7 +526,7 @@ RZ_IPI int rz_core_visual_analysis_classes(RzCore *core) {
 		ch = rz_cons_arrow_to_hjkl(ch); // get ESC+char, return 'hjkl' char
 		switch (ch) {
 		case 'C':
-			rz_config_toggle(core->config, "scr.color");
+			rz_config_toggle_boolean(core->config, "scr.color");
 			break;
 		case 'J':
 			index += 10;

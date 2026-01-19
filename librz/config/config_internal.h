@@ -18,11 +18,11 @@ typedef struct rz_config_node_t {
 		char *string;
 		ut64 integer;
 		bool boolean;
+		RzList /*<char *>*/ *list;
 	} value; ///< Variable held value unless setter/getter are defined.
-
-	RzConfigCallback getter; ///< Gets the value via the callback (`data` can be `const char **` or `ut64 *` or `bool *`)
-	RzConfigCallback setter; ///< Sets the value via the callback (`data` can be `const char **` or `ut64 *` or `bool *`)
-	RzConfigCallback setopt; ///< Sets the options via the callback (`data` is always RzList <char *> *` which can be modified)
+	RzConfigCallbackGet getter; ///< Gets the value via the callback (`data` can be `const char **` or `ut64 *` or `bool *`)
+	RzConfigCallbackSet setter; ///< Sets the value via the callback (`data` can be `const char **` or `ut64 *` or `bool *`)
+	RzConfigCallbackOpt setopt; ///< Sets the options via the callback (`data` is always RzList <char *> *` which can be modified)
 } RzConfigNode;
 
 struct rz_config_t {
@@ -39,6 +39,7 @@ typedef struct config_value_t {
 		char *string;
 		ut64 integer;
 		bool boolean;
+		RzList /*<char *>*/ *list;
 	} value;
 } ConfigValue;
 
@@ -51,12 +52,16 @@ static inline RzConfigNode *rz_config_node_get(RzConfig *cfg, const char *name) 
 	return ht_sp_find(cfg->ht, name, NULL);
 }
 
-RZ_IPI bool rz_config_node_set_boolean(RzConfig* cfg, RzConfigNode *node, bool value);
+RZ_IPI RZ_OWN RzList /*<char *>*/ *rz_config_string_list_dup(RZ_NULLABLE const RzList /*<char *>*/ *list);
+
+RZ_IPI bool rz_config_node_set_bool(RzConfig* cfg, RzConfigNode *node, bool value);
 RZ_IPI bool rz_config_node_set_integer(RzConfig* cfg, RzConfigNode *node, ut64 value);
 RZ_IPI bool rz_config_node_set_string(RzConfig* cfg, RzConfigNode *node, const char *value);
+RZ_IPI bool rz_config_node_set_list(RzConfig *cfg, RzConfigNode *node, RZ_NULLABLE const RzList /*<char *>*/ *value);
 
 RZ_IPI RZ_BORROW const char *rz_config_node_get_string(RzConfig *cfg, const RzConfigNode *node);
 RZ_IPI ut64 rz_config_node_get_integer(RzConfig *cfg, const RzConfigNode *node);
-RZ_IPI bool rz_config_node_get_boolean(RzConfig *cfg, const RzConfigNode *node);
+RZ_IPI bool rz_config_node_get_bool(RzConfig *cfg, const RzConfigNode *node);
+RZ_IPI RZ_BORROW const RzList /*<char *>*/ *rz_config_node_get_list(RzConfig *cfg, const RzConfigNode *node);
 
 #endif /* CONFIG_INTERNAL_H */

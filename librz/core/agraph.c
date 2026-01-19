@@ -162,22 +162,22 @@ static int mode2opts(const RzAGraph *g) {
 
 // duplicated from visual.c
 static void rotateAsmemu(RzCore *core) {
-	const bool isEmuStr = rz_config_get_i(core->config, "emu.str");
-	const bool isEmu = rz_config_get_i(core->config, "asm.emu");
+	const bool isEmuStr = rz_config_get_b(core->config, "emu.str");
+	const bool isEmu = rz_config_get_b(core->config, "asm.emu");
 	if (isEmu) {
 		if (isEmuStr) {
-			rz_config_set(core->config, "emu.str", "false");
+			rz_config_set_b(core->config, "emu.str", false);
 		} else {
-			rz_config_set(core->config, "asm.emu", "false");
+			rz_config_set_b(core->config, "asm.emu", false);
 		}
 	} else {
-		rz_config_set(core->config, "emu.str", "true");
+		rz_config_set_b(core->config, "emu.str", true);
 	}
 }
 
 static void showcursor(RzCore *core, int x) {
 	if (!x) {
-		int wheel = rz_config_get_i(core->config, "scr.wheel");
+		bool wheel = rz_config_get_b(core->config, "scr.wheel");
 		if (wheel) {
 			rz_cons_enable_mouse(true);
 		}
@@ -2120,18 +2120,17 @@ static void set_layout(RzAGraph *g) {
 
 static char *get_body(RzCore *core, ut64 addr, int size, int opts) {
 	char *body;
-	RzConfigHold *hc = rz_config_hold_new(core->config);
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.lines", "asm.bytes",
+		"asm.cmt.col", "asm.marks", "asm.offset",
+		"asm.comments", "asm.cmt.right", "asm.bb.line");
 	if (!hc) {
 		return NULL;
 	}
-	rz_config_hold_i(hc, "asm.lines", "asm.bytes",
-		"asm.cmt.col", "asm.marks", "asm.offset",
-		"asm.comments", "asm.cmt.right", "asm.bb.line", NULL);
-	const bool o_comments = rz_config_get_i(core->config, "graph.comments");
-	const bool o_cmtright = rz_config_get_i(core->config, "graph.cmtright");
-	const bool o_bytes = rz_config_get_i(core->config, "graph.bytes");
-	const bool o_flags_in_bytes = rz_config_get_i(core->config, "asm.flags.inbytes");
-	const bool o_asm_offset = rz_config_get_i(core->config, "asm.offset");
+	const bool o_comments = rz_config_get_b(core->config, "graph.comments");
+	const bool o_cmtright = rz_config_get_b(core->config, "graph.cmtright");
+	const bool o_bytes = rz_config_get_b(core->config, "graph.bytes");
+	const bool o_flags_in_bytes = rz_config_get_b(core->config, "asm.flags.inbytes");
+	const bool o_asm_offset = rz_config_get_b(core->config, "asm.offset");
 	int o_cursor = core->print->cur_enabled;
 	if (opts & BODY_COMMENTS) {
 		rz_core_visual_toggle_decompiler_disasm(core, true, false);
@@ -2141,40 +2140,38 @@ static char *get_body(RzCore *core, ut64 addr, int size, int opts) {
 		rz_str_trim(res);
 		res = rz_str_trim_lines(res);
 		rz_core_visual_toggle_decompiler_disasm(core, true, false);
-		rz_config_hold_restore(hc);
-		rz_config_hold_free(hc);
+		rz_config_hold_restore_and_free(hc);
 		return res;
 	}
 	const char *cmd = (opts & BODY_SUMMARY) ? "pds" : "pD";
 
 	// configure options
-	rz_config_set_i(core->config, "asm.bb.line", false);
-	rz_config_set_i(core->config, "asm.lines", false);
+	rz_config_set_b(core->config, "asm.bb.line", false);
+	rz_config_set_b(core->config, "asm.lines", false);
 	rz_config_set_i(core->config, "asm.cmt.col", 0);
-	rz_config_set_i(core->config, "asm.marks", false);
-	rz_config_set_i(core->config, "asm.cmt.right", (opts & BODY_SUMMARY) || o_cmtright);
-	rz_config_set_i(core->config, "asm.comments", (opts & BODY_SUMMARY) || o_comments);
-	rz_config_set_i(core->config, "asm.bytes",
+	rz_config_set_b(core->config, "asm.marks", false);
+	rz_config_set_b(core->config, "asm.cmt.right", (opts & BODY_SUMMARY) || o_cmtright);
+	rz_config_set_b(core->config, "asm.comments", (opts & BODY_SUMMARY) || o_comments);
+	rz_config_set_b(core->config, "asm.bytes",
 		(opts & (BODY_SUMMARY | BODY_OFFSETS)) || o_bytes || o_flags_in_bytes);
-	rz_config_set_i(core->config, "asm.bb.middle", false);
+	rz_config_set_b(core->config, "asm.bb.middle", false);
 	core->print->cur_enabled = false;
 
 	rz_config_set_b(core->config, "asm.offset",
 		(opts & BODY_OFFSETS) || (opts & BODY_SUMMARY) || o_asm_offset);
 
-	bool html = rz_config_get_i(core->config, "scr.html");
-	rz_config_set_i(core->config, "scr.html", 0);
-	if (rz_config_get_i(core->config, "graph.aeab")) {
+	bool html = rz_config_get_b(core->config, "scr.html");
+	rz_config_set_b(core->config, "scr.html", 0);
+	if (rz_config_get_b(core->config, "graph.aeab")) {
 		body = rz_core_cmd_strf(core, "%s 0x%08" PFMT64x, "aeab", addr);
 	} else {
 		body = rz_core_cmd_strf(core, "%s %d @ 0x%08" PFMT64x, cmd, size, addr);
 	}
-	rz_config_set_i(core->config, "scr.html", html);
+	rz_config_set_b(core->config, "scr.html", html);
 
 	// restore original options
 	core->print->cur_enabled = o_cursor;
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	return body;
 }
 
@@ -2223,11 +2220,11 @@ static int bbcmp(RzAnalysisBlock *a, RzAnalysisBlock *b) {
 static void get_bbupdate(RzAGraph *g, RzCore *core, RzAnalysisFunction *fcn) {
 	RzAnalysisBlock *bb;
 	void **iter;
-	bool emu = rz_config_get_i(core->config, "asm.emu");
+	bool emu = rz_config_get_b(core->config, "asm.emu");
 	ut64 saved_gp = core->analysis->gp;
 	ut8 *saved_arena = NULL;
 	char *shortcut = 0;
-	int shortcuts = 0;
+	bool shortcuts = 0;
 	core->keep_asmqjmps = false;
 
 	if (emu) {
@@ -2239,7 +2236,7 @@ static void get_bbupdate(RzAGraph *g, RzCore *core, RzAnalysisFunction *fcn) {
 	}
 	rz_pvector_sort(fcn->bbs, (RzPVectorComparator)bbcmp, NULL);
 
-	shortcuts = rz_config_get_i(core->config, "graph.nodejmps");
+	shortcuts = rz_config_get_b(core->config, "graph.nodejmps");
 	rz_pvector_foreach (fcn->bbs, iter) {
 		bb = (RzAnalysisBlock *)*iter;
 		if (bb->addr == UT64_MAX) {
@@ -2341,8 +2338,8 @@ static bool isbbfew(RzAnalysisBlock *curbb, RzAnalysisBlock *bb) {
 static int get_bbnodes(RzAGraph *g, RzCore *core, RzAnalysisFunction *fcn) {
 	RzAnalysisBlock *bb;
 	void **iter;
-	bool emu = rz_config_get_i(core->config, "asm.emu");
-	bool few = rz_config_get_i(core->config, "graph.few");
+	bool emu = rz_config_get_b(core->config, "asm.emu");
+	bool few = rz_config_get_b(core->config, "graph.few");
 	int ret = false;
 	ut64 saved_gp = core->analysis->gp;
 	ut8 *saved_arena = NULL;
@@ -3348,7 +3345,7 @@ static bool check_changes(RzAGraph *g, int is_interactive, RzCore *core, RzAnaly
 		}
 	}
 	if (core && core->config) {
-		if (rz_config_get_i(core->config, "graph.trace")) {
+		if (rz_config_get_b(core->config, "graph.trace")) {
 			// fold all bbs not traced
 			fold_asm_trace(core, g);
 		}
@@ -3374,7 +3371,7 @@ static bool check_changes(RzAGraph *g, int is_interactive, RzCore *core, RzAnaly
 			free(title);
 		}
 		g->can->color = rz_config_get_i(core->config, "scr.color");
-		g->hints = rz_config_get_i(core->config, "graph.hints");
+		g->hints = rz_config_get_b(core->config, "graph.hints");
 	}
 	if (g->update_seek_on || g->force_update_seek) {
 		RzANode *n = g->update_seek_on;
@@ -3425,20 +3422,16 @@ static int agraph_print(RzAGraph *g, int is_interactive, RzCore *core, RzAnalysi
 	}
 	if (g->is_dis) {
 		(void)G(-g->can->sx + 1, -g->can->sy + 2);
-		int scr_utf8 = rz_config_get_i(core->config, "scr.utf8");
-		int asm_bytes = rz_config_get_i(core->config, "asm.bytes");
-		int asm_cmt_right = rz_config_get_i(core->config, "asm.cmt.right");
-		rz_config_set_i(core->config, "scr.utf8", 0);
-		rz_config_set_i(core->config, "asm.bytes", 0);
-		rz_config_set_i(core->config, "asm.cmt.right", 0);
+		RzConfigHold *h = rz_config_hold_new2(core->config, "scr.utf8", "asm.bytes", "asm.cmt.right");
+		rz_config_set_b(core->config, "scr.utf8", false);
+		rz_config_set_b(core->config, "asm.bytes", false);
+		rz_config_set_b(core->config, "asm.cmt.right", false);
 		char *str = rz_core_cmd_str(core, "pd $r");
 		if (str) {
 			W(str);
 			free(str);
 		}
-		rz_config_set_i(core->config, "scr.utf8", scr_utf8);
-		rz_config_set_i(core->config, "asm.bytes", asm_bytes);
-		rz_config_set_i(core->config, "asm.cmt.right", asm_cmt_right);
+		rz_config_hold_restore_and_free(h);
 	}
 	if (g->title && *g->title) {
 		g->can->sy++;
@@ -3462,7 +3455,7 @@ static int agraph_print(RzAGraph *g, int is_interactive, RzCore *core, RzAnalysi
 
 	if (is_interactive) {
 		rz_cons_newline();
-		const char *cmdv = rz_config_get(core->config, "cmd.gprompt");
+		const char *cmdv = rz_config_get_s(core->config, "cmd.gprompt");
 		bool mustFlush = false;
 		rz_cons_visual_flush();
 		if (cmdv && *cmdv) {
@@ -3480,7 +3473,8 @@ static int agraph_print(RzAGraph *g, int is_interactive, RzCore *core, RzAnalysi
 
 static void check_function_modified(RzCore *core, RzAnalysisFunction *fcn) {
 	if (rz_analysis_function_was_modified(fcn)) {
-		if (rz_config_get_i(core->config, "analysis.detectwrites") || rz_cons_yesno('y', "Function was modified. Reanalyze? (Y/n)")) {
+		if (rz_config_get_b(core->config, "analysis.detectwrites") ||
+			rz_cons_yesno('y', "Function was modified. Reanalyze? (Y/n)")) {
 			rz_analysis_function_update_analysis(fcn);
 		}
 	}
@@ -4057,16 +4051,16 @@ static void graph_continue(RzCore *core) {
 static void applyDisMode(RzCore *core, const AGraphContext *grp_ctx) {
 	switch (grp_ctx->display_mode) {
 	case 0:
-		rz_config_set(core->config, "asm.pseudo", "false");
-		rz_config_set(core->config, "asm.esil", "false");
+		rz_config_set_b(core->config, "asm.pseudo", false);
+		rz_config_set_b(core->config, "asm.esil", false);
 		break;
 	case 1:
-		rz_config_set(core->config, "asm.pseudo", "true");
-		rz_config_set(core->config, "asm.esil", "false");
+		rz_config_set_b(core->config, "asm.pseudo", true);
+		rz_config_set_b(core->config, "asm.esil", false);
 		break;
 	case 2:
-		rz_config_set(core->config, "asm.pseudo", "false");
-		rz_config_set(core->config, "asm.esil", "true");
+		rz_config_set_b(core->config, "asm.pseudo", false);
+		rz_config_set_b(core->config, "asm.esil", true);
 		break;
 	}
 }
@@ -4081,14 +4075,14 @@ static void rotateColor(RzCore *core) {
 
 static char *get_graph_string(RzCore *core, RzAGraph *g) {
 	int c = rz_config_get_i(core->config, "scr.color");
-	int u = rz_config_get_i(core->config, "scr.utf8");
+	bool u = rz_config_get_b(core->config, "scr.utf8");
 	rz_config_set_i(core->config, "scr.color", 0);
-	rz_config_set_i(core->config, "scr.utf8", 0);
+	rz_config_set_b(core->config, "scr.utf8", 0);
 	rz_core_visual_graph(core, g, NULL, false);
 	char *s = rz_cons_get_buffer_dup();
 	rz_cons_reset();
 	rz_config_set_i(core->config, "scr.color", c);
-	rz_config_set_i(core->config, "scr.utf8", u);
+	rz_config_set_b(core->config, "scr.utf8", u);
 	return s;
 }
 
@@ -4159,12 +4153,11 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 	bool graph_allocated = false;
 	int movspeed;
 	int ret, invscroll;
-	RzConfigHold *hc = rz_config_hold_new(core->config);
 	AGraphContext grp_ctx = { 0 };
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.pseudo", "asm.esil", "asm.cmt.right", NULL);
 	if (!hc) {
 		return false;
 	}
-	rz_config_hold_i(hc, "asm.pseudo", "asm.esil", "asm.cmt.right", NULL);
 
 	int h, w = rz_cons_get_size(&h);
 	can = rz_cons_canvas_new(w, h);
@@ -4175,7 +4168,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 		if (!can) {
 			RZ_LOG_ERROR("core: cannot create RzCons.canvas context. Invalid screen "
 				     "size? See scr.columns + scr.rows\n");
-			rz_config_hold_free(hc);
+			rz_config_hold_restore_and_free(hc);
 			return false;
 		}
 	}
@@ -4186,8 +4179,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 		graph_allocated = true;
 		fcn = _fcn ? _fcn : rz_analysis_get_fcn_in(core->analysis, core->offset, 0);
 		if (!fcn) {
-			rz_config_hold_restore(hc);
-			rz_config_hold_free(hc);
+			rz_config_hold_restore_and_free(hc);
 			rz_cons_canvas_free(can);
 			return false;
 		}
@@ -4195,28 +4187,26 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 		g = rz_agraph_new(can);
 		if (!g) {
 			rz_cons_canvas_free(can);
-			rz_config_hold_restore(hc);
-			rz_config_hold_free(hc);
+			rz_config_hold_restore_and_free(hc);
 			return false;
 		}
 		g->layout = rz_config_get_i(core->config, "graph.layout");
-		g->dummy = rz_config_get_i(core->config, "graph.dummy");
-		g->show_node_titles = rz_config_get_i(core->config, "graph.ntitles");
+		g->dummy = rz_config_get_b(core->config, "graph.dummy");
+		g->show_node_titles = rz_config_get_b(core->config, "graph.ntitles");
 	} else {
 		o_can = g->can;
 	}
 	g->can = can;
 	g->movspeed = rz_config_get_i(core->config, "graph.scroll");
-	g->show_node_titles = rz_config_get_i(core->config, "graph.ntitles");
+	g->show_node_titles = rz_config_get_b(core->config, "graph.ntitles");
 	g->show_node_body = rz_config_get_b(core->config, "graph.body");
 	g->on_curnode_change = (RzANodeCallback)seek_to_node;
 	g->on_curnode_change_data = core;
 	g->edgemode = rz_config_get_i(core->config, "graph.edges");
-	g->hints = rz_config_get_i(core->config, "graph.hints");
+	g->hints = rz_config_get_b(core->config, "graph.hints");
 	g->is_interactive = is_interactive;
-	bool asm_comments = rz_config_get_i(core->config, "asm.comments");
-	rz_config_set(core->config, "asm.comments",
-		rz_str_bool(rz_config_get_i(core->config, "graph.comments")));
+	bool asm_comments = rz_config_get_b(core->config, "asm.comments");
+	rz_config_set_b(core->config, "asm.comments", rz_config_get_b(core->config, "graph.comments"));
 
 	/* we want letters as shortcuts for call/jmps */
 	core->is_asmqjmps_letter = true;
@@ -4242,7 +4232,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 
 	while (!exit_graph && !is_error && !rz_cons_is_breaked()) {
 		rz_cons_get_size(&h);
-		invscroll = rz_config_get_i(core->config, "graph.invscroll");
+		invscroll = rz_config_get_b(core->config, "graph.invscroll");
 		ret = agraph_refresh(&grp_ctx);
 
 		if (!ret) {
@@ -4288,12 +4278,12 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			break;
 		case '=': { // TODO: edit
 			showcursor(core, true);
-			const char *cmd = rz_config_get(core->config, "cmd.gprompt");
+			const char *cmd = rz_config_get_s(core->config, "cmd.gprompt");
 			rz_line_set_prompt(line, "cmd.gprompt> ");
 			line->contents = rz_str_dup(cmd);
 			const char *buf = rz_line_readline(line);
 			line->contents = NULL;
-			rz_config_set(core->config, "cmd.gprompt", buf);
+			rz_config_set_s(core->config, "cmd.gprompt", buf);
 			showcursor(core, false);
 		} break;
 		case '|': {
@@ -4389,7 +4379,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			if (!fcn) {
 				break;
 			}
-			key_s = rz_config_get(core->config, "key.s");
+			key_s = rz_config_get_s(core->config, "key.s");
 			if (key_s && *key_s) {
 				rz_core_cmd0(core, key_s);
 			} else {
@@ -4482,7 +4472,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			rz_cons_any_key(NULL);
 			break;
 		case '"':
-			rz_config_toggle(core->config, "graph.refs");
+			rz_config_toggle_bool(core->config, "graph.refs");
 			break;
 		case '#':
 			if (g->mode == RZ_AGRAPH_MODE_COMMENTS) {
@@ -4493,7 +4483,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			g->need_reload_nodes = true;
 			grp_ctx.scroll_position = 0;
 			agraph_update_seek(g, get_anode(g->curnode), true);
-			// rz_config_toggle (core->config, "graph.hints");
+			// rz_config_toggle_boolean (core->config, "graph.hints");
 			break;
 		case 'p':
 			g->mode = next_mode(g->mode);
@@ -4532,7 +4522,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			if (!rz_core_seek_undo(core)) {
 				RZ_LOG_ERROR("core: cannot undo\n");
 			}
-			if (rz_config_get_i(core->config, "graph.few")) {
+			if (rz_config_get_b(core->config, "graph.few")) {
 				g->need_reload_nodes = true;
 			}
 			break;
@@ -4565,7 +4555,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			break;
 		}
 		case 'R':
-			if (rz_config_get_i(core->config, "scr.randpal")) {
+			if (rz_config_get_b(core->config, "scr.randpal")) {
 				rz_cons_pal_random();
 			} else {
 				rz_core_theme_nextpal(core, RZ_CONS_PAL_SEEK_NEXT);
@@ -4581,7 +4571,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			break;
 		case '\'':
 			if (fcn) {
-				rz_config_toggle(core->config, "graph.comments");
+				rz_config_toggle_boolean(core->config, "graph.comments");
 				g->need_reload_nodes = true;
 			}
 			break;
@@ -4643,10 +4633,10 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			g->is_dis = !g->is_dis;
 			break;
 		case 'n':
-			rz_core_seek_next(core, rz_config_get(core->config, "scr.nkey"), true);
+			rz_core_seek_next(core, rz_config_get_s(core->config, "scr.nkey"), true);
 			break;
 		case 'N':
-			rz_core_seek_prev(core, rz_config_get(core->config, "scr.nkey"), true);
+			rz_core_seek_prev(core, rz_config_get_s(core->config, "scr.nkey"), true);
 			break;
 		case 'z':
 			agraph_toggle_mini(g);
@@ -4749,7 +4739,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			agraph_update_seek(g, get_anode(g->curnode), true);
 			break;
 		case ',':
-			rz_config_toggle(core->config, "graph.few");
+			rz_config_toggle_boolean(core->config, "graph.few");
 			g->need_reload_nodes = true;
 			agraph_update_seek(g, get_anode(g->curnode), true);
 			break;
@@ -4759,19 +4749,19 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			break;
 		case 'i':
 			agraph_follow_innodes(g, true);
-			if (rz_config_get_i(core->config, "graph.few")) {
+			if (rz_config_get_b(core->config, "graph.few")) {
 				g->need_reload_nodes = true;
 			}
 			break;
 		case 'I':
 			agraph_follow_innodes(g, false);
-			if (rz_config_get_i(core->config, "graph.few")) {
+			if (rz_config_get_b(core->config, "graph.few")) {
 				g->need_reload_nodes = true;
 			}
 			break;
 		case 't':
 			agraph_follow_true(g);
-			if (rz_config_get_i(core->config, "graph.few")) {
+			if (rz_config_get_b(core->config, "graph.few")) {
 				g->need_reload_nodes = true;
 			}
 			break;
@@ -4780,7 +4770,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			break;
 		case 'f':
 			agraph_follow_false(g);
-			if (rz_config_get_i(core->config, "graph.few")) {
+			if (rz_config_get_b(core->config, "graph.few")) {
 				g->need_reload_nodes = true;
 			}
 			break;
@@ -4811,13 +4801,13 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			rz_core_visual_hudstuff(core);
 			break;
 		case RZ_CONS_KEY_F1:
-			cmd = rz_config_get(core->config, "key.f1");
+			cmd = rz_config_get_s(core->config, "key.f1");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
 			break;
 		case RZ_CONS_KEY_F2:
-			cmd = rz_config_get(core->config, "key.f2");
+			cmd = rz_config_get_s(core->config, "key.f2");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			} else {
@@ -4825,31 +4815,31 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			}
 			break;
 		case RZ_CONS_KEY_F3:
-			cmd = rz_config_get(core->config, "key.f3");
+			cmd = rz_config_get_s(core->config, "key.f3");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
 			break;
 		case RZ_CONS_KEY_F4:
-			cmd = rz_config_get(core->config, "key.f4");
+			cmd = rz_config_get_s(core->config, "key.f4");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
 			break;
 		case RZ_CONS_KEY_F5:
-			cmd = rz_config_get(core->config, "key.f5");
+			cmd = rz_config_get_s(core->config, "key.f5");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
 			break;
 		case RZ_CONS_KEY_F6:
-			cmd = rz_config_get(core->config, "key.f6");
+			cmd = rz_config_get_s(core->config, "key.f6");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
 			break;
 		case RZ_CONS_KEY_F7:
-			cmd = rz_config_get(core->config, "key.f7");
+			cmd = rz_config_get_s(core->config, "key.f7");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			} else {
@@ -4857,7 +4847,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			}
 			break;
 		case RZ_CONS_KEY_F8:
-			cmd = rz_config_get(core->config, "key.f8");
+			cmd = rz_config_get_s(core->config, "key.f8");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			} else {
@@ -4865,7 +4855,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			}
 			break;
 		case RZ_CONS_KEY_F9:
-			cmd = rz_config_get(core->config, "key.f9");
+			cmd = rz_config_get_s(core->config, "key.f9");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			} else {
@@ -4873,19 +4863,19 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			}
 			break;
 		case RZ_CONS_KEY_F10:
-			cmd = rz_config_get(core->config, "key.f10");
+			cmd = rz_config_get_s(core->config, "key.f10");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
 			break;
 		case RZ_CONS_KEY_F11:
-			cmd = rz_config_get(core->config, "key.f11");
+			cmd = rz_config_get_s(core->config, "key.f11");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
 			break;
 		case RZ_CONS_KEY_F12:
-			cmd = rz_config_get(core->config, "key.f12");
+			cmd = rz_config_get_s(core->config, "key.f12");
 			if (cmd && *cmd) {
 				(void)rz_core_cmd0(core, cmd);
 			}
@@ -4913,7 +4903,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 	}
 	rz_vector_fini(&g->ghits.word_list);
 	rz_cons_break_pop();
-	rz_config_set(core->config, "asm.comments", rz_str_bool(asm_comments));
+	rz_config_set_b(core->config, "asm.comments", asm_comments);
 	core->cons->event_resize = NULL;
 	core->cons->event_data = NULL;
 	core->vmode = o_vmode;
@@ -4926,8 +4916,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 		rz_cons_canvas_free(g->can);
 		g->can = o_can;
 	}
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	if (update_seek) {
 		return -1;
 	}

@@ -65,7 +65,7 @@ RZ_IPI void rz_core_agraph_del_edge(RzCore *core, const char *un, const char *vn
 RZ_IPI void rz_core_agraph_print_ascii(RzCore *core) {
 	core->graph->can->linemode = rz_config_get_i(core->config, "graph.linemode");
 	core->graph->can->color = rz_config_get_i(core->config, "scr.color");
-	rz_agraph_set_title(core->graph, rz_config_get(core->config, "graph.title"));
+	rz_agraph_set_title(core->graph, rz_config_get_s(core->config, "graph.title"));
 	rz_agraph_print(core->graph);
 }
 
@@ -84,7 +84,7 @@ RZ_IPI void rz_core_agraph_print_interactive(RzCore *core) {
 	}
 
 	ut64 oseek = core->offset;
-	rz_agraph_set_title(core->graph, rz_config_get(core->config, "graph.title"));
+	rz_agraph_set_title(core->graph, rz_config_get_s(core->config, "graph.title"));
 	rz_agraph_set_curnode(core->graph, ran);
 	core->graph->force_update_seek = true;
 	core->graph->need_set_layout = true;
@@ -92,7 +92,7 @@ RZ_IPI void rz_core_agraph_print_interactive(RzCore *core) {
 	bool ov = rz_cons_is_interactive();
 	core->graph->need_update_dim = true;
 	int update_seek = rz_core_visual_graph(core, core->graph, NULL, true);
-	rz_config_set_i(core->config, "scr.interactive", ov);
+	rz_config_set_b(core->config, "scr.interactive", ov);
 	rz_cons_show_cursor(true);
 	rz_cons_enable_mouse(false);
 	if (update_seek != -1) {
@@ -142,7 +142,7 @@ static void agraph_print_node(RzANode *n, void *user) {
 }
 
 RZ_IPI void rz_core_agraph_print_dot(RzCore *core) {
-	const char *font = rz_config_get(core->config, "graph.font");
+	const char *font = rz_config_get_s(core->config, "graph.font");
 	rz_cons_printf("digraph code {\nrankdir=LR;\noutputorder=edgesfirst\ngraph [bgcolor=azure];\n"
 		       "edge [arrowhead=normal, color=\"#3030c0\" style=bold weight=2];\n"
 		       "node [fillcolor=white, style=filled shape=box "
@@ -234,7 +234,7 @@ RZ_IPI bool rz_core_agraph_print(RzCore *core, RzCoreGraphFormat format) {
 
 RZ_IPI bool rz_core_agraph_is_shortcuts(RzCore *core, RzAGraph *g) {
 	rz_return_val_if_fail(g && core, false);
-	return g->is_interactive && rz_config_get_i(core->config, "graph.nodejmps");
+	return g->is_interactive && rz_config_get_b(core->config, "graph.nodejmps");
 }
 
 RZ_IPI bool rz_core_agraph_add_shortcut(RzCore *core, RzAGraph *g, RzANode *an, ut64 addr, char *title) {

@@ -19,12 +19,11 @@ static bool analysis_emul_init(RzCore *core, RzConfigHold *hc, RzDebugTrace **dt
 	core->dbg->trace = rz_debug_trace_new();
 	core->analysis->esil->trace = rz_analysis_esil_trace_new(core->analysis->esil);
 
-	rz_config_hold_i(hc, "esil.romem", "dbg.trace",
-		"esil.nonull", "dbg.follow", NULL);
-	rz_config_set(core->config, "esil.romem", "true");
-	rz_config_set(core->config, "dbg.trace", "true");
-	rz_config_set(core->config, "esil.nonull", "true");
-	rz_config_set_i(core->config, "dbg.follow", false);
+	rz_config_hold_variable(hc, "esil.romem", "dbg.trace", "esil.nonull", "dbg.follow", NULL);
+	rz_config_set_b(core->config, "esil.romem", true);
+	rz_config_set_b(core->config, "dbg.trace", true);
+	rz_config_set_b(core->config, "esil.nonull", true);
+	rz_config_set_b(core->config, "dbg.follow", false);
 	const char *bp = rz_reg_get_name(core->analysis->reg, RZ_REG_NAME_BP);
 	const char *sp = rz_reg_get_name(core->analysis->reg, RZ_REG_NAME_SP);
 	if ((bp && !rz_reg_getv(core->analysis->reg, bp)) && (sp && !rz_reg_getv(core->analysis->reg, sp))) {
@@ -36,8 +35,7 @@ static bool analysis_emul_init(RzCore *core, RzConfigHold *hc, RzDebugTrace **dt
 }
 
 static void analysis_emul_restore(RzCore *core, RzConfigHold *hc, RzDebugTrace *dt, RzAnalysisEsilTrace *et, RzAnalysisRzilTrace *rt) {
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	rz_debug_trace_free(core->dbg->trace);
 	rz_analysis_esil_trace_free(core->analysis->esil->trace);
 	core->analysis->esil->trace = et;
@@ -222,7 +220,7 @@ static RzList /*<char *>*/ *parse_format(RzCore *core, char *fmt) {
 		return NULL;
 	}
 	Sdb *s = core->analysis->sdb_fmts;
-	const char *spec = rz_config_get(core->config, "analysis.types.spec");
+	const char *spec = rz_config_get_s(core->config, "analysis.types.spec");
 	char arr[10] = { 0 };
 	char tmpbuf[0x300]; // caller has the size limit of 0x200
 	char *ptr = strchr(fmt, '%');
@@ -349,7 +347,7 @@ static void type_match(RzCore *core, char *fcn_name, ut64 addr, ut64 baddr, cons
 
 	int idx = rz_pvector_len(etrace->instructions) - 1;
 
-	bool verbose = rz_config_get_i(core->config, "analysis.types.verbose");
+	bool verbose = rz_config_get_b(core->config, "analysis.types.verbose");
 	bool stack_rev = false, in_stack = false, format = false;
 
 	if (!fcn_name || !cc) {

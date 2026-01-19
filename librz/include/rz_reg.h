@@ -179,6 +179,8 @@ RZ_API bool rz_reg_set_reg_profile(RZ_BORROW RzReg *reg);
 RZ_API bool rz_reg_set_profile(RzReg *reg, const char *profile);
 RZ_API char *rz_reg_parse_gdb_profile(const char *profile);
 RZ_API bool rz_reg_is_readonly(RzReg *reg, RzRegItem *item);
+RZ_API void rz_reg_set_readonly(RZ_NONNULL RzReg *reg, RZ_NULLABLE RZ_OWN RzList /*<char *>*/ *reg_ro);
+RZ_API RZ_BORROW RzList /*<char *>*/ *rz_reg_get_readonly(RZ_NONNULL RzReg *reg);
 
 RZ_API RzRegSet *rz_reg_regset_get(RzReg *r, int type);
 RZ_API ut64 rz_reg_getv(RzReg *reg, const char *name);

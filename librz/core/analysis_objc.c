@@ -78,11 +78,12 @@ static void objc_analyze(RzCore *core) {
 	const char *notify = "Analyzing code to find selfref references";
 	rz_core_notify_begin(core, "%s", notify);
 	(void)rz_core_analysis_refs(core, 0);
-	if (!strcmp("arm", rz_config_get(core->config, "asm.arch"))) {
-		const bool emu_lazy = rz_config_get_i(core->config, "emu.lazy");
-		rz_config_set_i(core->config, "emu.lazy", true);
+	const char *arch = rz_config_get_s(core->config, "asm.arch");
+	if (RZ_STR_EQ("arm", arch)) {
+		const bool emu_lazy = rz_config_get_b(core->config, "emu.lazy");
+		rz_config_set_b(core->config, "emu.lazy", true);
 		rz_core_analysis_esil_default(core);
-		rz_config_set_i(core->config, "emu.lazy", emu_lazy);
+		rz_config_set_b(core->config, "emu.lazy", emu_lazy);
 	}
 	rz_core_notify_done(core, "%s", notify);
 }

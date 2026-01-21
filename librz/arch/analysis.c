@@ -193,8 +193,11 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->gnu_thumb1_case_uqi_addr = 0;
 	analysis->ht_virtual_xrefs = ht_sp_new(HT_STR_DUP, NULL, (HtSPFreeValue)rz_set_u_free);
 
+	// default settings.
+	analysis->gp = 0;
 	rz_analysis_enable_limits(analysis, false);
 	rz_analysis_set_limits(analysis, UT64_MAX, UT64_MAX);
+	analysis->recursive_noreturn = false;
 	return analysis;
 }
 

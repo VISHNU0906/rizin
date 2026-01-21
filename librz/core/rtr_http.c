@@ -387,7 +387,7 @@ static int rz_core_rtr_http_run(RzCore *core, bool open_browser) {
 	}
 
 	// store current configs
-	RzConfigHold *hc = rz_config_hold_new2(core->config, "scr.color", "scr.html", "scr.interactive", "asm.cmt.right", "asm.bytes");
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "scr.color", "scr.html", "scr.interactive", "asm.cmt.right", "asm.bytes", NULL);
 	if (!hc) {
 		return 0;
 	}

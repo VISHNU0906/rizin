@@ -2122,7 +2122,7 @@ static char *get_body(RzCore *core, ut64 addr, int size, int opts) {
 	char *body;
 	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.lines", "asm.bytes",
 		"asm.cmt.col", "asm.marks", "asm.offset",
-		"asm.comments", "asm.cmt.right", "asm.bb.line");
+		"asm.comments", "asm.cmt.right", "asm.bb.line", NULL);
 	if (!hc) {
 		return NULL;
 	}
@@ -3422,7 +3422,7 @@ static int agraph_print(RzAGraph *g, int is_interactive, RzCore *core, RzAnalysi
 	}
 	if (g->is_dis) {
 		(void)G(-g->can->sx + 1, -g->can->sy + 2);
-		RzConfigHold *h = rz_config_hold_new2(core->config, "scr.utf8", "asm.bytes", "asm.cmt.right");
+		RzConfigHold *h = rz_config_hold_new2(core->config, "scr.utf8", "asm.bytes", "asm.cmt.right", NULL);
 		rz_config_set_b(core->config, "scr.utf8", false);
 		rz_config_set_b(core->config, "asm.bytes", false);
 		rz_config_set_b(core->config, "asm.cmt.right", false);

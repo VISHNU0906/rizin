@@ -1542,7 +1542,7 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_arch_op) {
 	bool oldfixedbits = core->fixedbits;
 	int bits = -1;
 
-	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.arch", "asm.bits", "analysis.ignbithints");
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.arch", "asm.bits", "analysis.ignbithints", NULL);
 	if (!hc) {
 		return RZ_CMD_STATUS_ERROR;
 	}
@@ -1586,7 +1586,7 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_bits_op) {
 	}
 	bool oldfixedbits = core->fixedbits;
 
-	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.bits", "analysis.ignbithints");
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.bits", "analysis.ignbithints", NULL);
 	if (!hc) {
 		return RZ_CMD_STATUS_ERROR;
 	}

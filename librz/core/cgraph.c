@@ -354,7 +354,7 @@ static RZ_OWN RzGraph /*<RzGraphNodeInfo *>*/ *rz_core_graph_function_bbs(RZ_NON
 	hc = rz_config_hold_new2(core->config,
 		"asm.xrefs.max", "asm.lines", "asm.lines.fcn",
 		"asm.bytes", "asm.debuginfo", "asm.offset", "asm.marks",
-		"asm.cmt.right", "asm.cmt.col", "asm.bb.middle");
+		"asm.cmt.right", "asm.cmt.col", "asm.bb.middle", NULL);
 	if (!hc) {
 		goto fail;
 	}

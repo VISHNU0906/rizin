@@ -351,7 +351,10 @@ static RZ_OWN RzGraph /*<RzGraphNodeInfo *>*/ *rz_core_graph_function_bbs(RZ_NON
 	if (!graph) {
 		return NULL;
 	}
-	hc = rz_config_hold_new(core->config);
+	hc = rz_config_hold_new2(core->config,
+		"asm.xrefs.max", "asm.lines", "asm.lines.fcn",
+		"asm.bytes", "asm.debuginfo", "asm.offset", "asm.marks",
+		"asm.cmt.right", "asm.cmt.col", "asm.bb.middle");
 	if (!hc) {
 		goto fail;
 	}
@@ -360,18 +363,16 @@ static RZ_OWN RzGraph /*<RzGraphNodeInfo *>*/ *rz_core_graph_function_bbs(RZ_NON
 		goto fail;
 	}
 
-	rz_config_hold_var(hc, "asm.xrefs.max", "asm.lines", "asm.lines.fcn", "asm.bytes", "asm.debuginfo", "asm.offset", "asm.marks",
-		"asm.cmt.right", "asm.cmt.col", "asm.bb.middle", NULL);
 	rz_config_set_i(core->config, "asm.xrefs.max", 3);
-	rz_config_set_i(core->config, "asm.lines", 0);
-	rz_config_set_i(core->config, "asm.lines.fcn", 0);
-	rz_config_set_i(core->config, "asm.bytes", 0);
-	rz_config_set_i(core->config, "asm.debuginfo", 0);
-	rz_config_set_i(core->config, "asm.offset", 0);
-	rz_config_set_i(core->config, "asm.marks", 0);
-	rz_config_set_i(core->config, "asm.cmt.right", 0);
+	rz_config_set_b(core->config, "asm.lines", 0);
+	rz_config_set_b(core->config, "asm.lines.fcn", 0);
+	rz_config_set_b(core->config, "asm.bytes", 0);
+	rz_config_set_b(core->config, "asm.debuginfo", 0);
+	rz_config_set_b(core->config, "asm.offset", 0);
+	rz_config_set_b(core->config, "asm.marks", 0);
+	rz_config_set_b(core->config, "asm.cmt.right", 0);
 	rz_config_set_i(core->config, "asm.cmt.col", 0);
-	rz_config_set_i(core->config, "asm.bb.middle", 0);
+	rz_config_set_b(core->config, "asm.bb.middle", 0);
 
 	if (addr == UT64_MAX) {
 		ut64 from = rz_config_get_i(core->config, "graph.from");
@@ -391,8 +392,7 @@ static RZ_OWN RzGraph /*<RzGraphNodeInfo *>*/ *rz_core_graph_function_bbs(RZ_NON
 
 ret:
 	ht_up_free(cache);
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	return graph;
 fail:
 	rz_graph_free(graph);
@@ -681,7 +681,7 @@ static bool convert_dot_to_image(RzCore *core, const char *dot_file, const char 
 		eprintf("Graphviz not found\n");
 		return false;
 	}
-	const char *ext = rz_config_get(core->config, "graph.gv.format");
+	const char *ext = rz_config_get_s(core->config, "graph.gv.format");
 
 	char *cmd = NULL;
 	if (save_path && *save_path) {
@@ -722,7 +722,7 @@ static bool convert_dot_str_to_image(RzCore *core, char *str, const char *save_p
  */
 RZ_API RZ_OWN char *rz_core_graph_to_dot_str(RZ_NONNULL RzCore *core, RZ_NONNULL RzGraph /*<RzGraphNodeInfo *>*/ *graph) {
 	rz_return_val_if_fail(core && graph, NULL);
-	const char *font = rz_config_get(core->config, "graph.font");
+	const char *font = rz_config_get_s(core->config, "graph.font");
 	char *node_properties = rz_str_newf("fontname=\"%s\"", font);
 	char *result = rz_graph_drawable_to_dot(graph, node_properties, NULL);
 	free(node_properties);

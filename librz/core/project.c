@@ -77,7 +77,7 @@ RZ_API RzProjectErr rz_project_save_file(RzCore *core, const char *file, bool co
 		goto tmp_file_err;
 	}
 
-	rz_config_set(core->config, "prj.file", file);
+	rz_config_set_s(core->config, "prj.file", file);
 
 tmp_file_err:
 	rz_file_rm(tmp_file);
@@ -161,7 +161,7 @@ RZ_API RzProjectErr rz_project_load(RzCore *core, RzProject *prj, bool load_bin_
 		return RZ_PROJECT_ERR_INVALID_CONTENTS;
 	}
 
-	rz_config_set(core->config, "prj.file", file);
+	rz_config_set_s(core->config, "prj.file", file);
 
 	return RZ_PROJECT_ERR_SUCCESS;
 }

@@ -53,11 +53,11 @@ RZ_API void rz_core_wait(RzCore *core) {
 }
 
 static void http_logf(RzCore *core, const char *fmt, ...) {
-	bool http_log_enabled = rz_config_get_i(core->config, "http.log");
+	bool http_log_enabled = rz_config_get_b(core->config, "http.log");
 	va_list ap;
 	va_start(ap, fmt);
 	if (http_log_enabled) {
-		const char *http_log_file = rz_config_get(core->config, "http.logfile");
+		const char *http_log_file = rz_config_get_s(core->config, "http.logfile");
 		if (http_log_file && *http_log_file) {
 			char *msg = calloc(4096, 1);
 			if (msg) {
@@ -94,7 +94,7 @@ static char *rtrcmd(TextLog T, const char *str) {
 static void showcursor(RzCore *core, int x) {
 	if (core && core->vmode) {
 		rz_cons_show_cursor(x);
-		rz_cons_enable_mouse(x ? rz_config_get_i(core->config, "scr.wheel") : false);
+		rz_cons_enable_mouse(x ? rz_config_get_b(core->config, "scr.wheel") : false);
 	} else {
 		rz_cons_enable_mouse(false);
 	}
@@ -454,7 +454,7 @@ static bool rz_core_rtr_gdb_run(RzCore *core, ut32 port, const char *file_path, 
 	}
 	gdbr_init(g, true);
 	g->server_debug = debug_msg;
-	int arch = rz_sys_arch_id(rz_config_get(core->config, "asm.arch"));
+	int arch = rz_sys_arch_id(rz_config_get_s(core->config, "asm.arch"));
 	int bits = rz_config_get_i(core->config, "asm.bits");
 	gdbr_set_architecture(g, arch, bits);
 	core->gdbserver_up = 1;
@@ -849,7 +849,7 @@ RZ_API void rz_core_rtr_cmds(RzCore *core, const char *port) {
 	if (!s) {
 		goto err_sp;
 	}
-	s->local = rz_config_get_i(core->config, "tcp.islocal");
+	s->local = rz_config_get_b(core->config, "tcp.islocal");
 
 	if (!rz_socket_listen(s, port, NULL)) {
 		RZ_LOG_ERROR("Cannot listen on port %s\n", port);

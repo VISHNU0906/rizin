@@ -412,7 +412,7 @@ static void ds_print_ref_lines(char *line, char *line_col, RzDisasmState *ds) {
 
 static void get_bits_comment(RzCore *core, RzAnalysisFunction *f, char *cmt, int cmt_size) {
 	if (core && f && cmt && cmt_size > 0 && f->bits && f->bits != core->rasm->bits) {
-		const char *asm_arch = rz_config_get(core->config, "asm.arch");
+		const char *asm_arch = rz_config_get_s(core->config, "asm.arch");
 		if (asm_arch && *asm_arch && strstr(asm_arch, "arm")) {
 			switch (f->bits) {
 			case 16: strcpy(cmt, " (thumb)"); break;
@@ -563,7 +563,7 @@ static RzDisasmState *ds_init(RzCore *core) {
 		return NULL;
 	}
 	ds->core = core;
-	ds->strip = rz_config_get(core->config, "asm.strip");
+	ds->strip = rz_config_get_s(core->config, "asm.strip");
 
 	ds->show_color = rz_config_get_i(core->config, "scr.color");
 	ds->show_color_bytes = rz_config_get_b(core->config, "scr.color.bytes"); // maybe rename to asm.color.bytes
@@ -578,7 +578,7 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->show_flgoff = rz_config_get_b(core->config, "asm.flags.offset");
 	ds->show_nodup = rz_config_get_b(core->config, "asm.nodup");
 	{
-		const char *ah = rz_config_get(core->config, "asm.highlight");
+		const char *ah = rz_config_get_s(core->config, "asm.highlight");
 		ds->asm_highlight = (ah && *ah) ? rz_num_math(core->num, ah) : UT64_MAX;
 	}
 	ds->asm_analysis = rz_config_get_b(core->config, "asm.analysis");
@@ -607,7 +607,7 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->show_fcnsize = rz_config_get_b(core->config, "asm.fcn.size");
 	ds->show_vars = rz_config_get_b(core->config, "asm.var");
 	ds->show_varsum = rz_config_get_i(core->config, "asm.var.summary");
-	ds->fold_var = rz_config_get(core->config, "asm.var.fold");
+	ds->fold_var = rz_config_get_s(core->config, "asm.var.fold");
 	ds->show_varaccess = rz_config_get_b(core->config, "asm.var.access");
 	ds->maxrefs = rz_config_get_i(core->config, "asm.xrefs.max");
 	ds->maxflags = rz_config_get_i(core->config, "asm.flags.limit");
@@ -619,8 +619,8 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->linesright = rz_config_get_b(core->config, "asm.lines.right");
 	ds->show_indent = rz_config_get_b(core->config, "asm.indent");
 	ds->indent_space = rz_config_get_i(core->config, "asm.indentspace");
-	ds->tracespace = rz_config_get_i(core->config, "asm.tracespace");
-	ds->cyclespace = rz_config_get_i(core->config, "asm.cyclespace");
+	ds->tracespace = rz_config_get_b(core->config, "asm.tracespace");
+	ds->cyclespace = rz_config_get_b(core->config, "asm.cyclespace");
 
 	ds->debuginfo.enable = rz_config_get_b(core->config, "asm.debuginfo");
 	ds->debuginfo.file = rz_config_get_b(core->config, "asm.debuginfo.file");
@@ -632,8 +632,8 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->show_lines_ret = ds->show_lines ? rz_config_get_b(core->config, "asm.lines.ret") : false;
 	ds->show_size = rz_config_get_b(core->config, "asm.size");
 	ds->show_trace = rz_config_get_b(core->config, "asm.trace");
-	ds->linesout = rz_config_get_i(core->config, "asm.lines.out");
-	ds->adistrick = rz_config_get_i(core->config, "asm.middle"); // TODO: find better name
+	ds->linesout = rz_config_get_b(core->config, "asm.lines.out");
+	ds->adistrick = rz_config_get_b(core->config, "asm.middle"); // TODO: find better name
 	ds->asm_describe = rz_config_get_b(core->config, "asm.describe");
 	ds->show_offset = rz_config_get_b(core->config, "asm.offset");
 	ds->show_offdec = rz_config_get_b(core->config, "asm.decoff");
@@ -676,8 +676,8 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->show_bytes = rz_config_get_b(core->config, "asm.bytes");
 	ds->show_bytes_right = rz_config_get_b(core->config, "asm.bytes.right");
 	ds->show_optype = rz_config_get_b(core->config, "asm.optype");
-	ds->asm_meta = rz_config_get_i(core->config, "asm.meta");
-	ds->asm_xrefs_code = rz_config_get_i(core->config, "asm.xrefs.code");
+	ds->asm_meta = rz_config_get_b(core->config, "asm.meta");
+	ds->asm_xrefs_code = rz_config_get_b(core->config, "asm.xrefs.code");
 	ds->show_reloff = rz_config_get_b(core->config, "asm.reloff");
 	ds->show_reloff_flags = rz_config_get_b(core->config, "asm.reloff.flags");
 	ds->show_lines_fcn = ds->show_lines ? rz_config_get_b(core->config, "asm.lines.fcn") : false;
@@ -703,7 +703,7 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->show_stackptr = rz_config_get_b(core->config, "asm.stackptr");
 	ds->show_xrefs = rz_config_get_b(core->config, "asm.xrefs");
 	ds->show_cmtrefs = rz_config_get_b(core->config, "asm.cmt.refs");
-	ds->show_cmtoff = rz_config_get(core->config, "asm.cmt.off");
+	ds->show_cmtoff = rz_config_get_s(core->config, "asm.cmt.off");
 	if (!ds->show_cmtoff) {
 		ds->show_cmtoff = "nodup";
 	}
@@ -711,11 +711,11 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->nbytes = rz_config_get_i(core->config, "asm.nbytes");
 	ds->show_asciidot = !strcmp(core->print->strconv_mode, "asciidot");
 	ds->strenc = core->bin->str_search_cfg.string_encoding;
-	core->print->bytespace = rz_config_get_i(core->config, "asm.bytes.space");
+	core->print->bytespace = rz_config_get_b(core->config, "asm.bytes.space");
 	ds->cursor = 0;
 	ds->nb = 0;
 	ds->flagspace_ports = rz_flag_space_get(core->flags, "ports");
-	ds->lbytes = rz_config_get_i(core->config, "asm.lbytes");
+	ds->lbytes = rz_config_get_b(core->config, "asm.lbytes");
 	ds->show_comment_right_default = rz_config_get_b(core->config, "asm.cmt.right");
 	ds->show_comment_right = ds->show_comment_right_default;
 	ds->show_flag_in_bytes = rz_config_get_b(core->config, "asm.flags.inbytes");
@@ -741,7 +741,7 @@ static RzDisasmState *ds_init(RzCore *core) {
 	if (ds->show_flag_in_bytes) {
 		ds->show_flags = false;
 	}
-	if (rz_config_get_i(core->config, "asm.lines.wide")) {
+	if (rz_config_get_b(core->config, "asm.lines.wide")) {
 		ds->linesopts |= RZ_ANALYSIS_REFLINE_TYPE_WIDE;
 	}
 	if (core->cons->vline) {
@@ -1083,7 +1083,7 @@ RZ_API RzAnalysisHint *rz_core_hint_begin(RzCore *core, RzAnalysisHint *hint, ut
 	if (hint) {
 		/* syntax */
 		if (hint->syntax) {
-			rz_config_set(core->config, "asm.syntax", hint->syntax);
+			rz_config_set_s(core->config, "asm.syntax", hint->syntax);
 		}
 	}
 	RzAnalysisFunction *fcn = rz_analysis_get_fcn_in(core->analysis, at, 0);
@@ -2674,12 +2674,12 @@ static void ds_print_lines_left(RzDisasmState *ds) {
 	if (ds->show_section) {
 		char *str = NULL;
 		if (ds->show_section_perm && core->bin && core->bin->cur) {
-			int va = rz_config_get_i(core->config, "io.va");
+			int va = rz_config_get_b(core->config, "io.va");
 			RzBinSection *sec = rz_bin_get_section_at(core->bin->cur->o, ds->at, va);
 			str = rz_str_dup(sec ? rz_str_rwx_i(sec->perm) : "---");
 		}
 		if (ds->show_section_name && core->bin && core->bin->cur) {
-			int va = rz_config_get_i(core->config, "io.va");
+			int va = rz_config_get_b(core->config, "io.va");
 			RzBinSection *sec = rz_bin_get_section_at(core->bin->cur->o, ds->at, va);
 			if (sec) {
 				if (str) {
@@ -3000,7 +3000,7 @@ static bool ds_print_data_type(RzDisasmState *ds, const ut8 *buf, int ib, int si
 	}
 
 	if (size == 4 || size == 8) {
-		if (rz_str_startswith(rz_config_get(core->config, "asm.arch"), "arm")) {
+		if (rz_str_startswith(rz_config_get_s(core->config, "asm.arch"), "arm")) {
 			ut64 bits = rz_config_get_i(core->config, "asm.bits");
 			// adjust address for arm/thumb address
 			if (bits < 64) {
@@ -3426,7 +3426,7 @@ static void ds_print_fcn_name(RzDisasmState *ds) {
 		const char *arch;
 		RzFlagItem *flag = rz_flag_get_by_spaces(ds->core->flags, ds->analysis_op.jump,
 			RZ_FLAGS_FS_CLASSES, RZ_FLAGS_FS_SYMBOLS, NULL);
-		if (flag && flag->name && ds->opstr && !strstr(ds->opstr, flag->name) && (rz_str_startswith(flag->name, "sym.") || rz_str_startswith(flag->name, "method.")) && (arch = rz_config_get(ds->core->config, "asm.arch")) && strcmp(arch, "dalvik")) {
+		if (flag && flag->name && ds->opstr && !strstr(ds->opstr, flag->name) && (rz_str_startswith(flag->name, "sym.") || rz_str_startswith(flag->name, "method.")) && (arch = rz_config_get_s(ds->core->config, "asm.arch")) && strcmp(arch, "dalvik")) {
 			RzFlagItem *flag_sym = flag;
 			if (ds->core->vmode && (rz_str_startswith(flag->name, "sym.") || (flag_sym = rz_flag_get_by_spaces(ds->core->flags, ds->analysis_op.jump, RZ_FLAGS_FS_SYMBOLS, NULL))) && flag_sym->demangled) {
 				return;
@@ -3834,7 +3834,7 @@ static void ds_print_str(RzDisasmState *ds, const char *str, int len, ut64 refad
 	}
 	// do not resolve strings on arm64 pointed with ADRP
 	if (ds->analysis_op.type == RZ_ANALYSIS_OP_TYPE_LEA) {
-		if (ds->core->rasm->bits == 64 && rz_str_startswith(rz_config_get(ds->core->config, "asm.arch"), "arm")) {
+		if (ds->core->rasm->bits == 64 && rz_str_startswith(rz_config_get_s(ds->core->config, "asm.arch"), "arm")) {
 			return;
 		}
 	}
@@ -3931,7 +3931,7 @@ static void ds_print_ptr(RzDisasmState *ds, int len, int idx) {
 	}
 	rz_list_free(list);
 	if (ds->analysis_op.type == (RZ_ANALYSIS_OP_TYPE_MOV | RZ_ANALYSIS_OP_TYPE_REG) && ds->analysis_op.stackop == RZ_ANALYSIS_STACK_SET && ds->analysis_op.val != UT64_MAX && ds->analysis_op.val > 10) {
-		const char *arch = rz_config_get(core->config, "asm.arch");
+		const char *arch = rz_config_get_s(core->config, "asm.arch");
 		if (arch && !strcmp(arch, "x86")) {
 			p = refaddr = ds->analysis_op.val;
 			refptr = 0;
@@ -4330,7 +4330,7 @@ static int myregwrite(RzAnalysisEsil *esil, const char *name, ut64 *val) {
 				ignored = true;
 				break;
 			case RZ_ANALYSIS_OP_TYPE_LEA:
-				if (ds->core->rasm->bits == 64 && rz_str_startswith(rz_config_get(ds->core->config, "asm.arch"), "arm")) {
+				if (ds->core->rasm->bits == 64 && rz_str_startswith(rz_config_get_s(ds->core->config, "asm.arch"), "arm")) {
 					ignored = true;
 				}
 				break;
@@ -4444,7 +4444,7 @@ static void ds_print_esil_analysis_init(RzDisasmState *ds) {
 		return;
 	}
 	if (!core->analysis->esil) {
-		int iotrap = rz_config_get_i(core->config, "esil.iotrap");
+		int iotrap = rz_config_get_b(core->config, "esil.iotrap");
 		int esd = rz_config_get_i(core->config, "esil.stack.depth");
 		unsigned int addrsize = rz_config_get_i(core->config, "esil.addr.size");
 
@@ -4553,7 +4553,7 @@ static void delete_last_comment(RzDisasmState *ds) {
 
 static bool can_emulate_metadata(RzCore *core, ut64 at) {
 	// check if there is a meta at the addr that is unemulateable
-	const char *emuskipmeta = rz_config_get(core->config, "emu.skip");
+	const char *emuskipmeta = rz_config_get_s(core->config, "emu.skip");
 	bool ret = true;
 	RzPVector *metas = rz_meta_get_all_at(core->analysis, at);
 	void **it;
@@ -4570,7 +4570,7 @@ static bool can_emulate_metadata(RzCore *core, ut64 at) {
 
 static void mipsTweak(RzDisasmState *ds) {
 	RzCore *core = ds->core;
-	const char *asm_arch = rz_config_get(core->config, "asm.arch");
+	const char *asm_arch = rz_config_get_s(core->config, "asm.arch");
 	if (asm_arch && *asm_arch && strstr(asm_arch, "mips")) {
 		if (rz_config_get_b(core->config, "analysis.gpfixed")) {
 			ut64 gp = rz_config_get_i(core->config, "analysis.gp");
@@ -4631,7 +4631,7 @@ static void ds_print_esil_analysis(RzDisasmState *ds) {
 	}
 	rz_analysis_esil_stack_free(esil);
 	rz_config_hold_var(hc, "io.cache", NULL);
-	rz_config_set(core->config, "io.cache", "true");
+	rz_config_set_b(core->config, "io.cache", true);
 	if (!ds->show_comments) {
 		goto beach;
 	}
@@ -4783,8 +4783,7 @@ beach:
 	if (esil) {
 		esil->cb.hook_mem_write = hook_mem_write;
 	}
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 }
 
 static void ds_print_calls_hints(RzDisasmState *ds) {
@@ -5167,8 +5166,7 @@ RZ_API int rz_core_print_disasm(RZ_NONNULL RzCore *core, ut64 addr, RZ_NONNULL u
 	if (!rch) {
 		return 0;
 	}
-	rz_config_hold_variable(rch, "asm.arch", NULL);
-	rz_config_hold_variable(rch, "asm.bits", NULL);
+	rz_config_hold_var(rch, "asm.arch", "asm.bits");
 
 	// TODO: All those ds must be print flags
 	RzDisasmState *ds = ds_init(core);
@@ -5188,8 +5186,7 @@ RZ_API int rz_core_print_disasm(RZ_NONNULL RzCore *core, ut64 addr, RZ_NONNULL u
 		ds->pj = pj ? pj : pj_new();
 		if (!ds->pj) {
 			ds_free(ds);
-			rz_config_hold_restore(rch);
-			rz_config_hold_free(rch);
+			rz_config_hold_restore_and_free(rch);
 			return 0;
 		}
 		rz_cons_push();
@@ -5265,8 +5262,7 @@ toro:
 				rz_cons_pop();
 			}
 			rz_cons_break_pop();
-			rz_config_hold_restore(rch);
-			rz_config_hold_free(rch);
+			rz_config_hold_restore_and_free(rch);
 			ds_free(ds);
 			return 0; // break;
 		}
@@ -5606,8 +5602,7 @@ toro:
 	// TODO: this too (must review)
 	ds_print_esil_analysis_fini(ds);
 	ds_reflines_fini(ds);
-	rz_config_hold_restore(rch);
-	rz_config_hold_free(rch);
+	rz_config_hold_restore_and_free(rch);
 	ds_free(ds);
 	RZ_FREE(nbuf);
 	p->calc_row_offsets = calc_row_offsets;
@@ -5875,7 +5870,7 @@ RZ_API int rz_core_print_disasm_json(RzCore *core, ut64 addr, ut8 *buf, int nb_b
 		goto clean_return;
 	}
 
-	bool asm_pseudo = rz_config_get_i(core->config, "asm.pseudo");
+	bool asm_pseudo = rz_config_get_b(core->config, "asm.pseudo");
 
 	RzAnalysisBytes *ab;
 	rz_iterator_foreach(iter, ab) {
@@ -6120,7 +6115,7 @@ RZ_API int rz_core_disasm_pdi_with_buf(RzCore *core, ut64 address, ut8 *buf, ut3
 	int midflags = rz_config_get_i(core->config, "asm.flags.middle");
 	bool midbb = rz_config_get_b(core->config, "asm.bb.middle");
 	bool asmmarks = rz_config_get_b(core->config, "asm.marks");
-	rz_config_set_i(core->config, "asm.marks", false);
+	rz_config_set_b(core->config, "asm.marks", false);
 	i = 0;
 	j = 0;
 	RzAnalysisMetaItem *meta = NULL;
@@ -6307,7 +6302,7 @@ RZ_API int rz_core_disasm_pdi_with_buf(RzCore *core, ut64 address, ut8 *buf, ut3
 		}
 		i += ret;
 	}
-	rz_config_set_i(core->config, "asm.marks", asmmarks);
+	rz_config_set_b(core->config, "asm.marks", asmmarks);
 	rz_cons_break_pop();
 	if (alloc_buf) {
 		free(buf);
@@ -6366,9 +6361,9 @@ RZ_API int rz_core_disasm_pde(RzCore *core, int nb_opcodes, RzCmdStateOutput *st
 	rz_reg_arena_push(reg);
 	RzConfigHold *chold = rz_config_hold_new(core->config);
 	rz_config_hold_var(chold, "io.cache", "asm.lines", NULL);
-	rz_config_set_i(core->config, "io.cache", true);
-	rz_config_set_i(core->config, "asm.lines", false);
-	const char *strip = rz_config_get(core->config, "asm.strip");
+	rz_config_set_b(core->config, "io.cache", true);
+	rz_config_set_b(core->config, "asm.lines", false);
+	const char *strip = rz_config_get_s(core->config, "asm.strip");
 	const int max_op_size = rz_analysis_archinfo(core->analysis, RZ_ANALYSIS_ARCHINFO_MAX_OP_SIZE);
 	int min_op_size = rz_analysis_archinfo(core->analysis, RZ_ANALYSIS_ARCHINFO_MIN_OP_SIZE);
 	min_op_size = min_op_size > 0 ? min_op_size : 1;
@@ -6468,8 +6463,7 @@ RZ_API int rz_core_disasm_pde(RzCore *core, int nb_opcodes, RzCmdStateOutput *st
 		rz_skyline_add(&core->io->cache_skyline, c->itv, c);
 	}
 	core->io->cached = ocached;
-	rz_config_hold_restore(chold);
-	rz_config_hold_free(chold);
+	rz_config_hold_restore_and_free(chold);
 	return i;
 }
 
@@ -6477,8 +6471,8 @@ RZ_API bool rz_core_print_function_disasm_json(RzCore *core, RzAnalysisFunction 
 	RzAnalysisBlock *b;
 	void **locs_it = NULL;
 	ut32 fcn_size = rz_analysis_function_realsize(fcn);
-	const char *orig_bb_middle = rz_config_get(core->config, "asm.bb.middle");
-	rz_config_set_i(core->config, "asm.bb.middle", false);
+	bool orig_bb_middle = rz_config_get_b(core->config, "asm.bb.middle");
+	rz_config_set_b(core->config, "asm.bb.middle", false);
 	pj_o(pj);
 	pj_ks(pj, "name", fcn->name);
 	pj_kn(pj, "size", fcn_size);
@@ -6500,7 +6494,7 @@ RZ_API bool rz_core_print_function_disasm_json(RzCore *core, RzAnalysisFunction 
 	}
 	pj_end(pj);
 	pj_end(pj);
-	rz_config_set(core->config, "asm.bb.middle", orig_bb_middle);
+	rz_config_set_b(core->config, "asm.bb.middle", orig_bb_middle);
 	return true;
 }
 
@@ -6524,10 +6518,10 @@ RZ_API RZ_OWN char *rz_core_disasm_instruction(RzCore *core, ut64 addr, ut64 rel
 	const int size = 12;
 	ut8 buf[12];
 	char *buf_asm = NULL;
-	bool asm_subvar = rz_config_get_i(core->config, "asm.sub.var");
-	core->parser->pseudo = rz_config_get_i(core->config, "asm.pseudo");
-	core->parser->subrel = rz_config_get_i(core->config, "asm.sub.rel");
-	core->parser->localvar_only = rz_config_get_i(core->config, "asm.sub.varonly");
+	bool asm_subvar = rz_config_get_b(core->config, "asm.sub.var");
+	core->parser->pseudo = rz_config_get_b(core->config, "asm.pseudo");
+	core->parser->subrel = rz_config_get_b(core->config, "asm.sub.rel");
+	core->parser->localvar_only = rz_config_get_b(core->config, "asm.sub.varonly");
 
 	if (core->parser->subrel) {
 		core->parser->subrel_addr = reladdr;

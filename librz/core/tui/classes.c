@@ -222,6 +222,12 @@ RZ_IPI int rz_core_visual_classes(RzCore *core) {
 		rz_cons_message("No Classes");
 		return false;
 	}
+	int scr_color = rz_config_get_i(core->config, "scr.color");
+	if (!scr_color) {
+		// we do not know if we support only ansi or realcolors
+		scr_color = 1;
+	}
+
 	for (;;) {
 		int cols;
 		rz_cons_clear00();
@@ -281,9 +287,14 @@ RZ_IPI int rz_core_visual_classes(RzCore *core) {
 
 		ch = rz_cons_arrow_to_hjkl(ch); // get ESC+char, return 'hjkl' char
 		switch (ch) {
-		case 'C':
-			rz_config_toggle_boolean(core->config, "scr.color");
+		case 'C': {
+			if (rz_config_get_i(core->config, "scr.color") > 0) {
+				rz_config_set_i(core->config, "scr.color", 0);
+			} else {
+				rz_config_set_i(core->config, "scr.color", scr_color);
+			}
 			break;
+		}
 		case '_':
 			if (rz_core_visual_hudclasses(core)) {
 				return true;
@@ -504,6 +515,11 @@ RZ_IPI int rz_core_visual_analysis_classes(RzCore *core) {
 	TuiClassMode mode = TUI_CLASS_MODE_NONE;
 	const char *class_name = "";
 	RzLine *line = core->cons->line;
+	int scr_color = rz_config_get_i(core->config, "scr.color");
+	if (!scr_color) {
+		// we do not know if we support only ansi or realcolors
+		scr_color = 1;
+	}
 
 	if (rz_pvector_empty(classes)) {
 		rz_cons_message("No Classes");
@@ -526,7 +542,11 @@ RZ_IPI int rz_core_visual_analysis_classes(RzCore *core) {
 		ch = rz_cons_arrow_to_hjkl(ch); // get ESC+char, return 'hjkl' char
 		switch (ch) {
 		case 'C':
-			rz_config_toggle_boolean(core->config, "scr.color");
+			if (rz_config_get_i(core->config, "scr.color") > 0) {
+				rz_config_set_i(core->config, "scr.color", 0);
+			} else {
+				rz_config_set_i(core->config, "scr.color", scr_color);
+			}
 			break;
 		case 'J':
 			index += 10;

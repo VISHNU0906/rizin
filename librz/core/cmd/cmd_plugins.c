@@ -38,7 +38,7 @@ RZ_IPI RzCmdStatus rz_plugins_crypto_print_handler(RzCore *core, int argc, const
 
 RZ_IPI RzCmdStatus rz_plugins_debug_print_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
 	if (argc > 1) {
-		return rz_config_set(core->config, "dbg.backend", argv[1]) ? RZ_CMD_STATUS_OK : RZ_CMD_STATUS_ERROR;
+		return rz_config_set_s(core->config, "dbg.backend", argv[1]) ? RZ_CMD_STATUS_OK : RZ_CMD_STATUS_ERROR;
 	}
 	return rz_core_debug_plugins_print(core, state);
 }

@@ -16,7 +16,7 @@ RZ_API int rz_core_setup_debugger(RzCore *r, const char *debugbackend, bool atta
 
 	rz_config_set_b(r->config, "cfg.debug", true);
 	rz_config_set_b(r->config, "io.ff", true);
-	rz_config_set(r->config, "dbg.backend", debugbackend);
+	rz_config_set_s(r->config, "dbg.backend", debugbackend);
 	pid = rz_io_desc_get_pid(fd);
 	rz_debug_select(r->dbg, pid, r->dbg->tid);
 	r->dbg->main_pid = pid;
@@ -28,7 +28,7 @@ RZ_API int rz_core_setup_debugger(RzCore *r, const char *debugbackend, bool atta
 	rz_core_reg_update_flags(r);
 	/* honor dbg.bep */
 	{
-		const char *bep = rz_config_get(r->config, "dbg.bep");
+		const char *bep = rz_config_get_s(r->config, "dbg.bep");
 		if (bep) {
 			ut64 address = 0;
 			if (!strcmp(bep, "loader")) {
@@ -137,7 +137,7 @@ RZ_API void rz_core_seek_arch_bits(RzCore *core, ut64 addr) {
 		rz_config_set_i(core->config, "asm.bits", bits);
 	}
 	if (arch) {
-		rz_config_set(core->config, "asm.arch", arch);
+		rz_config_set_s(core->config, "asm.arch", arch);
 	}
 }
 
@@ -153,7 +153,7 @@ RZ_API bool rz_core_write_at(RzCore *core, ut64 addr, const ut8 *buf, int size) 
 	if (start_in_block || end_in_block) {
 		rz_core_block_read(core);
 	}
-	if (rz_config_get_i(core->config, "cfg.wseek")) {
+	if (rz_config_get_b(core->config, "cfg.wseek")) {
 		rz_core_seek_delta(core, size, true);
 	}
 	return ret;
@@ -174,7 +174,7 @@ RZ_API bool rz_core_write_at(RzCore *core, ut64 addr, const ut8 *buf, int size) 
 RZ_API bool rz_core_extend_at(RzCore *core, ut64 addr, ut64 size) {
 	rz_return_val_if_fail(core, false);
 
-	int io_va = rz_config_get_i(core->config, "io.va");
+	int io_va = rz_config_get_b(core->config, "io.va");
 	if (io_va) {
 		RzIOMap *map = rz_io_map_get(core->io, core->offset);
 		if (map) {

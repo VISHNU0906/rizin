@@ -31,7 +31,7 @@ RZ_API void rz_core_fortune_list_types(void) {
 }
 
 RZ_API void rz_core_fortune_list(RzCore *core) {
-	const char *types = (char *)rz_config_get(core->config, "cfg.fortunes.file");
+	const char *types = (char *)rz_config_get_s(core->config, "cfg.fortunes.file");
 
 	char *file = rizin_fortune_file(core->sys_path, types);
 	char *str = rz_file_slurp(file, NULL);
@@ -53,7 +53,7 @@ RZ_API void rz_core_fortune_list(RzCore *core) {
 
 RZ_API RZ_OWN char *rz_core_fortune_get_random(RzCore *core) {
 	int lines = 0;
-	const char *types = (char *)rz_config_get(core->config, "cfg.fortunes.file");
+	const char *types = (char *)rz_config_get_s(core->config, "cfg.fortunes.file");
 
 	char *file = rizin_fortune_file(core->sys_path, types);
 	char *line = rz_file_slurp_random_line_count(file, &lines);
@@ -68,7 +68,7 @@ RZ_API void rz_core_fortune_print_random(RzCore *core) {
 		line = rz_core_fortune_get_random(core);
 	}
 	if (line) {
-		if (rz_config_get_i(core->config, "cfg.fortunes.clippy")) {
+		if (rz_config_get_b(core->config, "cfg.fortunes.clippy")) {
 			rz_core_clippy_print(core, line);
 		} else {
 			rz_cons_printf(" -- %s\n", line);

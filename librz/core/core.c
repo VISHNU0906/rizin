@@ -178,7 +178,7 @@ RZ_IPI void rz_core_print_warnings_after(RZ_NONNULL RzCore *core) {
 
 static int on_fcn_new(RzAnalysis *_analysis, void *_user, RzAnalysisFunction *fcn) {
 	RzCore *core = (RzCore *)_user;
-	const char *cmd = rz_config_get(core->config, "cmd.fcn.new");
+	const char *cmd = rz_config_get_s(core->config, "cmd.fcn.new");
 	if (cmd && *cmd) {
 		ut64 oaddr = core->offset;
 		ut64 addr = fcn->addr;
@@ -191,7 +191,7 @@ static int on_fcn_new(RzAnalysis *_analysis, void *_user, RzAnalysisFunction *fc
 
 static int on_fcn_delete(RzAnalysis *_analysis, void *_user, RzAnalysisFunction *fcn) {
 	RzCore *core = (RzCore *)_user;
-	const char *cmd = rz_config_get(core->config, "cmd.fcn.delete");
+	const char *cmd = rz_config_get_s(core->config, "cmd.fcn.delete");
 	if (cmd && *cmd) {
 		ut64 oaddr = core->offset;
 		ut64 addr = fcn->addr;
@@ -204,7 +204,7 @@ static int on_fcn_delete(RzAnalysis *_analysis, void *_user, RzAnalysisFunction 
 
 static int on_fcn_rename(RzAnalysis *_analysis, void *_user, RzAnalysisFunction *fcn, const char *oname) {
 	RzCore *core = (RzCore *)_user;
-	const char *cmd = rz_config_get(core->config, "cmd.fcn.rename");
+	const char *cmd = rz_config_get_s(core->config, "cmd.fcn.rename");
 	if (cmd && *cmd) {
 		// XXX: wat do with old name here?
 		ut64 oaddr = core->offset;
@@ -217,7 +217,7 @@ static int on_fcn_rename(RzAnalysis *_analysis, void *_user, RzAnalysisFunction 
 }
 
 static void rz_core_debug_breakpoint_hit(RzCore *core, RzBreakpointItem *bpi) {
-	const char *cmdbp = rz_config_get(core->config, "cmd.bp");
+	const char *cmdbp = rz_config_get_s(core->config, "cmd.bp");
 	const bool cmdbp_exists = (cmdbp && *cmdbp);
 	const bool bpcmd_exists = (bpi->data && bpi->data[0]);
 	const bool may_output = (cmdbp_exists || bpcmd_exists);
@@ -238,7 +238,7 @@ static void rz_core_debug_breakpoint_hit(RzCore *core, RzBreakpointItem *bpi) {
 }
 
 static void rz_core_debug_syscall_hit(RzCore *core) {
-	const char *cmdhit = rz_config_get(core->config, "cmd.onsyscall");
+	const char *cmdhit = rz_config_get_s(core->config, "cmd.onsyscall");
 
 	if (cmdhit && cmdhit[0] != 0) {
 		rz_core_cmd0(core, cmdhit);
@@ -375,7 +375,7 @@ RZ_API void rz_core_set_asmqjmps(RzCore *core, char *str, size_t len, int pos) {
 
 static void setab(RzCore *core, const char *arch, int bits) {
 	if (arch) {
-		rz_config_set(core->config, "asm.arch", arch);
+		rz_config_set_s(core->config, "asm.arch", arch);
 	}
 	if (bits > 0) {
 		rz_config_set_i(core->config, "asm.bits", bits);
@@ -408,7 +408,7 @@ static ut64 cfggeti(RzCore *core, const char *k) {
 }
 
 static const char *cfgget(RzCore *core, const char *k) {
-	return rz_config_get(core->config, k);
+	return rz_config_get_s(core->config, k);
 }
 
 static bool cfgseti(RzCore *core, const char *k, ut64 v) {
@@ -416,7 +416,7 @@ static bool cfgseti(RzCore *core, const char *k, ut64 v) {
 }
 
 static bool cfgset(RzCore *core, const char *k, const char *v) {
-	return rz_config_set(core->config, k, v);
+	return rz_config_set_s(core->config, k, v);
 }
 
 static ut64 numget(RzCore *core, const char *k) {
@@ -1344,7 +1344,7 @@ RZ_API const char *rz_core_analysis_optype_colorfor(RzCore *core, ut64 addr, boo
 	if (!(core->print->flags & RZ_PRINT_FLAGS_COLOR)) {
 		return NULL;
 	}
-	if (!rz_config_get_i(core->config, "scr.color")) {
+	if (rz_config_get_i(core->config, "scr.color") < 1) {
 		return NULL;
 	}
 	type = rz_core_analysis_address(core, addr);
@@ -1501,7 +1501,7 @@ static void core_set_rz_asm_by_hint(RzCore *core, ut64 addr) {
 }
 
 static void core_set_rz_asm_by_config(RzCore *core) {
-	const char *arch = rz_config_get(core->config, "asm.arch");
+	const char *arch = rz_config_get_s(core->config, "asm.arch");
 	int bits = rz_config_get_i(core->config, "asm.bits");
 	rz_asm_set_arch(core->rasm, arch, bits);
 }
@@ -1544,12 +1544,14 @@ static size_t bp_get_sw_breakpoint_size_at(ut64 addr, void *user) {
 static void ev_iowrite_cb(RzEvent *ev, int type, void *user, void *data) {
 	RzCore *core = user;
 	RzEventIOWrite *iow = data;
-	if (rz_config_get_i(core->config, "analysis.detectwrites")) {
-		rz_analysis_update_analysis_range(core->analysis, iow->addr, iow->len);
-		if (core->cons->event_resize && core->cons->event_data) {
-			// Force a reload of the graph
-			core->cons->event_resize(core->cons->event_data);
-		}
+	if (!rz_config_get_b(core->config, "analysis.detectwrites")) {
+		return;
+	}
+
+	rz_analysis_update_analysis_range(core->analysis, iow->addr, iow->len);
+	if (core->cons->event_resize && core->cons->event_data) {
+		// Force a reload of the graph
+		core->cons->event_resize(core->cons->event_data);
 	}
 }
 
@@ -1789,7 +1791,7 @@ RZ_API bool rz_core_init(RzCore *core) {
 			rz_config_set_i(core->config, "asm.bits", 32);
 		}
 	}
-	rz_config_set(core->config, "asm.arch", RZ_SYS_ARCH);
+	rz_config_set_s(core->config, "asm.arch", RZ_SYS_ARCH);
 	update_sdb(core);
 	{
 		char *a = rz_path_system(core->sys_path, RZ_FLAGS);
@@ -1808,7 +1810,7 @@ RZ_API bool rz_core_init(RzCore *core) {
 RZ_API void __cons_cb_fkey(RzCore *core, int fkey) {
 	char buf[32];
 	snprintf(buf, sizeof(buf), "key.f%d", fkey);
-	const char *v = rz_config_get(core->config, buf);
+	const char *v = rz_config_get_s(core->config, buf);
 	if (v && *v) {
 		rz_cons_printf("%s\n", v);
 		rz_core_cmd0(core, v);
@@ -1975,7 +1977,7 @@ static bool prompt_add_offset(RzCore *core, RzStrBuf *sb, bool add_sep) {
 
 static void set_prompt(RzCore *r) {
 	RzLine *line = r->cons->line;
-	const char *cmdprompt = rz_config_get(r->config, "cmd.prompt");
+	const char *cmdprompt = rz_config_get_s(r->config, "cmd.prompt");
 	const char *BEGIN = "";
 	const char *END = "";
 	const char *remote = "";
@@ -2121,7 +2123,7 @@ RZ_API RZ_OWN char *rz_core_editor(const RzCore *core, RZ_NULLABLE const char *f
 		return NULL;
 	}
 
-	const char *editor = rz_config_get(core->config, "cfg.editor");
+	const char *editor = rz_config_get_s(core->config, "cfg.editor");
 	if (RZ_STR_ISEMPTY(editor)) {
 		RZ_LOG_ERROR("core: please set \"cfg.editor\" to run the editor\n");
 		return NULL;

@@ -410,6 +410,19 @@ RZ_API bool rz_config_add_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 	return true;
 }
 
+static bool config_append_var_args_to_list(va_list argp, RzList /*<char *>*/ *list) {
+	const char *value = va_arg(argp, const char *);
+	while (value) {
+		char *copy = rz_str_dup(value);
+		if (!copy || !rz_list_append(list, copy)) {
+			free(copy);
+			return false;
+		}
+		value = va_arg(argp, const char *);
+	}
+	return true;
+}
+
 /**
  * \brief      Adds a new variable of type string, but with options
  *
@@ -441,28 +454,11 @@ RZ_API bool rz_config_add_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 	}
 
 	va_start(argp, desc);
-	const char *option = va_arg(argp, const char *);
-	while (option) {
-		char *copy = rz_str_dup(option);
-		if (!copy || !rz_list_append(node->value.list, copy)) {
-			config_node_free(node);
-			return false;
-		}
-		option = va_arg(argp, const char *);
-	}
+	bool ok = config_append_var_args_to_list(argp, node->value.list);
 	va_end(argp);
-
-	if (rz_list_empty(node->options)) {
-		RZ_LOG_ERROR("config: failed to set options for variable '%s'.\n", name);
+	if (!ok) {
 		config_node_free(node);
 		return false;
-	}
-
-	free(node->value.string);
-	node->value.string = rz_str_dup(rz_list_first_val(node->options));
-	if (!node->value.string) {
-		config_node_free(node);
-		return NULL;
 	}
 
 	ht_sp_insert(cfg->ht, node->name, node);
@@ -502,16 +498,12 @@ RZ_API bool rz_config_add_options(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 	}
 
 	va_start(argp, desc);
-	const char *option = va_arg(argp, const char *);
-	while (option) {
-		char *copy = rz_str_dup(option);
-		if (!copy || !rz_list_append(node->options, copy)) {
-			config_node_free(node);
-			return false;
-		}
-		option = va_arg(argp, const char *);
-	}
+	bool ok = config_append_var_args_to_list(argp, node->options);
 	va_end(argp);
+	if (!ok) {
+		config_node_free(node);
+		return false;
+	}
 
 	if (rz_list_empty(node->options)) {
 		RZ_LOG_ERROR("config: failed to set options for variable '%s'.\n", name);
@@ -736,8 +728,20 @@ RZ_IPI bool rz_config_node_set_list(RzConfig *cfg, RzConfigNode *node, RZ_NULLAB
 	return node->value.list != NULL;
 }
 
+static bool config_node_set_list_from_string(RzConfig *cfg, RzConfigNode *node, const char *value) {
+	RzList *list = NULL;
+	if (RZ_STR_ISNOTEMPTY(value)) {
+		list = rz_str_split_duplist(value, ",", true);
+	}
+
+	bool res = rz_config_node_set_list(cfg, node, list);
+	rz_list_free(list);
+
+	return res;
+}
+
 /**
- * \brief      Sets the value (type string) of a given variable of the config
+ * \brief      Sets the value (type string or list) of a given variable of the config
  *
  * \param      cfg    The RzConfig to modify
  * \param[in]  name   The name of the variable
@@ -753,6 +757,11 @@ RZ_API bool rz_config_set_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
 		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
 		return false;
+	}
+
+	if (node->flags & RZ_CONFIG_VAR_LIST) {
+		// we allow to use rz_config_set_string for list type
+		return config_node_set_list_from_string(cfg, node, value);
 	}
 
 	return rz_config_node_set_string(cfg, node, value);
@@ -807,7 +816,7 @@ RZ_API bool rz_config_set_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
  *
  * \param      cfg    The RzConfig to modify
  * \param[in]  name   The name of the variable
- * \param[in]  value  The value to update
+ * \param[in]  value  The list to set
  *
  * \return     On success returns true, otherwise false
  */
@@ -822,6 +831,53 @@ RZ_API bool rz_config_set_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 	}
 
 	return rz_config_node_set_list(cfg, node, value);
+}
+
+/**
+ * \brief      Sets the value (type string list) of a given variable of the config
+ *
+ * \param      cfg    The RzConfig to modify
+ * \param[in]  name   The name of the variable
+ * \param[in]  ...    The values to set in the list
+ *
+ * \return     On success returns true, otherwise false
+ */
+RZ_API bool rz_config_set_list2(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, ...) {
+	RzConfigNode *node = rz_config_node_get(cfg, name);
+	if (!node) {
+		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
+		return false;
+	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
+		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		return false;
+	} else if (!(node->flags & RZ_CONFIG_VAR_LIST)) {
+		RZ_LOG_ERROR("config: variable %s was accessed as string list but is %s\n", node->name, config_node_get_type(node));
+		return false;
+	}
+
+	va_list argp;
+	RzList *list = rz_list_newf(free);
+	if (!list) {
+		return false;
+	}
+
+	va_start(argp, name);
+	bool ok = config_append_var_args_to_list(argp, list);
+	va_end(argp);
+	if (!ok) {
+		rz_list_free(list);
+		return false;
+	}
+
+	if (node->setter) {
+		ok = node->setter(cfg->user, &list);
+		rz_list_free(list);
+		return ok;
+	}
+
+	rz_list_free(node->value.list);
+	node->value.list = list;
+	return true;
 }
 
 /**

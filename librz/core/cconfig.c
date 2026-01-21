@@ -13,6 +13,29 @@
 
 #include "core_private.h"
 
+#define CONFIG_IS_HELP(str) RZ_STR_EQ(str, "?")
+
+static RZ_OWN RzList /*<char *>*/ *core_config_string_list_dup(RZ_NULLABLE const RzList /*<char *>*/ *list) {
+	const char *elem;
+	const RzListIter *it;
+	RzList *dup = rz_list_newf(free);
+	if (!dup) {
+		return NULL;
+	}
+
+	rz_list_foreach (list, it, elem) {
+		if (RZ_STR_ISEMPTY(elem)) {
+			continue;
+		}
+
+		char *copy = rz_str_dup(elem);
+		if (!copy || !rz_list_append(dup, copy)) {
+			free(copy);
+		}
+	}
+	return dup;
+}
+
 #include "cconfig_arch.c"
 
 RZ_API int rz_core_config_init(RzCore *core) {
@@ -47,8 +70,9 @@ RZ_API int rz_core_config_init(RzCore *core) {
 	}
 #endif
 
-	rz_config_lock(cfg, true);
-	return true;
+	return core_config_add_arch_variables(core) &&
+		// to be removed later.
+		true;
 }
 
 RZ_API void rz_core_parse_rizinrc(RzCore *r) {

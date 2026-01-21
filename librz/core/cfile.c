@@ -41,11 +41,11 @@ static void loadGP(RzCore *core) {
 	if (__isMips(core->rasm)) {
 		ut64 gp = rz_num_math(core->num, "loc._gp");
 		if (!gp || gp == UT64_MAX) {
-			rz_config_set(core->config, "analysis.roregs", "zero");
+			rz_config_set_s(core->config, "analysis.roregs", "zero");
 			ut64 addr = rz_num_math(core->num, "entry");
 			rz_core_seek_opt(core, addr, true, false);
 			rz_core_debug_step_one(core, 10);
-			rz_config_set(core->config, "analysis.roregs", "zero,gp");
+			rz_config_set_s(core->config, "analysis.roregs", "zero,gp");
 			gp = rz_reg_getv(core->analysis->reg, "gp");
 		}
 		// RZ_LOG_DEBUG("[mips] gp: 0x%08"PFMT64x"\n", gp);
@@ -265,7 +265,7 @@ RZ_API void rz_core_file_reopen_remote_debug(RzCore *core, const char *uri, ut64
 		return;
 	}
 	rz_core_block_read(core);
-	if (rz_config_get_i(core->config, "dbg.rebase")) {
+	if (rz_config_get_b(core->config, "dbg.rebase")) {
 		__rebase_everything(core, old_sections, old_base);
 	}
 	rz_pvector_free(old_sections);
@@ -316,7 +316,7 @@ RZ_API void rz_core_file_reopen_debug(RzCore *core, const char *args) {
 	rz_config_set_i(core->config, "asm.bits", bits);
 	rz_config_set_b(core->config, "cfg.debug", true);
 	rz_core_file_reopen(core, newfile, 0, 2);
-	if (rz_config_get_i(core->config, "dbg.rebase")) {
+	if (rz_config_get_b(core->config, "dbg.rebase")) {
 		__rebase_everything(core, old_sections, old_base);
 	}
 	rz_pvector_free(old_sections);
@@ -547,7 +547,7 @@ RZ_API void rz_core_sysenv_begin(RzCore *core) {
 	char tmpbuf[64];
 	// This will be deprecated when moving the . commands to newshell
 	RzIODesc *desc = core->file ? rz_io_desc_get(core->io, core->file->fd) : NULL;
-	rz_sys_setenv("RZ_BIN_PDBSERVER", rz_config_get(core->config, "pdb.server"));
+	rz_sys_setenv("RZ_BIN_PDBSERVER", rz_config_get_s(core->config, "pdb.server"));
 	if (desc && desc->name) {
 		rz_sys_setenv("RZ_FILE", desc->name);
 		rz_sys_setenv("RZ_SIZE", rz_strf(tmpbuf, "%" PFMT64d, rz_io_desc_size(desc)));
@@ -564,18 +564,19 @@ RZ_API void rz_core_sysenv_begin(RzCore *core) {
 		close(config_sdb_fd);
 	}
 
+	int bits = rz_config_get_i(core->config, "asm.bits");
 	Sdb *config_sdb = sdb_new(NULL, config_sdb_path, 0);
-	rz_config_serialize(core->config, config_sdb);
+	rz_serialize_config_save(config_sdb, core->config);
 	sdb_sync(config_sdb);
 	sdb_free(config_sdb);
 	rz_sys_setenv("RZ_CONFIG", config_sdb_path);
-	rz_sys_setenv("RZ_BIN_LANG", rz_config_get(core->config, "bin.lang"));
-	rz_sys_setenv("RZ_BIN_DEMANGLE", rz_config_get(core->config, "bin.demangle"));
-	rz_sys_setenv("RZ_ARCH", rz_config_get(core->config, "asm.arch"));
-	rz_sys_setenv("RZ_BITS", rz_config_get(core->config, "asm.bits"));
+	rz_sys_setenv("RZ_BIN_LANG", rz_config_get_s(core->config, "bin.lang"));
+	rz_sys_setenv("RZ_BIN_DEMANGLE", rz_config_get_s(core->config, "bin.demangle"));
+	rz_sys_setenv("RZ_ARCH", rz_config_get_s(core->config, "asm.arch"));
+	rz_sys_setenv("RZ_BITS", rz_strf(tmpbuf, "%d", bits));
 	rz_sys_setenv("RZ_COLOR", rz_config_get_i(core->config, "scr.color") ? "1" : "0");
 	rz_sys_setenv("RZ_DEBUG", rz_config_get_b(core->config, "cfg.debug") ? "1" : "0");
-	rz_sys_setenv("RZ_IOVA", rz_config_get_i(core->config, "io.va") ? "1" : "0");
+	rz_sys_setenv("RZ_IOVA", rz_config_get_b(core->config, "io.va") ? "1" : "0");
 	free(config_sdb_path);
 }
 
@@ -689,7 +690,8 @@ static bool core_file_do_load_for_debug(RzCore *r, ut64 baseaddr, const char *fi
 		rz_pvector_push(&cf->binfiles, binfile);
 	}
 
-	if (*rz_config_get(r->config, "dbg.libs")) {
+	const char *dbglibs = rz_config_get_s(r->config, "dbg.libs");
+	if (RZ_STR_ISNOTEMPTY(dbglibs)) {
 		rz_core_cmd0(r, ".dmm*");
 #if __linux__
 		setbpint(r, "dbg.libs", "sym.imp.dlopen");
@@ -769,7 +771,7 @@ static bool try_loadlib(RzCore *core, const char *lib, ut64 addr) {
 }
 
 RZ_API bool rz_core_file_loadlib(RzCore *core, const char *lib, ut64 libaddr) {
-	const char *dirlibs = rz_config_get(core->config, "dir.libs");
+	const char *dirlibs = rz_config_get_s(core->config, "dir.libs");
 	char *libdir = rz_path_libdir(core->sys_path);
 	if (!dirlibs || !*dirlibs) {
 		dirlibs = "." RZ_SYS_DIR;
@@ -981,14 +983,14 @@ RZ_API bool rz_core_bin_load(RZ_NONNULL RzCore *r, RZ_NULLABLE const char *filen
 			char msg[2];
 			msg[0] = plugin->strfilter;
 			msg[1] = 0;
-			rz_config_set(r->config, "bin.str.filter", msg);
+			rz_config_set_s(r->config, "bin.str.filter", msg);
 		}
 		if (plugin->name) {
 			load_scripts_for(r, plugin->name);
 		}
 	}
 
-	cmd_load = rz_config_get(r->config, "cmd.load");
+	cmd_load = rz_config_get_s(r->config, "cmd.load");
 	if (cmd_load && *cmd_load) {
 		rz_core_cmd(r, cmd_load, 0);
 	}
@@ -1005,7 +1007,7 @@ RZ_API bool rz_core_bin_load(RZ_NONNULL RzCore *r, RZ_NULLABLE const char *filen
 			if (obj) {
 				bool va = obj->info ? obj->info->has_va : 0;
 				if (!va) {
-					rz_config_set_i(r->config, "io.va", 0);
+					rz_config_set_b(r->config, "io.va", 0);
 				}
 				// workaround to map correctly malloc:// and raw binaries
 				if (rz_io_desc_is_dbg(desc) || (rz_pvector_empty(obj->maps) || !va)) {
@@ -1016,7 +1018,7 @@ RZ_API bool rz_core_bin_load(RZ_NONNULL RzCore *r, RZ_NULLABLE const char *filen
 					rz_core_bin_set_arch_bits(r, binfile->file, info->arch, info->bits);
 				} else {
 					rz_core_bin_set_arch_bits(r, binfile->file,
-						rz_config_get(r->config, "asm.arch"),
+						rz_config_get_s(r->config, "asm.arch"),
 						rz_config_get_i(r->config, "asm.bits"));
 				}
 			}
@@ -1027,11 +1029,11 @@ RZ_API bool rz_core_bin_load(RZ_NONNULL RzCore *r, RZ_NULLABLE const char *filen
 		}
 		if (binfile) {
 			ut16 bits = rz_config_get_i(r->config, "asm.bits");
-			const char *arch = rz_config_get(r->config, "asm.arch");
+			const char *arch = rz_config_get_s(r->config, "asm.arch");
 			rz_core_bin_set_arch_bits(r, binfile->file, arch, bits);
 		}
 	}
-	if (desc && rz_config_get_i(r->config, "io.exec")) {
+	if (desc && rz_config_get_b(r->config, "io.exec")) {
 		desc->perm |= RZ_PERM_X;
 	}
 	if (!rz_config_get_b(r->config, "cfg.debug")) {
@@ -1101,7 +1103,7 @@ RZ_API bool rz_core_bin_load(RZ_NONNULL RzCore *r, RZ_NULLABLE const char *filen
 		if (plugin->info) {
 			RzBinInfo *inf = plugin->info(binfile);
 			RZ_LOG_INFO("Setting up coredump arch-bits to: %s-%d\n", inf->arch, inf->bits);
-			rz_config_set(r->config, "asm.arch", inf->arch);
+			rz_config_set_s(r->config, "asm.arch", inf->arch);
 			rz_config_set_i(r->config, "asm.bits", inf->bits);
 			rz_bin_info_free(inf);
 		}
@@ -1173,7 +1175,7 @@ RZ_API RZ_BORROW RzCoreFile *rz_core_file_open_many(RZ_NONNULL RzCore *r, RZ_NUL
 RZ_API RZ_BORROW RzCoreFile *rz_core_file_open(RZ_NONNULL RzCore *r, RZ_NONNULL const char *file, int flags, ut64 loadaddr) {
 	rz_return_val_if_fail(r && file, NULL);
 	ut64 prev = rz_time_now_mono();
-	const bool openmany = rz_config_get_i(r->config, "file.openmany");
+	const bool openmany = rz_config_get_b(r->config, "file.openmany");
 	RzCoreFile *fh = NULL;
 
 	if (!strcmp(file, "=")) {
@@ -1217,12 +1219,12 @@ RZ_API RZ_BORROW RzCoreFile *rz_core_file_open(RZ_NONNULL RzCore *r, RZ_NONNULL 
 		}
 	}
 	{
-		const char *cp = rz_config_get(r->config, "cmd.open");
+		const char *cp = rz_config_get_s(r->config, "cmd.open");
 		if (cp && *cp) {
 			rz_core_cmd(r, cp, 0);
 		}
 		char *absfile = rz_file_abspath(file);
-		rz_config_set(r->config, "file.path", absfile);
+		rz_config_set_s(r->config, "file.path", absfile);
 		free(absfile);
 	}
 

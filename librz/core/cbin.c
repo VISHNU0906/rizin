@@ -282,17 +282,18 @@ RZ_API bool rz_core_bin_apply_all_info(RzCore *r, RzBinFile *binfile) {
 	ut64 baseaddr = rz_bin_get_baddr(r->bin);
 	rz_config_set_i(r->config, "bin.baddr", baseaddr);
 	sdb_num_add(r->sdb, "orig_baddr", baseaddr);
+
+	// TODO: move this assignment into a breakpoint_set_base_address function.
 	r->dbg->bp->baddr = baseaddr;
-	rz_config_set(r->config, "asm.arch", arch);
+	rz_config_set_s(r->config, "asm.arch", arch);
 	rz_config_set_i(r->config, "asm.bits", bits);
-	if (info->cpu) {
-		rz_config_set(r->config, "asm.cpu", info->cpu);
-	}
-	rz_config_set(r->config, "analysis.arch", arch);
+	rz_config_set_s(r->config, "asm.cpu", info->cpu);
+	rz_config_set_s(r->config, "analysis.arch", arch);
+
 	if (RZ_STR_ISNOTEMPTY(info->cpu)) {
-		rz_config_set(r->config, "analysis.cpu", info->cpu);
+		rz_config_set_s(r->config, "analysis.cpu", info->cpu);
 	} else {
-		rz_config_set(r->config, "analysis.cpu", arch);
+		rz_config_set_s(r->config, "analysis.cpu", arch);
 	}
 	rz_asm_use(r->rasm, arch);
 
@@ -558,25 +559,25 @@ RZ_API bool rz_core_bin_apply_config(RzCore *r, RzBinFile *binfile) {
 	rz_config_set(r->config, "file.type", rz_str_get(info->rclass));
 	rz_config_set(r->config, "bin.lang", rz_str_get(info->lang));
 	if (info->rclass && !strcmp(info->rclass, "pe")) {
-		rz_config_set(r->config, "analysis.cpp.abi", "msvc");
+		rz_config_set_s(r->config, "analysis.cpp.abi", "msvc");
 	} else {
-		rz_config_set(r->config, "analysis.cpp.abi", "itanium");
+		rz_config_set_s(r->config, "analysis.cpp.abi", "itanium");
 	}
 	if (RZ_STR_ISNOTEMPTY(info->os)) {
-		rz_config_set(r->config, "asm.os", info->os);
+		rz_config_set_s(r->config, "asm.os", info->os);
 	}
 	if (RZ_STR_ISNOTEMPTY(info->arch)) {
 		// update the arch & bits only if really set.
-		rz_config_set(r->config, "asm.arch", info->arch);
+		rz_config_set_s(r->config, "asm.arch", info->arch);
 		rz_config_set_i(r->config, "asm.bits", info->bits);
 	}
 	if (RZ_STR_ISNOTEMPTY(info->cpu)) {
 		// update the CPU only if really set.
-		rz_config_set(r->config, "asm.cpu", info->cpu);
+		rz_config_set_s(r->config, "asm.cpu", info->cpu);
 	}
 	if (RZ_STR_ISNOTEMPTY(info->features)) {
 		// update the CPU features only if really set.
-		rz_config_set(r->config, "asm.features", info->features);
+		rz_config_set_s(r->config, "asm.features", info->features);
 	}
 	if (RZ_STR_ISNOTEMPTY(info->arch)) {
 		// update the endianness only if the arch value is set.
@@ -586,12 +587,12 @@ RZ_API bool rz_core_bin_apply_config(RzCore *r, RzBinFile *binfile) {
 			rz_config_set_b(r->config, "cfg.bigendian", info->big_endian);
 		}
 	}
-	rz_config_set_b(r->config, "asm.debuginfo", (RZ_BIN_DBG_STRIPPED & info->dbg_info) ? false : true);
+	rz_config_set_b(r->config, "asm.debuginfo", !(info->dbg_info & RZ_BIN_DBG_STRIPPED));
 
 	rz_core_analysis_type_init(r);
 	rz_core_analysis_cc_init(r);
 	if (info->default_cc && rz_analysis_cc_exist(r->analysis, info->default_cc)) {
-		rz_config_set(r->config, "analysis.cc", info->default_cc);
+		rz_config_set_s(r->config, "analysis.cc", info->default_cc);
 	}
 
 	char *types_dir = rz_path_system(r->sys_path, RZ_SDB_TYPES);
@@ -627,7 +628,7 @@ RZ_API bool rz_core_bin_apply_main(RzCore *r, RzBinFile *binfile, bool va) {
 static inline RzBinDWARF *load_dwarf(RzCore *core, RzBinFile *binfile) {
 	RzBinDWARF *dw = rz_bin_dwarf_from_file(binfile);
 
-	const char *dwo_path = rz_config_get(core->config, "bin.dbginfo.dwo_path");
+	const char *dwo_path = rz_config_get_s(core->config, "bin.dbginfo.dwo_path");
 	if (RZ_STR_ISNOTEMPTY(dwo_path)) {
 		RzBinDWARF *dwo = rz_bin_dwarf_from_path(dwo_path, dw);
 		if (dwo) {
@@ -643,7 +644,7 @@ static inline RzBinDWARF *load_dwarf(RzCore *core, RzBinFile *binfile) {
 		}
 	}
 
-	const char *debug_file_directory = rz_config_get(
+	const char *debug_file_directory = rz_config_get_s(
 		core->config, "bin.dbginfo.debug_file_directory");
 	if (RZ_STR_ISNOTEMPTY(debug_file_directory)) {
 		RzList *debug_file_directorys =
@@ -660,7 +661,7 @@ static inline RzBinDWARF *load_dwarf(RzCore *core, RzBinFile *binfile) {
 	}
 
 	if (rz_config_get_b(core->config, "bin.dbginfo.debuginfod")) {
-		char *debuginfod_urls = (char *)rz_config_get(core->config, "bin.dbginfo.debuginfod_urls");
+		char *debuginfod_urls = (char *)rz_config_get_s(core->config, "bin.dbginfo.debuginfod_urls");
 		if (RZ_STR_ISNOTEMPTY(debuginfod_urls)) {
 			debuginfod_urls = rz_str_dup(debuginfod_urls);
 		} else {
@@ -1776,7 +1777,7 @@ static bool is_executable(RzBinObject *obj) {
 
 static bool bin_dwarf(RzCore *core, RzBinFile *binfile, RzCmdStateOutput *state) {
 	rz_return_val_if_fail(core && binfile, false);
-	if (!rz_config_get_i(core->config, "bin.dbginfo") || !binfile->o) {
+	if (!rz_config_get_b(core->config, "bin.dbginfo") || !binfile->o) {
 		return false;
 	}
 
@@ -1805,7 +1806,7 @@ static bool bin_dwarf(RzCore *core, RzBinFile *binfile, RzCmdStateOutput *state)
 RZ_API void rz_core_bin_print_source_line_sample(RzCore *core, const RzBinSourceLineSample *s, RzCmdStateOutput *state) {
 	rz_return_if_fail(core && s && state);
 	if (state->mode == RZ_OUTPUT_MODE_JSON) {
-		bool chopPath = !rz_config_get_i(core->config, "dir.dwarf.abspath");
+		bool chopPath = !rz_config_get_b(core->config, "dir.dwarf.abspath");
 		char *file = s->file ? rz_str_escape_utf8_for_json(s->file, -1) : NULL;
 		if (chopPath && file) {
 			const char *slash = rz_str_lchr(file, '/');
@@ -3108,7 +3109,7 @@ static const char *get_filename(RzBinInfo *info, RzIODesc *desc) {
 RZ_API bool rz_core_file_info_print(RZ_NONNULL RzCore *core, RZ_NONNULL RzBinFile *binfile, RZ_NONNULL RzCmdStateOutput *state) {
 	rz_return_val_if_fail(core && core->file && state, false);
 
-	bool io_cache = rz_config_get_i(core->config, "io.cache");
+	bool io_cache = rz_config_get_b(core->config, "io.cache");
 	RzBinObject *obj = rz_bin_cur_object(core->bin);
 	RzBinInfo *info = obj ? (RzBinInfo *)rz_bin_object_get_info(obj) : NULL;
 	int fd = rz_io_fd_get_current(core->io);
@@ -4739,7 +4740,7 @@ static void core_bin_file_print(RzCore *core, RzBinFile *bf, RzCmdStateOutput *s
 	RzBinObject *obj = bf->o;
 	RzBinInfo *info = obj->info;
 	ut8 bits = info ? info->bits : 0;
-	const char *asmarch = rz_config_get(core->config, "asm.arch");
+	const char *asmarch = rz_config_get_s(core->config, "asm.arch");
 	const char *arch = info ? info->arch ? info->arch : asmarch : "unknown";
 
 	switch (state->mode) {
@@ -5125,7 +5126,7 @@ RZ_API RZ_OWN char *rz_core_bin_pdb_get_filename(RZ_NONNULL RzCore *core) {
 	free(filename);
 
 	// Last chance: Check if file is in downstream symbol store
-	const char *symstore_path = rz_config_get(core->config, "pdb.symstore");
+	const char *symstore_path = rz_config_get_s(core->config, "pdb.symstore");
 	return rz_str_newf("%s" RZ_SYS_DIR "%s" RZ_SYS_DIR "%s" RZ_SYS_DIR "%s",
 		symstore_path, basename, info->guid, basename);
 }

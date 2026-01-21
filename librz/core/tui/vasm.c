@@ -20,9 +20,9 @@ static int readline_callback(void *_a, const char *str) {
 	RzCoreVisualAsm *a = _a;
 	RzCore *core = a->core;
 	rz_cons_clear00();
-	rz_cons_printf("Write some %s-%" PFMT64d " assembly...\n\n",
-		rz_config_get(a->core->config, "asm.arch"),
-		rz_config_get_i(a->core->config, "asm.bits"));
+	rz_cons_printf("Write some %s-%d assembly...\n\n",
+		rz_config_get_s(a->core->config, "asm.arch"),
+		(int)rz_config_get_i(a->core->config, "asm.bits"));
 	if (*str == '?') {
 		rz_cons_printf("0> ?\n\n"
 			       "Visual assembler help:\n\n"

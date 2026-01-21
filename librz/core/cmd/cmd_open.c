@@ -1050,7 +1050,7 @@ RZ_IPI RzCmdStatus rz_reopen_debug_file_handler(RzCore *core, int argc, const ch
 RZ_IPI RzCmdStatus rz_reopen_debug_rzrun_handler(RzCore *core, int argc, const char **argv) {
 	char *file = rz_file_temp("rz-run");
 	char *s = rz_str_dup(argv[1]);
-	rz_config_set(core->config, "dbg.profile", file);
+	rz_config_set_s(core->config, "dbg.profile", file);
 	rz_str_replace_char(s, ',', '\n');
 	rz_file_dump(file, (const ut8 *)s, strlen(s), 0);
 	rz_file_dump(file, (const ut8 *)"\n", 1, 1);

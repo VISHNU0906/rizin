@@ -345,9 +345,10 @@ RZ_IPI RzCmdStatus rz_cmd_info_whole_strings_handler(RzCore *core, int argc, con
 }
 
 RZ_IPI RzCmdStatus rz_cmd_info_purge_string_handler(RzCore *core, int argc, const char **argv) {
-	char *strpurge = core->bin->strpurge;
+	const char *strpurge = rz_str_get(core->bin->strpurge);
 	char tmp[2048];
-	rz_config_set(core->config, "bin.str.purge", rz_strf(tmp, "%s%s0x%" PFMT64x, strpurge ? strpurge : "", strpurge && *strpurge ? "," : "", core->offset));
+	rz_strf(tmp, "%s%s0x%" PFMT64x, strpurge, *strpurge ? "," : "", core->offset);
+	rz_config_set_s(core->config, "bin.str.purge", tmp);
 	return RZ_CMD_STATUS_OK;
 }
 
@@ -482,8 +483,8 @@ RZ_IPI RzCmdStatus rz_cmd_info_pdb_show_handler(RzCore *core, int argc, const ch
 RZ_IPI RzCmdStatus rz_cmd_info_pdb_download_handler(RzCore *core, int argc, const char **argv, RzCmdStateOutput *state) {
 	SPDBOptions pdbopts;
 	pdbopts.extract = rz_config_get_i(core->config, "pdb.extract");
-	pdbopts.symbol_store_path = rz_config_get(core->config, "pdb.symstore");
-	pdbopts.symbol_server = rz_config_get(core->config, "pdb.server");
+	pdbopts.symbol_store_path = rz_config_get_s(core->config, "pdb.symstore");
+	pdbopts.symbol_server = rz_config_get_s(core->config, "pdb.server");
 	if (state->mode == RZ_OUTPUT_MODE_JSON) {
 		pj_o(state->d.pj);
 	}

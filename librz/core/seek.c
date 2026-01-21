@@ -55,7 +55,7 @@ static bool seek_check_save(RzCore *core, ut64 addr, bool rb, bool save) {
  * \param core RzCore reference
  */
 RZ_API bool rz_core_seek_mark(RzCore *core) {
-	if (!rz_config_get_i(core->config, "cfg.seek.silent")) {
+	if (!rz_config_get_b(core->config, "cfg.seek.silent")) {
 		get_current_seek_state(core, &core->seek_history.saved_item);
 		core->seek_history.saved_set = true;
 		return true;
@@ -220,7 +220,7 @@ RZ_API bool rz_core_seek_next(RzCore *core, const char *type, bool save) {
 			}
 		}
 	} else if (strstr(type, "hit")) {
-		const char *pfx = rz_config_get(core->config, "search.prefix");
+		const char *pfx = rz_config_get_s(core->config, "search.prefix");
 		struct seek_flag_offset_t u = { .offset = core->offset, .next = &next, .is_next = true };
 		rz_flag_foreach_prefix(core->flags, pfx, -1, seek_flag_offset, &u);
 	} else { // flags
@@ -253,7 +253,7 @@ RZ_API bool rz_core_seek_prev(RzCore *core, const char *type, bool save) {
 			}
 		}
 	} else if (strstr(type, "hit")) {
-		const char *pfx = rz_config_get(core->config, "search.prefix");
+		const char *pfx = rz_config_get_s(core->config, "search.prefix");
 		struct seek_flag_offset_t u = { .offset = core->offset, .next = &next, .is_next = false };
 		rz_flag_foreach_prefix(core->flags, pfx, -1, seek_flag_offset, &u);
 	} else { // flags

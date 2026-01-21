@@ -7,12 +7,12 @@
 #include "../core_private.h"
 
 static ut64 initializeEsil(RzCore *core) {
-	int romem = rz_config_get_i(core->config, "esil.romem");
-	int stats = rz_config_get_i(core->config, "esil.stats");
-	int iotrap = rz_config_get_i(core->config, "esil.iotrap");
-	int exectrap = rz_config_get_i(core->config, "esil.exectrap");
+	int romem = rz_config_get_b(core->config, "esil.romem");
+	int stats = rz_config_get_b(core->config, "esil.stats");
+	int iotrap = rz_config_get_b(core->config, "esil.iotrap");
+	int exectrap = rz_config_get_b(core->config, "esil.exectrap");
 	int stacksize = rz_config_get_i(core->config, "esil.stack.depth");
-	int noNULL = rz_config_get_i(core->config, "esil.noNULL");
+	int noNULL = rz_config_get_b(core->config, "esil.nonull");
 	unsigned int addrsize = rz_config_get_i(core->config, "esil.addr.size");
 	if (!(core->analysis->esil = rz_analysis_esil_new(stacksize, iotrap, addrsize))) {
 		return UT64_MAX;
@@ -23,20 +23,20 @@ static ut64 initializeEsil(RzCore *core) {
 	esil->cmd = rz_core_esil_cmd;
 	rz_analysis_esil_setup(esil, core->analysis, romem, stats, noNULL); // setup io
 	{
-		const char *cmd_esil_step = rz_config_get(core->config, "cmd.esil.step");
+		const char *cmd_esil_step = rz_config_get_s(core->config, "cmd.esil.step");
 		if (cmd_esil_step && *cmd_esil_step) {
 			esil->cmd_step = rz_str_dup(cmd_esil_step);
 		}
-		const char *cmd_esil_step_out = rz_config_get(core->config, "cmd.esil.stepout");
+		const char *cmd_esil_step_out = rz_config_get_s(core->config, "cmd.esil.stepout");
 		if (cmd_esil_step_out && *cmd_esil_step_out) {
 			esil->cmd_step_out = rz_str_dup(cmd_esil_step_out);
 		}
 		{
-			const char *s = rz_config_get(core->config, "cmd.esil.intr");
+			const char *s = rz_config_get_s(core->config, "cmd.esil.intr");
 			if (s) {
 				char *my = rz_str_dup(s);
 				if (my) {
-					rz_config_set(core->config, "cmd.esil.intr", my);
+					rz_config_set_s(core->config, "cmd.esil.intr", my);
 					free(my);
 				}
 			}
@@ -73,7 +73,7 @@ RZ_API int rz_core_esil_step(RzCore *core, ut64 until_addr, const char *until_ex
 	RzAnalysisEsil *esil = core->analysis->esil;
 	const char *name = rz_reg_get_name(core->analysis->reg, RZ_REG_NAME_PC);
 	ut64 addr = 0;
-	bool breakoninvalid = rz_config_get_i(core->config, "esil.breakoninvalid");
+	bool breakoninvalid = rz_config_get_b(core->config, "esil.breakoninvalid");
 	int esiltimeout = rz_config_get_i(core->config, "esil.timeout");
 	ut64 startTime;
 

@@ -105,7 +105,7 @@ static void cmd_seek_opcode(RzCore *core, const char *input, bool silent) {
 
 RZ_IPI int rz_seek_search(void *data, const char *input) {
 	RzCore *core = (RzCore *)data;
-	const char *pfx = rz_config_get(core->config, "search.prefix");
+	const char *pfx = rz_config_get_s(core->config, "search.prefix");
 	const ut64 saved_from = rz_config_get_i(core->config, "search.from");
 	const ut64 saved_maxhits = rz_config_get_i(core->config, "search.maxhits");
 	int kwidx = core->search->n_kws; // (int)rz_config_get_i (core->config, "search.kwidx")-1;
@@ -332,7 +332,7 @@ RZ_IPI RzCmdStatus rz_seek_end_handler(RzCore *core, int argc, const char **argv
 RZ_IPI RzCmdStatus rz_seek_next_handler(RzCore *core, int argc, const char **argv) {
 	const char *nkey;
 	if (argc == 1) {
-		nkey = rz_config_get(core->config, "scr.nkey");
+		nkey = rz_config_get_s(core->config, "scr.nkey");
 	} else {
 		nkey = argv[1];
 	}
@@ -342,7 +342,7 @@ RZ_IPI RzCmdStatus rz_seek_next_handler(RzCore *core, int argc, const char **arg
 RZ_IPI RzCmdStatus rz_seek_prev_handler(RzCore *core, int argc, const char **argv) {
 	const char *nkey;
 	if (argc == 1) {
-		nkey = rz_config_get(core->config, "scr.nkey");
+		nkey = rz_config_get_s(core->config, "scr.nkey");
 	} else {
 		nkey = argv[1];
 	}

@@ -6,6 +6,15 @@
 
 #include "../core_private.h"
 
+static bool core_esil_cmd(RzAnalysisEsil *esil, const char *cmd, ut64 a1, ut64 a2) {
+	if (cmd && *cmd) {
+		RzCore *core = esil->analysis->core;
+		rz_core_cmdf(core, "%s %" PFMT64d " %" PFMT64d, cmd, a1, a2);
+		return core->num->value;
+	}
+	return false;
+}
+
 static ut64 initializeEsil(RzCore *core) {
 	int romem = rz_config_get_b(core->config, "esil.romem");
 	int stats = rz_config_get_b(core->config, "esil.stats");
@@ -20,7 +29,7 @@ static ut64 initializeEsil(RzCore *core) {
 	ut64 addr;
 	RzAnalysisEsil *esil = core->analysis->esil;
 	esil->verbose = rz_config_get_i(core->config, "esil.verbose");
-	esil->cmd = rz_core_esil_cmd;
+	esil->cmd = core_esil_cmd;
 	rz_analysis_esil_setup(esil, core->analysis, romem, stats, noNULL); // setup io
 	{
 		const char *cmd_esil_step = rz_config_get_s(core->config, "cmd.esil.step");

@@ -72,7 +72,7 @@ static bool lib_arch_dt(RzLibPlugin *pl, void *user, void *data) {
 }
 
 static void loadSystemPlugins(RzCore *core, int where) {
-	const char *dir_plugins = rz_config_get(core->config, "dir.plugins");
+	const char *dir_plugins = rz_config_get_s(core->config, "dir.plugins");
 	if (where & RZ_CORE_LOADLIBS_CONFIG) {
 		rz_lib_opendir(core->lib, dir_plugins, false);
 	}
@@ -140,7 +140,7 @@ RZ_API int rz_core_loadlibs(RzCore *core, int where) {
 	ut64 prev = rz_time_now_mono();
 	loadSystemPlugins(core, where);
 	/* TODO: all those default plugin paths should be defined in rz_lib */
-	if (!rz_config_get_i(core->config, "cfg.plugins")) {
+	if (!rz_config_get_b(core->config, "cfg.plugins")) {
 		core->times->loadlibs_time = 0;
 		return false;
 	}

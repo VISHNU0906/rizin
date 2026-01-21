@@ -203,10 +203,12 @@ RZ_API bool rz_config_is_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 RZ_API void rz_config_iterate_vars(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL RzConfigIterator iterator, RZ_NULLABLE void *user) {
 	rz_return_if_fail(cfg && iterator);
 
+	const char *desc;
 	const RzListIter *iter;
 	const RzConfigNode *node;
 	rz_list_foreach (cfg->nodes, iter, node) {
-		if (!iterator(cfg, node->name, node->desc, node->flags, user)) {
+		desc = rz_str_get(node->desc);
+		if (!iterator(cfg, node->name, desc, node->flags, user)) {
 			return;
 		}
 	}
@@ -1125,4 +1127,22 @@ RZ_API const ut32 rz_config_get_flags(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL
 	}
 
 	return node->flags;
+}
+
+/**
+ * \brief      Gets the type of a given variable of the config
+ *
+ * \param      cfg    The RzConfig to use
+ * \param[in]  name   The name of the variable
+ *
+ * \return     On success returns a valid pointer, otherwise NULL
+ */
+RZ_API const char *rz_config_get_type(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
+	RzConfigNode *node = rz_config_node_get(cfg, name);
+	if (!node) {
+		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
+		return NULL;
+	}
+
+	return config_node_get_type(node);
 }

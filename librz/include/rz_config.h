@@ -40,10 +40,12 @@ typedef bool (*RzConfigIterator)(const RzConfig *conf, const char *name, const c
 #define rz_config_get_b rz_config_get_bool
 #define rz_config_get_i rz_config_get_integer
 #define rz_config_get_s rz_config_get_string
+#define rz_config_get_l rz_config_get_list
 
 #define rz_config_set_b rz_config_set_bool
 #define rz_config_set_i rz_config_set_integer
 #define rz_config_set_s rz_config_set_string
+#define rz_config_set_l rz_config_set_list
 
 #define rz_config_add_b rz_config_add_bool
 #define rz_config_add_i rz_config_add_integer
@@ -94,6 +96,7 @@ RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL const 
 RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API const ut32 rz_config_get_flags(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API const char *rz_config_get_type(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 
 /* hold.c */
 RZ_API RzConfigHold *rz_config_hold_new(RZ_NONNULL RzConfig *cfg);

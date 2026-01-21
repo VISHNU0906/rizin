@@ -716,7 +716,7 @@ RZ_API RZ_OWN RzList /*<RzIOMap *>*/ *rz_core_get_boundaries_select(RZ_NONNULL R
 	RzInterval interval;
 	ut64 from = rz_config_get_i(core->config, from_key);
 	ut64 to = rz_config_get_i(core->config, to_key);
-	const char *use_mode = rz_config_get(core->config, in_key);
+	const char *use_mode = rz_config_get_s(core->config, in_key);
 
 	interval.addr = from;
 	interval.size = to - from;

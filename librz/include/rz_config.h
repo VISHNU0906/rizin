@@ -25,6 +25,7 @@ typedef enum {
 #define rz_config_var_is_bool(flags)     (flags & RZ_CONFIG_VAR_BOOL)
 #define rz_config_var_is_int(flags)      (flags & RZ_CONFIG_VAR_INT)
 #define rz_config_var_is_str(flags)      (flags & RZ_CONFIG_VAR_STR)
+#define rz_config_var_is_list(flags)     (flags & RZ_CONFIG_VAR_LIST)
 #define rz_config_var_is_writable(flags) (flags & RZ_CONFIG_VAR_WRITABLE)
 #define rz_config_var_is_readonly(flags) (!rz_config_var_is_writable(flags))
 

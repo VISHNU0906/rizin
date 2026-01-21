@@ -13,69 +13,74 @@
 #include <cmd_descs.h>
 
 static void config_visual_hit_i(RzCore *core, const char *name, int delta) {
-	struct rz_config_node_t *node;
-	node = rz_config_node_get(core->config, name);
-	if (node && rz_config_node_is_int(node)) {
-		int hitDelta = rz_config_get_i(core->config, name) + delta;
-		(void)rz_config_set_i(core->config, name, hitDelta);
+	const ut32 flags = rz_config_get_flags(core->config, name);
+	if (!rz_config_var_is_int(flags)) {
+		return;
 	}
+
+	ut64 value = rz_config_get_i(core->config, name);
+	value += delta;
+	rz_config_set_i(core->config, name, value);
 }
 
 /* Visually activate the config variable */
 static void config_visual_hit(RzCore *core, const char *name, int editor) {
 	char buf[1024];
-	RzConfigNode *node;
 	RzLine *line = core->cons->line;
-
-	if (!(node = rz_config_node_get(core->config, name))) {
+	const ut32 flags = rz_config_get_flags(core->config, name);
+	if (!flags) {
 		return;
 	}
-	if (rz_config_node_is_bool(node)) {
-		rz_config_set_i(core->config, name, node->i_value ? 0 : 1);
-	} else {
-		// XXX: must use config_set () to run callbacks!
-		if (editor) {
-			char *buf = rz_core_editor(core, NULL, node->value);
-			char *tmp = rz_str_dup(buf);
-			free(node->value);
-			node->value = tmp;
-			free(buf);
-		} else {
-			// FGETS AND SO
-			rz_cons_printf("New value (old=%s): \n", node->value);
-			rz_cons_show_cursor(true);
-			rz_cons_flush();
-			rz_cons_set_raw(0);
-			rz_line_set_prompt(line, ":> ");
-			rz_cons_fgets(buf, sizeof(buf), 0, 0);
-			rz_cons_set_raw(1);
-			rz_cons_show_cursor(false);
-			rz_config_set(core->config, name, buf);
-			// node->value = rz_str_dup (node->value, buf);
-		}
+
+	if (rz_config_var_is_bool(flags)) {
+		rz_config_toggle_bool(core->config, name);
+		return;
 	}
+
+	char *value = rz_config_get_as_string(core->config, name);
+	if (editor) {
+		char *buf = rz_core_editor(core, NULL, value);
+		rz_config_set_any(core->config, name, buf);
+		free(buf);
+		free(value);
+		return;
+	}
+
+	// FGETS AND SO
+	rz_cons_printf("New value (old=%s): \n", value);
+	rz_cons_show_cursor(true);
+	rz_cons_flush();
+	rz_cons_set_raw(0);
+	rz_line_set_prompt(line, ":> ");
+	rz_cons_fgets(buf, sizeof(buf), 0, 0);
+	rz_cons_set_raw(1);
+	rz_cons_show_cursor(false);
+	rz_config_set_any(core->config, name, buf);
+	free(value);
 }
 
-static void show_config_options(RzCore *core, const char *opt) {
-	RzConfigNode *node = rz_config_node_get(core->config, opt);
-	if (node && !rz_list_empty(node->options)) {
-		int h, w = rz_cons_get_size(&h);
-		const char *item;
-		RzListIter *iter;
-		RzStrBuf *sb = rz_strbuf_new(" Options: ");
-		rz_list_foreach (node->options, iter, item) {
-			rz_strbuf_appendf(sb, "%s%s", rz_list_has_prev(iter) ? ", " : "", item);
-			if (rz_strbuf_length(sb) + 5 >= w) {
-				char *s = rz_strbuf_drain(sb);
-				rz_cons_println(s);
-				free(s);
-				sb = rz_strbuf_new("");
-			}
-		}
-		char *s = rz_strbuf_drain(sb);
-		rz_cons_println(s);
-		free(s);
+static void show_config_options(RzCore *core, const char *name) {
+	const RzList *options = rz_config_get_options(core->config, name);
+	if (rz_list_empty(options)) {
+		return;
 	}
+
+	int h, w = rz_cons_get_size(&h);
+	const char *item;
+	const RzListIter *iter;
+	RzStrBuf *sb = rz_strbuf_new(" Options: ");
+	rz_list_foreach (options, iter, item) {
+		rz_strbuf_appendf(sb, "%s%s", rz_list_iter_has_prev(iter) ? ", " : "", item);
+		if (rz_strbuf_length(sb) + 5 >= w) {
+			char *s = rz_strbuf_drain(sb);
+			rz_cons_println(s);
+			free(s);
+			sb = rz_strbuf_new("");
+		}
+	}
+	char *s = rz_strbuf_drain(sb);
+	rz_cons_println(s);
+	free(s);
 }
 
 RZ_IPI void rz_core_visual_config(RzCore *core) {

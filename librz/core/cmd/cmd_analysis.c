@@ -297,7 +297,7 @@ static void print_trampolines(RzCore *core, ut64 minimum, ut64 maximum,
 }
 
 static void core_analysis_bytes_size(RzCore *core, const ut8 *buf, int len, int nops) {
-	core->parser->subrel = rz_config_get_i(core->config, "asm.sub.rel");
+	core->parser->subrel = rz_config_get_b(core->config, "asm.sub.rel");
 	int ret, i, idx;
 	RzAnalysisOp op = { 0 };
 	ut64 addr;
@@ -322,7 +322,7 @@ static void core_analysis_bytes_size(RzCore *core, const ut8 *buf, int len, int 
 }
 
 static void core_analysis_bytes_desc(RzCore *core, const ut8 *buf, int len, int nops) {
-	core->parser->subrel = rz_config_get_i(core->config, "asm.sub.rel");
+	core->parser->subrel = rz_config_get_b(core->config, "asm.sub.rel");
 	int ret, i, idx;
 	RzAnalysisOp op = { 0 };
 	ut64 addr;
@@ -361,7 +361,7 @@ static void core_analysis_bytes_desc(RzCore *core, const ut8 *buf, int len, int 
 
 static void core_analysis_bytes_esil(RzCore *core, const ut8 *buf, int len, int nops) {
 	bool use_color = core->print->flags & RZ_PRINT_FLAGS_COLOR;
-	core->parser->subrel = rz_config_get_i(core->config, "asm.sub.rel");
+	core->parser->subrel = rz_config_get_b(core->config, "asm.sub.rel");
 	int ret, i, idx;
 	const char *color = "";
 	const char *esilstr;
@@ -890,10 +890,10 @@ static bool cmd_aea(RzCore *core, int mode, ut64 addr, int length) {
 	// esil = core->analysis->esil;
 	rz_reg_arena_push(core->analysis->reg);
 	int stacksize = rz_config_get_i(core->config, "esil.stack.depth");
-	bool iotrap = rz_config_get_i(core->config, "esil.iotrap");
-	int romem = rz_config_get_i(core->config, "esil.romem");
-	int stats1 = rz_config_get_i(core->config, "esil.stats");
-	int noNULL = rz_config_get_i(core->config, "esil.noNULL");
+	bool iotrap = rz_config_get_b(core->config, "esil.iotrap");
+	bool romem = rz_config_get_b(core->config, "esil.romem");
+	bool stats1 = rz_config_get_b(core->config, "esil.stats");
+	bool noNULL = rz_config_get_b(core->config, "esil.nonull");
 	unsigned int addrsize = rz_config_get_i(core->config, "esil.addr.size");
 	esil = rz_analysis_esil_new(stacksize, iotrap, addrsize);
 	rz_analysis_esil_setup(esil, core->analysis, romem, stats1, noNULL); // setup io
@@ -5307,9 +5307,10 @@ RZ_IPI RzCmdStatus rz_analyze_cycles_handler(RzCore *core, int argc, const char 
 	RzAnalysisCycleHook *hook;
 	char *instr_tmp = NULL;
 	st32 ccl = 0;
-	RzConfigHold *hc = rz_config_hold_new(core->config);
-
-	rz_config_hold_var(hc, "asm.cmt.right", "asm.functions", "asm.lines", "asm.xrefs", NULL);
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.cmt.right", "asm.functions", "asm.lines", "asm.xrefs", NULL);
+	if (!hc) {
+		return RZ_CMD_STATUS_ERROR;
+	}
 
 	if (argc > 1) {
 		ccl = (st32)rz_num_get(core->num, argv[1]);
@@ -5319,10 +5320,10 @@ RZ_IPI RzCmdStatus rz_analyze_cycles_handler(RzCore *core, int argc, const char 
 		}
 	}
 
-	rz_config_set_i(core->config, "asm.cmt.right", true);
-	rz_config_set_i(core->config, "asm.functions", false);
-	rz_config_set_i(core->config, "asm.lines", false);
-	rz_config_set_i(core->config, "asm.xrefs", false);
+	rz_config_set_b(core->config, "asm.cmt.right", true);
+	rz_config_set_b(core->config, "asm.functions", false);
+	rz_config_set_b(core->config, "asm.lines", false);
+	rz_config_set_b(core->config, "asm.xrefs", false);
 
 	hooks = rz_core_analysis_cycles(core, ccl); // analysisyse
 	rz_cons_clear_line(stderr);
@@ -5334,8 +5335,7 @@ RZ_IPI RzCmdStatus rz_analyze_cycles_handler(RzCore *core, int argc, const char 
 	}
 	rz_list_free(hooks);
 
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	return RZ_CMD_STATUS_OK;
 }
 
@@ -5712,7 +5712,7 @@ RZ_IPI RzCmdStatus rz_analyze_all_consecutive_functions_in_section_handler(RzCor
 	RzIOMap *map;
 	RzList *list = rz_core_get_boundaries_select(core, "analysis.from", "analysis.to", "analysis.in");
 	if (!list) {
-		RZ_LOG_ERROR("Cannot get boundaries when analysis.in=%s.\n", rz_config_get(core->config, "analysis.in"));
+		RZ_LOG_ERROR("Cannot get boundaries when analysis.in=%s.\n", rz_config_get_s(core->config, "analysis.in"));
 		return RZ_CMD_STATUS_ERROR;
 	}
 
@@ -5804,11 +5804,11 @@ RZ_IPI RzCmdStatus rz_recover_all_golang_functions_strings_handler(RzCore *core,
 	// Backup previous values
 	bool reload_search = rz_config_get_b(core->config, "str.search.reload");
 	rz_config_set_b(core->config, "str.search.reload", false);
-	char *val = rz_str_dup(rz_config_get(core->config, "str.encoding"));
+	char *val = rz_config_get_as_string(core->config, "str.encoding");
 
-	rz_config_set(core->config, "str.encoding", "utf8");
+	rz_config_set_s(core->config, "str.encoding", "utf8");
 	rz_core_analysis_resolve_golang_strings(core);
-	rz_config_set(core->config, "str.encoding", val);
+	rz_config_set_s(core->config, "str.encoding", val);
 	rz_config_set_b(core->config, "str.search.reload", reload_search);
 	free(val);
 	return RZ_CMD_STATUS_OK;
@@ -6162,10 +6162,10 @@ RZ_IPI RzCmdStatus rz_analysis_data_trampoline_handler(RzCore *core, int argc, c
 
 static RzCmdStatus emulate_esil_expr(RzCore *core, const char *expr) {
 	int stacksize = rz_config_get_i(core->config, "esil.stack.depth");
-	int iotrap = rz_config_get_i(core->config, "esil.iotrap");
-	int romem = rz_config_get_i(core->config, "esil.romem");
-	int stats = rz_config_get_i(core->config, "esil.stats");
-	int noNULL = rz_config_get_i(core->config, "esil.noNULL");
+	bool iotrap = rz_config_get_b(core->config, "esil.iotrap");
+	bool romem = rz_config_get_b(core->config, "esil.romem");
+	bool stats = rz_config_get_b(core->config, "esil.stats");
+	bool noNULL = rz_config_get_b(core->config, "esil.noNULL");
 	unsigned int addrsize = rz_config_get_i(core->config, "esil.addr.size");
 
 	RzAnalysisEsil *esil = core->analysis->esil;

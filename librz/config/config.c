@@ -648,6 +648,12 @@ static int config_compare_options(const void *_value, const void *_entry, void *
 RZ_IPI bool rz_config_node_set_string(RzConfig *cfg, RzConfigNode *node, RZ_NULLABLE const char *value) {
 	if (!(node->flags & RZ_CONFIG_VAR_STR)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as string but is %s\n", node->name, config_node_get_type(node));
+#if RZ_CHECKS_LEVEL != 0
+		// needs to be removed.
+		if (node->flags & RZ_CONFIG_VAR_BOOL) {
+			return rz_config_node_set_bool(cfg, node, rz_str_is_true(value));
+		}
+#endif
 		return false;
 	}
 
@@ -684,6 +690,12 @@ RZ_IPI bool rz_config_node_set_string(RzConfig *cfg, RzConfigNode *node, RZ_NULL
 RZ_IPI bool rz_config_node_set_integer(RzConfig *cfg, RzConfigNode *node, ut64 value) {
 	if (!(node->flags & RZ_CONFIG_VAR_INT)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as integer but is %s\n", node->name, config_node_get_type(node));
+#if RZ_CHECKS_LEVEL != 0
+		// needs to be removed.
+		if (node->flags & RZ_CONFIG_VAR_BOOL) {
+			return rz_config_node_set_bool(cfg, node, value);
+		}
+#endif
 		return false;
 	}
 
@@ -840,6 +852,12 @@ RZ_API bool rz_config_toggle_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 RZ_IPI RZ_BORROW const char *rz_config_node_get_string(RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_STR)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as string but is %s\n", node->name, config_node_get_type(node));
+#if RZ_CHECKS_LEVEL != 0
+		// needs to be removed.
+		if (node->flags & RZ_CONFIG_VAR_BOOL) {
+			return rz_str_bool(rz_config_node_get_bool(cfg, node));
+		}
+#endif
 		return "";
 	}
 
@@ -856,6 +874,12 @@ RZ_IPI RZ_BORROW const char *rz_config_node_get_string(RzConfig *cfg, const RzCo
 RZ_IPI ut64 rz_config_node_get_integer(RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_INT)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as integer but is %s\n", node->name, config_node_get_type(node));
+#if RZ_CHECKS_LEVEL != 0
+		// needs to be removed.
+		if (node->flags & RZ_CONFIG_VAR_BOOL) {
+			return rz_config_node_get_bool(cfg, node);
+		}
+#endif
 		return 0;
 	}
 

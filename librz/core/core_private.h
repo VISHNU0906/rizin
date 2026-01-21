@@ -20,6 +20,8 @@ RZ_IPI void rz_core_kuery_print(RzCore *core, const char *k);
 RZ_IPI int rz_output_mode_to_char(RzOutputMode mode);
 RZ_IPI void rz_core_print_warnings_after(RZ_NONNULL RzCore *core);
 
+RZ_IPI void rz_core_config_print_all(RzConfig *cfg, const char *str, RzCmdStateOutput *state);
+
 RZ_IPI int bb_cmpaddr(const void *_a, const void *_b, void *user);
 RZ_IPI int fcn_cmpaddr(const void *_a, const void *_b, void *user);
 

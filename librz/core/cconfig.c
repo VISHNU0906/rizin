@@ -39,6 +39,196 @@ static RZ_OWN RzList /*<char *>*/ *core_config_string_list_dup(RZ_NULLABLE const
 #include "cconfig_arch.c"
 #include "cconfig_sign.c"
 
+typedef struct core_config_print_s {
+	RzCmdStateOutput *state;
+	const char *str;
+	char color_name[32];
+	char color_value[32];
+	char color_meta[32];
+	char reset_str[32];
+} CoreConfigPrint;
+
+static void core_config_print_array_as_json(PJ *pj, const char *key, const RzList /*<char *>*/ *list, bool allow_empty) {
+	const char *entry;
+	const RzListIter *it;
+	if (rz_list_empty(list) && !allow_empty) {
+		return;
+	}
+	pj_ka(pj, key);
+	rz_list_foreach (list, it, entry) {
+		pj_s(pj, entry);
+	}
+	pj_end(pj);
+}
+
+static void core_config_print_var_as_json(PJ *pj, const RzConfig *conf, const char *var_name, ut32 flags) {
+	if (rz_config_var_is_int(flags)) {
+		pj_kn(pj, var_name, rz_config_get_i(conf, var_name));
+	} else if (rz_config_var_is_bool(flags)) {
+		pj_kb(pj, var_name, rz_config_get_b(conf, var_name));
+	} else if (rz_config_var_is_list(flags)) {
+		const RzList *list = rz_config_get_l(conf, var_name);
+		core_config_print_array_as_json(pj, var_name, list, true);
+	} else {
+		const char *value = rz_config_get_s(conf, var_name);
+		pj_ks(pj, var_name, value);
+	}
+}
+
+static void core_config_print_array_as_string(const RzList /*<char *>*/ *list, bool allow_empty) {
+	const char *entry;
+	const RzListIter *it;
+	if (rz_list_empty(list) && !allow_empty) {
+		return;
+	}
+
+	rz_cons_print("[");
+	rz_list_foreach (list, it, entry) {
+		if (rz_list_head(list) != it) {
+			rz_cons_printf(", %s", entry);
+		} else {
+			rz_cons_print(entry);
+		}
+	}
+	rz_cons_print("]");
+}
+
+static void core_config_print_var_as_string(const RzConfig *conf, const char *var_name, ut32 flags) {
+	if (rz_config_var_is_int(flags)) {
+		ut64 value = rz_config_get_i(conf, var_name);
+		if (value > 0x1000) {
+			rz_cons_printf("0x%" PFMT64x, value);
+		} else {
+			rz_cons_printf("%" PFMT64u, value);
+		}
+	} else if (rz_config_var_is_bool(flags)) {
+		bool value = rz_config_get_b(conf, var_name);
+		rz_cons_print(rz_str_bool(value));
+	} else if (rz_config_var_is_list(flags)) {
+		const RzList *list = rz_config_get_l(conf, var_name);
+		core_config_print_array_as_string(list, true);
+	} else {
+		const char *value = rz_config_get_s(conf, var_name);
+		rz_cons_print(value);
+	}
+}
+
+static bool core_config_print_iterator(const RzConfig *conf, const char *var_name, const char *desc, ut32 flags, void *user) {
+	CoreConfigPrint *ccp = (CoreConfigPrint *)user;
+	if (RZ_STR_ISNOTEMPTY(ccp->str) && !rz_str_startswith(var_name, ccp->str)) {
+		return true;
+	}
+
+	RzOutputMode mode = ccp->state->mode;
+	PJ *pj = ccp->state->d.pj;
+
+	char *es = NULL;
+	const RzList *opts = rz_config_get_options(conf, var_name);
+	const char *vtype = rz_config_get_type(conf, var_name);
+
+	switch (mode) {
+	case RZ_OUTPUT_MODE_JSON:
+		core_config_print_var_as_json(pj, conf, var_name, flags);
+		return true;
+		break;
+	case RZ_OUTPUT_MODE_LONG_JSON:
+		pj_o(pj);
+		pj_ks(pj, "name", var_name);
+		core_config_print_var_as_json(pj, conf, var_name, flags);
+		pj_ks(pj, "type", vtype);
+		es = rz_str_escape(desc);
+		if (es) {
+			pj_ks(pj, "desc", es);
+			free(es);
+		}
+		pj_kb(pj, "ro", rz_config_var_is_readonly(flags));
+		core_config_print_array_as_json(pj, "options", opts, false);
+		pj_end(pj);
+		break;
+	case RZ_OUTPUT_MODE_LONG: {
+		const char *ro_str = rz_config_var_is_readonly(flags) ? "ro-" : "";
+		rz_cons_printf("%s%20s = %s", ccp->color_name, var_name, ccp->color_value);
+		core_config_print_var_as_string(conf, var_name, flags);
+		rz_cons_printf(" %s(%s%s); %s%s ", ccp->color_meta, ro_str, vtype, ccp->reset_str, desc);
+		core_config_print_array_as_string(opts, false);
+		rz_cons_println("");
+		break;
+	}
+	case RZ_OUTPUT_MODE_QUIET:
+		rz_cons_printf("%s=", var_name);
+		core_config_print_var_as_string(conf, var_name, flags);
+		rz_cons_println("");
+		break;
+	case RZ_OUTPUT_MODE_STANDARD: {
+		rz_cons_printf("%s%20s: %s%s\n", ccp->color_name, var_name, ccp->reset_str, desc);
+		break;
+	}
+	case RZ_OUTPUT_MODE_STR_BUF:
+		rz_strbuf_appendf(ccp->state->d.sbuf, "%20s: %10s - %s\n", var_name, vtype, desc);
+		break;
+	default:
+		rz_warn_if_reached();
+		break;
+	}
+
+	return true;
+}
+
+/**
+ * \brief Prints the configuation variables with their description and its values
+ *
+ * \param cfg reference to RzConfig
+ * \param str reference to the key that can be passed to filter the output
+ * \param state reference to RzCmdStateOutput
+ */
+RZ_IPI void rz_core_config_print_all(RzConfig *cfg, const char *str, RzCmdStateOutput *state) {
+	rz_return_if_fail(cfg);
+
+	CoreConfigPrint ccp = { 0 };
+	ccp.state = state;
+	ccp.str = str;
+
+	PJ *pj = state->d.pj;
+	const bool color_enabled = rz_config_get_i(cfg, "scr.color") > 0;
+
+	switch (state->mode) {
+	case RZ_OUTPUT_MODE_LONG_JSON:
+		pj_a(pj);
+		break;
+	case RZ_OUTPUT_MODE_JSON:
+		pj_o(pj);
+		break;
+	case RZ_OUTPUT_MODE_LONG:
+		if (color_enabled) {
+			RzColor color_name_val = rz_cons_pal_get("label");
+			RzColor color_value_val = rz_cons_pal_get("args");
+			RzColor color_meta_val = rz_cons_pal_get("comment");
+			RzColor reset_val = rz_cons_pal_get("help");
+			rz_cons_rgb_str(ccp.color_name, sizeof(ccp.color_name), &color_name_val);
+			rz_cons_rgb_str(ccp.color_value, sizeof(ccp.color_value), &color_value_val);
+			rz_cons_rgb_str(ccp.color_meta, sizeof(ccp.color_meta), &color_meta_val);
+			rz_cons_rgb_str(ccp.reset_str, sizeof(ccp.reset_str), &reset_val);
+		}
+		break;
+	case RZ_OUTPUT_MODE_STANDARD:
+		if (color_enabled) {
+			RzColor color_val = rz_cons_pal_get("label");
+			RzColor reset_val = rz_cons_pal_get("help");
+			rz_cons_rgb_str(ccp.color_name, sizeof(ccp.color_name), &color_val);
+			rz_cons_rgb_str(ccp.reset_str, sizeof(ccp.reset_str), &reset_val);
+		}
+		break;
+	default:
+		break;
+	}
+
+	rz_config_iterate_vars(cfg, core_config_print_iterator, state);
+
+	if (state->mode == RZ_OUTPUT_MODE_LONG_JSON || state->mode == RZ_OUTPUT_MODE_JSON) {
+		pj_end(pj);
+	}
+}
+
 RZ_API int rz_core_config_init(RzCore *core) {
 	RzConfig *cfg = core->config = rz_config_new(core);
 	if (!cfg) {

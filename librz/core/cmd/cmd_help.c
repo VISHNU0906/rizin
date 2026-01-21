@@ -10,6 +10,8 @@
 #include <rz_cmd.h>
 #include <rz_search.h>
 
+#include "../core_private.h"
+
 typedef struct _search_help {
 	bool color;
 	RzStrBuf *sb;

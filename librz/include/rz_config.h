@@ -62,7 +62,8 @@ RZ_API RZ_OWN RzConfig *rz_config_new(RZ_NULLABLE void *user);
 RZ_API RZ_OWN RzConfig *rz_config_clone(RZ_NONNULL RzConfig *cfg);
 RZ_API void rz_config_free(RZ_NULLABLE RzConfig *cfg);
 RZ_API void rz_config_lock(RZ_NONNULL RzConfig *cfg, bool enable_lock);
-RZ_API void rz_config_set_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, bool read_only);
+RZ_API bool rz_config_set_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, bool read_only);
+RZ_API bool rz_config_is_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API void rz_config_iterate_vars(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL RzConfigIterator iterator, RZ_NULLABLE void *user);
 
 RZ_API bool rz_config_add_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, RZ_NULLABLE const char *value);

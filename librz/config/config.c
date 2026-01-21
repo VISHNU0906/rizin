@@ -162,28 +162,48 @@ RZ_API void rz_config_lock(RZ_NONNULL RzConfig *cfg, bool enable_lock) {
 }
 
 /**
- * \brief      Sets a given variable to read only or writable mode.
+ * \brief      Sets a given variable to readonly or writable mode.
  *
  * \param      cfg        The RzConfig to lock/unlock
  * \param      name       The name of the variable to set as RO/RW
- * \param[in]  read_only  When true sets the variable to read only mode otherwise allows writing.
+ * \param[in]  read_only  When true sets the variable to readonly mode otherwise allows writing.
+ *
+ * \return     Returns true if the key is readonly, otherwise false.
  */
-RZ_API void rz_config_set_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, bool read_only) {
-	rz_return_if_fail(cfg && RZ_STR_ISNOTEMPTY(name));
-
+RZ_API bool rz_config_set_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, bool read_only) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
-		return;
+		return false;
 	}
 
 	if (!read_only) {
 		node->flags |= RZ_CONFIG_VAR_WRITABLE;
-		return;
+		return true;
 	}
 
 	ut32 flags = ~RZ_CONFIG_VAR_WRITABLE;
 	node->flags &= flags;
+
+	return true;
+}
+
+/**
+ * \brief      Gets if a given variable is readonly or not.
+ *
+ * \param      cfg        The RzConfig to lock/unlock
+ * \param      name       The name of the variable to set as RO/RW
+ *
+ * \return     Returns true if the key is readonly, otherwise false.
+ */
+RZ_API bool rz_config_is_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+	RzConfigNode *node = rz_config_node_get(cfg, name);
+	if (!node) {
+		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
+		return false;
+	}
+
+	return node->flags & RZ_CONFIG_VAR_WRITABLE;
 }
 
 /**
@@ -755,7 +775,7 @@ RZ_API bool rz_config_set_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
 		return false;
 	}
 
@@ -782,7 +802,7 @@ RZ_API bool rz_config_set_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
 		return false;
 	}
 
@@ -804,7 +824,7 @@ RZ_API bool rz_config_set_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
 		return false;
 	}
 
@@ -826,7 +846,7 @@ RZ_API bool rz_config_set_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
 		return false;
 	}
 
@@ -848,7 +868,7 @@ RZ_API bool rz_config_set_list2(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char 
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_LIST)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as string list but is %s\n", node->name, config_node_get_type(node));
@@ -895,7 +915,7 @@ RZ_API bool rz_config_set_any(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *n
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
 		return false;
 	}
 
@@ -924,7 +944,7 @@ RZ_API bool rz_config_toggle_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_BOOL)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as boolean but is %s\n", node->name, config_node_get_type(node));

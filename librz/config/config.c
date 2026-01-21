@@ -995,6 +995,40 @@ RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL RzConf
 }
 
 /**
+ * \brief      Returns the value of a given variable of the config as string
+ *
+ * \param      cfg    The RzConfig to use
+ * \param[in]  name   The name of the variable
+ *
+ * \return     On success returns a valid string, otherwise NULL
+ */
+RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+	RzConfigNode *node = rz_config_node_get(cfg, name);
+	if (!node) {
+		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
+		return NULL;
+	}
+
+	char *copy = NULL;
+
+	if (node->flags & RZ_CONFIG_VAR_STR) {
+		const char *value = rz_config_node_get_string(cfg, node);
+		copy = rz_str_dup(value);
+	} else if (node->flags & RZ_CONFIG_VAR_INT) {
+		ut64 value = rz_config_node_get_integer(cfg, node);
+		copy = rz_str_newf("%" PFMT64u, value);
+	} else if (node->flags & RZ_CONFIG_VAR_BOOL) {
+		bool value = rz_config_node_get_bool(cfg, node);
+		copy = rz_str_dup(value ? "true" : "false");
+	} else {
+		const RzList *value = rz_config_node_get_list(cfg, node);
+		copy = rz_str_list_join(value, ",");
+	}
+
+	return copy;
+}
+
+/**
  * \brief      Gets the options of a given variable of the config
  *
  * \param      cfg    The RzConfig to use

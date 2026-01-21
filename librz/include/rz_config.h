@@ -88,6 +88,7 @@ RZ_API ut64 rz_config_get_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 RZ_API bool rz_config_get_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
 
+RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API const ut32 rz_config_get_flags(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
 

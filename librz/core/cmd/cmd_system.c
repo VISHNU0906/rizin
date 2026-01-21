@@ -28,7 +28,7 @@ static char *config_path(RzCore *core) {
 		free(path);
 		return NULL;
 	}
-	rz_config_serialize(core->config, sdb);
+	rz_serialize_config_save(sdb, core->config);
 	sdb_sync(sdb);
 	sdb_free(sdb);
 
@@ -51,25 +51,32 @@ static const char *system_apply_env_var(const char *env, const char *value, cons
 	return *alloc_str;
 }
 
+static const char *get_bool_as_string(RzConfig *config, const char *name) {
+	bool boolean = rz_config_get_b(config, name);
+	return rz_str_bool(boolean);
+}
+
 static int system_exec(RzCore *core, int argc, const char **argv, char **output, int *length, int *ret) {
 	char file_size[32];
 	char core_offset[32];
 	char block_size[32];
-	const char *file_path = rz_config_get(core->config, "file.path");
-	const char *asm_arch = rz_config_get(core->config, "asm.arch");
-	const char *asm_bits = rz_config_get(core->config, "asm.bits");
-	const char *bin_demangle = rz_config_get(core->config, "bin.demangle");
-	const char *bin_lang = rz_config_get(core->config, "bin.lang");
-	const char *cfg_debug = rz_config_get(core->config, "cfg.debug");
-	const char *io_va = rz_config_get(core->config, "io.va");
-	const char *pdb_server = rz_config_get(core->config, "pdb.server");
-	const char *scr_color = rz_config_get(core->config, "scr.color");
-	const char *endian = rz_str_bool(core->rasm->big_endian);
+	char asm_bits[32];
+	const char *file_path = rz_config_get_s(core->config, "file.path");
+	const char *asm_arch = rz_config_get_s(core->config, "asm.arch");
+	const ut32 arch_bits = rz_config_get_i(core->config, "asm.bits");
+	const char *bin_demangle = rz_config_get_s(core->config, "bin.demangle");
+	const char *bin_lang = rz_config_get_s(core->config, "bin.lang");
+	const char *cfg_debug = get_bool_as_string(core->config, "cfg.debug");
+	const char *io_va = get_bool_as_string(core->config, "io.va");
+	const char *pdb_server = rz_config_get_s(core->config, "pdb.server");
+	const char *scr_color = rz_config_get_i(core->config, "scr.color") > 0 ? "1" : "0";
+	const char *endian = get_bool_as_string(core->config, "cfg.bigendian");
 	char *cfg_path = config_path(core);
 
 	rz_strf(file_size, "%" PFMT64u, core->file ? rz_io_fd_size(core->io, core->file->fd) : 0);
 	rz_strf(core_offset, "%" PFMT64u, core->offset);
 	rz_strf(block_size, "%u", core->blocksize);
+	rz_strf(asm_bits, "%u", arch_bits);
 
 	const char *envvars[] = {
 		"RZ_FILE",

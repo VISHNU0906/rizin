@@ -206,7 +206,7 @@ static bool rz_rop_print_standard_mode(const RzCore *core, const RzCoreAsmHit *h
 		return false;
 	}
 
-	const bool rop_comments = rz_config_get_i(core->config, "rop.comments");
+	const bool rop_comments = rz_config_get_b(core->config, "rop.comments");
 	const bool colorize = rz_config_get_i(core->config, "scr.color");
 	bool ret_val = context->ret_val;
 
@@ -832,7 +832,7 @@ static bool analyze_gadget(RzCore *core, const RzCoreAsmHit *hit, RzRopGadgetInf
 	const ut64 old_addr = core->offset;
 	rz_core_seek(core, hit->addr, true);
 	rz_core_analysis_il_reinit(core);
-	rz_config_set(core->config, "io.cache", "true");
+	rz_config_set_b(core->config, "io.cache", true);
 	rz_core_il_step(core, 1);
 
 	if (!core->analysis->il_vm) {

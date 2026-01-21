@@ -25,7 +25,7 @@ RZ_IPI RzCmdStatus rz_flirt_dump_handler(RzCore *core, int argc, const char **ar
 RZ_IPI RzCmdStatus rz_flirt_scan_handler(RzCore *core, int argc, const char **argv) {
 	int new, old;
 	int depth = rz_config_get_i(core->config, "dir.depth");
-	const char *arch = rz_config_get(core->config, "asm.arch");
+	const char *arch = rz_config_get_s(core->config, "asm.arch");
 	char *file = NULL;
 	RzListIter *iter = NULL;
 	RzList *files = rz_file_globsearch(argv[1], depth);

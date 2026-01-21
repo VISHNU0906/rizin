@@ -1842,7 +1842,7 @@ end:
 RZ_API void rz_core_analysis_resolve_golang_strings(RzCore *core) {
 	rz_return_if_fail(core && core->analysis && core->analysis->fcns && core->io);
 
-	const char *asm_arch = rz_config_get(core->config, "asm.arch");
+	const char *asm_arch = rz_config_get_s(core->config, "asm.arch");
 	ut32 asm_bits = rz_config_get_i(core->config, "asm.bits");
 	RzListIter *lit;
 	void **vit;

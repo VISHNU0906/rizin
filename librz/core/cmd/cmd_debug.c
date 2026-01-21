@@ -35,11 +35,11 @@ struct trace_node {
 
 // XXX those tmp files are never removed and we shuoldnt use files for this
 static void set_profile_string(RzCore *core, const char *str) {
-	char *file = rz_str_dup(rz_config_get(core->config, "dbg.profile"));
+	char *file = rz_config_get_as_string(core->config, "dbg.profile");
 	if (RZ_STR_ISEMPTY(file)) {
 		free(file);
 		file = rz_file_temp("rz-run");
-		rz_config_set(core->config, "dbg.profile", file);
+		rz_config_set_s(core->config, "dbg.profile", file);
 	}
 	rz_file_dump(file, (const ut8 *)str, (int)strlen(str), 0);
 	rz_file_dump(file, (const ut8 *)"\n", 1, 1);
@@ -121,7 +121,7 @@ static void dot_trace_discover_child(RTreeNode *n, RTreeVisitor *vis) {
 }
 
 static void dot_trace_traverse(RzCore *core, RTree *t, int fmt) {
-	const char *gfont = rz_config_get(core->config, "graph.font");
+	const char *gfont = rz_config_get_s(core->config, "graph.font");
 	struct dot_trace_ght aux_data;
 	RTreeVisitor vis = { 0 };
 	const RzList *nodes;
@@ -267,7 +267,7 @@ static bool step_until_inst(RzCore *core, const char *instr, bool regex) {
 	ut8 buf[32];
 	ut64 pc;
 	int ret;
-	bool is_x86 = rz_str_startswith(rz_config_get(core->config, "asm.arch"), "x86");
+	bool is_x86 = rz_str_startswith(rz_config_get_s(core->config, "asm.arch"), "x86");
 	rz_cons_break_push(NULL, NULL);
 	for (;;) {
 		if (rz_cons_is_breaked()) {
@@ -2431,7 +2431,7 @@ RZ_IPI RzCmdStatus rz_cmd_debug_handler_list_handler(RzCore *core, int argc, con
 }
 
 RZ_IPI RzCmdStatus rz_cmd_debug_handler_set_handler(RzCore *core, int argc, const char **argv) {
-	return bool2status(rz_config_set(core->config, "dbg.backend", argv[1]));
+	return bool2status(rz_config_set_s(core->config, "dbg.backend", argv[1]));
 }
 
 // dor
@@ -2859,9 +2859,9 @@ RZ_IPI RzCmdStatus rz_cmd_debug_inject_assembly_handler(RzCore *core, int argc, 
 RZ_IPI RzCmdStatus rz_cmd_debug_inject_egg_handler(RzCore *core, int argc, const char **argv) {
 	RzEgg *egg = core->egg;
 	RzBuffer *b;
-	const char *asm_arch = rz_config_get(core->config, "asm.arch");
+	const char *asm_arch = rz_config_get_s(core->config, "asm.arch");
 	int asm_bits = rz_config_get_i(core->config, "asm.bits");
-	const char *asm_os = rz_config_get(core->config, "asm.os");
+	const char *asm_os = rz_config_get_s(core->config, "asm.os");
 	rz_egg_setup(egg, asm_arch, asm_bits, 0, asm_os);
 	rz_egg_reset(egg);
 	rz_egg_load(egg, argv[1], 0);

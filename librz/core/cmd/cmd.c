@@ -180,19 +180,19 @@ RZ_API bool rz_core_run_script(RzCore *core, RZ_NONNULL const char *file) {
 			free(out);
 		}
 	} else if (rz_str_endswith(file, ".html")) {
-		char *httpIndex = rz_str_dup(rz_config_get(core->config, "http.index"));
+		char *httpIndex = rz_str_dup(rz_config_get_s(core->config, "http.index"));
 		char *absfile = rz_file_abspath(file);
-		rz_config_set(core->config, "http.index", absfile);
+		rz_config_set_s(core->config, "http.index", absfile);
 		free(absfile);
 		rz_core_rtr_http(core, true);
-		rz_config_set(core->config, "http.index", httpIndex);
+		rz_config_set_s(core->config, "http.index", httpIndex);
 		free(httpIndex);
 		ret = true;
 	} else if (rz_str_endswith(file, ".c")) {
 		rz_core_cmd_strf(core, "#!c %s", file);
 		ret = true;
 	} else if (rz_file_is_c(file)) {
-		const char *dir = rz_config_get(core->config, "dir.types");
+		const char *dir = rz_config_get_s(core->config, "dir.types");
 		char *error_msg = NULL;
 		int result = rz_type_parse_file(core->analysis->typedb, file, dir, &error_msg);
 		if (error_msg) {
@@ -526,25 +526,6 @@ err_r_w32_cmd_pipe:
 }
 #undef __CLOSE_DUPPED_PIPES
 #endif
-
-static bool set_tmp_arch(RzCore *core, char *arch, char **tmparch) {
-	rz_return_val_if_fail(tmparch, false);
-	*tmparch = rz_str_dup(rz_config_get(core->config, "asm.arch"));
-	rz_config_set(core->config, "asm.arch", arch);
-	core->fixedarch = true;
-	return true;
-}
-
-static bool set_tmp_bits(RzCore *core, int bits, char **tmpbits, int *cmd_ignbithints) {
-	rz_return_val_if_fail(tmpbits, false);
-	*tmpbits = rz_str_dup(rz_config_get(core->config, "asm.bits"));
-	rz_config_set_i(core->config, "asm.bits", bits);
-	core->fixedbits = true;
-	// XXX: why?
-	*cmd_ignbithints = rz_config_get_i(core->config, "analysis.ignbithints");
-	rz_config_set_i(core->config, "analysis.ignbithints", 1);
-	return true;
-}
 
 struct exec_command_t {
 	RzCore *core;
@@ -1306,8 +1287,8 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(redirect_stmt) {
 	}
 
 	if (is_html) {
-		scr_html = rz_config_get_i(state->core->config, "scr.html");
-		rz_config_set_i(state->core->config, "scr.html", true);
+		scr_html = rz_config_get_b(state->core->config, "scr.html");
+		rz_config_set_b(state->core->config, "scr.html", true);
 		pipecolor = true;
 	} else {
 		TSNode fd_desc = ts_node_named_child(redirect_op, 0);
@@ -1376,7 +1357,7 @@ fail:
 		rz_config_set_i(state->core->config, "scr.color", ocolor);
 	}
 	if (scr_html != -1) {
-		rz_config_set_i(state->core->config, "scr.html", scr_html);
+		rz_config_set_b(state->core->config, "scr.html", scr_html);
 	}
 	return res;
 }
@@ -1544,9 +1525,7 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_fromto_op) {
 	TSNode next = tmp_get_next_node(node);
 	RzCmdStatus res = handle_ts_stmt(state, next);
 
-	rz_config_hold_restore(hc);
-
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	rz_cmd_parsed_args_free(a);
 	return res;
 }
@@ -1558,42 +1537,42 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_arch_op) {
 	if (!arg_str) {
 		return RZ_CMD_STATUS_INVALID;
 	}
-	char *tmparch, *tmpbits;
-	bool is_arch_set = false, is_bits_set = false;
-	bool oldfixedarch = core->fixedarch, oldfixedbits = core->fixedbits;
-	int cmd_ignbithints = -1;
+
+	bool oldfixedarch = core->fixedarch;
+	bool oldfixedbits = core->fixedbits;
 	int bits = -1;
+
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.arch", "asm.bits", "analysis.ignbithints");
+	if (!hc) {
+		return RZ_CMD_STATUS_ERROR;
+	}
 
 	// change arch and bits
 	char *q = strchr(arg_str, ':');
 	if (q) {
 		*q++ = '\0';
 		bits = rz_num_math(core->num, q);
+
+		core->fixedbits = true;
 	}
-	is_arch_set = set_tmp_arch(core, arg_str, &tmparch);
+
+	rz_config_set_s(core->config, "asm.arch", arg_str);
+	core->fixedarch = true;
 
 	if (bits > 0) {
-		is_bits_set = set_tmp_bits(core, bits, &tmpbits, &cmd_ignbithints);
+		rz_config_set_i(core->config, "asm.bits", bits);
+		rz_config_set_b(core->config, "analysis.ignbithints", true);
 	}
 
 	// execute command or next tmp op with changed settings
 	TSNode next = tmp_get_next_node(node);
 	RzCmdStatus res = handle_ts_stmt(state, next);
 
-	// restore original settings
-	if (is_arch_set) {
-		core->fixedarch = oldfixedarch;
-		rz_config_set(core->config, "asm.arch", tmparch);
-		free(tmparch);
-	}
-	if (is_bits_set) {
-		rz_config_set(core->config, "asm.bits", tmpbits);
-		core->fixedbits = oldfixedbits;
-		free(tmpbits);
-	}
-	if (cmd_ignbithints != -1) {
-		rz_config_set_i(core->config, "analysis.ignbithints", cmd_ignbithints);
-	}
+	rz_config_hold_restore_and_free(hc);
+
+	core->fixedarch = oldfixedarch;
+	core->fixedbits = oldfixedbits;
+
 	free(arg_str);
 	return res;
 }
@@ -1606,20 +1585,24 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_bits_op) {
 		return RZ_CMD_STATUS_INVALID;
 	}
 	bool oldfixedbits = core->fixedbits;
-	char *tmpbits;
-	int cmd_ignbithints;
+
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "asm.bits", "analysis.ignbithints");
+	if (!hc) {
+		return RZ_CMD_STATUS_ERROR;
+	}
 
 	int bits = rz_num_math(core->num, arg_str);
-	set_tmp_bits(core, bits, &tmpbits, &cmd_ignbithints);
+
+	core->fixedbits = true;
+	rz_config_set_i(core->config, "asm.bits", bits);
+	rz_config_set_b(core->config, "analysis.ignbithints", true);
 
 	TSNode next = tmp_get_next_node(node);
 	RzCmdStatus res = handle_ts_stmt(state, next);
 
-	rz_config_set(core->config, "asm.bits", tmpbits);
+	rz_config_hold_restore_and_free(hc);
 	core->fixedbits = oldfixedbits;
-	rz_config_set_i(core->config, "analysis.ignbithints", cmd_ignbithints);
 
-	free(tmpbits);
 	free(arg_str);
 	return res;
 }
@@ -1653,6 +1636,10 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_eval_op) {
 	TSNode args = ts_node_named_child(node, 0);
 
 	RzConfigHold *hc = rz_config_hold_new(core->config);
+	if (!hc) {
+		return RZ_CMD_STATUS_ERROR;
+	}
+
 	uint32_t i, n_args = ts_node_named_child_count(args);
 	for (i = 0; i < n_args; i++) {
 		TSNode arg = ts_node_named_child(args, i);
@@ -1661,7 +1648,7 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_eval_op) {
 		if (eq) {
 			*eq = 0;
 			rz_config_hold_var(hc, arg_str, NULL);
-			rz_config_set(core->config, arg_str, eq + 1);
+			rz_config_set_any(core->config, arg_str, eq + 1);
 		} else {
 			RZ_LOG_ERROR("core: Missing '=' in e: expression (%s)\n", arg_str);
 		}
@@ -2167,10 +2154,10 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(iter_hit_stmt) {
 	TSNode command = ts_node_named_child(node, 0);
 	TSNode search_cmd = ts_node_named_child(node, 1);
 	char *command_str = ts_node_sub_string(command, state->input);
-	char *cmdhit = rz_str_dup(rz_config_get(core->config, "cmd.hit"));
-	rz_config_set(core->config, "cmd.hit", command_str);
+	char *cmdhit = rz_str_dup(rz_config_get_s(core->config, "cmd.hit"));
+	rz_config_set_s(core->config, "cmd.hit", command_str);
 	RzCmdStatus res = handle_ts_stmt(state, search_cmd);
-	rz_config_set(core->config, "cmd.hit", cmdhit);
+	rz_config_set_s(core->config, "cmd.hit", cmdhit);
 	free(command_str);
 	return res;
 }

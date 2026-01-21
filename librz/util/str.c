@@ -1069,9 +1069,18 @@ RZ_API int rz_str_cmp(RZ_NULLABLE const char *a, RZ_NULLABLE const char *b, int 
 	return strncmp(a, b, len);
 }
 
-// Copies all characters from src to dst up until the character 'ch'.
-RZ_API int rz_str_ccpy(char *dst, char *src, int ch) {
-	int i;
+/**
+ * \brief      Copies all characters from src to dst up until the character 'ch'.
+ *
+ * \param      dst   The destination string
+ * \param[in]  src   The source string
+ * \param[in]  ch    Terminator char.
+ *
+ * \return     Returns the number of char copied.
+ */
+RZ_API size_t rz_str_ccpy(RZ_NONNULL char *dst, RZ_NONNULL const char *src, int ch) {
+	rz_return_val_if_fail(dst && src, 0);
+	size_t i;
 	for (i = 0; src[i] && src[i] != ch; i++) {
 		dst[i] = src[i];
 	}
@@ -3926,7 +3935,7 @@ RZ_API char *rz_str_list_join(const RzList /*<char *>*/ *str, const char *sep) {
 	RzStrBuf sb;
 	rz_strbuf_init(&sb);
 
-	rz_list_foreach(str, it, p) {
+	rz_list_foreach (str, it, p) {
 		if (rz_strbuf_length(&sb) != 0) {
 			rz_strbuf_append_n(&sb, sep, len);
 		}

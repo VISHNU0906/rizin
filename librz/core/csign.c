@@ -462,10 +462,10 @@ RZ_API bool rz_core_flirt_create_file(RZ_NONNULL RzCore *core, RZ_NONNULL const 
 		result = rz_sign_flirt_write_string_pattern_to_buffer(node, buffer);
 	} else if (!strcmp(extension, ".sig")) {
 		ut64 hdr_version = rz_config_get_i(core->config, "flirt.sig.version");
-		const char *hdr_arch = rz_config_get(core->config, "asm.arch");
-		const char *hdr_file = rz_config_get(core->config, "flirt.sig.file");
-		const char *hdr_os = rz_config_get(core->config, "flirt.sig.os");
-		const char *hdr_lib = rz_config_get(core->config, "flirt.sig.library");
+		const char *hdr_arch = rz_config_get_s(core->config, "asm.arch");
+		const char *hdr_file = rz_config_get_s(core->config, "flirt.sig.file");
+		const char *hdr_os = rz_config_get_s(core->config, "flirt.sig.os");
+		const char *hdr_lib = rz_config_get_s(core->config, "flirt.sig.library");
 		bool deflate = rz_config_get_b(core->config, "flirt.sig.deflate");
 		ut8 architecture = rz_core_flirt_arch_from_name(hdr_arch);
 
@@ -562,10 +562,10 @@ RZ_API bool rz_core_flirt_convert_file(RZ_NONNULL RzCore *core, RZ_NONNULL const
 		result = rz_sign_flirt_write_string_pattern_to_buffer(node, buffer);
 	} else {
 		ut64 hdr_version = rz_config_get_i(core->config, "flirt.sig.version");
-		const char *hdr_arch = rz_config_get(core->config, "asm.arch");
-		const char *hdr_file = rz_config_get(core->config, "flirt.sig.file");
-		const char *hdr_os = rz_config_get(core->config, "flirt.sig.os");
-		const char *hdr_lib = rz_config_get(core->config, "flirt.sig.library");
+		const char *hdr_arch = rz_config_get_s(core->config, "asm.arch");
+		const char *hdr_file = rz_config_get_s(core->config, "flirt.sig.file");
+		const char *hdr_os = rz_config_get_s(core->config, "flirt.sig.os");
+		const char *hdr_lib = rz_config_get_s(core->config, "flirt.sig.library");
 		bool deflate = rz_config_get_b(core->config, "flirt.sig.deflate");
 		ut8 architecture = rz_core_flirt_arch_from_name(hdr_arch);
 

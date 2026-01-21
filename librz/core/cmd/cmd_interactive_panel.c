@@ -33,8 +33,7 @@ RZ_IPI RzCmdStatus rz_interactive_panel_load_handler(RzCore *core, int argc, con
 	if (visual && visual->panels_root && visual->panels_root->active_tab) {
 		rz_load_panels_layout(core, argv[1]);
 	}
-	rz_config_set(core->config, "scr.layout", argv[1]);
-	RZ_LOG_INFO("Set scr.layout = %s", argv[1]);
+	rz_config_set_s(core->config, "scr.layout", argv[1]);
 	return RZ_CMD_STATUS_OK;
 }
 
@@ -42,6 +41,6 @@ RZ_IPI RzCmdStatus rz_interactive_panel_store_handler(RzCore *core, int argc, co
 	rz_save_panels_layout(core, argv[1]);
 
 	rz_return_val_if_fail(core->config, RZ_CMD_STATUS_ERROR);
-	rz_config_set(core->config, "scr.layout", argv[1]);
+	rz_config_set_s(core->config, "scr.layout", argv[1]);
 	return RZ_CMD_STATUS_OK;
 }

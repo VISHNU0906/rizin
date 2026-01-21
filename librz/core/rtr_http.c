@@ -44,13 +44,13 @@ static int rz_core_rtr_http_handler_invalid(RzCore *core, RzSocketHTTPRequest *r
 
 static int rz_core_rtr_http_handler_get_file(RzCore *core, RzSocketHTTPRequest *rs, char *headers) {
 	char *dir = NULL;
-	if (rz_config_get_i(core->config, "http.dirlist")) {
+	if (rz_config_get_b(core->config, "http.dirlist")) {
 		if (rz_file_is_directory(rs->path)) {
 			dir = rz_str_dup(rs->path);
 		}
 	}
-	if (rz_config_get_i(core->config, "http.upget")) {
-		const char *uproot = rz_config_get(core->config, "http.uproot");
+	if (rz_config_get_b(core->config, "http.upget")) {
+		const char *uproot = rz_config_get_s(core->config, "http.uproot");
 		if (!rs->path[3] || (rs->path[3] == '/' && !rs->path[4])) {
 			char *ptr = rtr_dir_files(uproot);
 			rz_socket_http_response(rs, 200, ptr, 0, headers);
@@ -87,14 +87,14 @@ static int rz_core_rtr_http_handler_get_file(RzCore *core, RzSocketHTTPRequest *
 }
 
 static int rz_core_rtr_http_handler_get_cmd(RzCore *core, RzSocketHTTPRequest *rs, char *headers) {
-	const bool colon = rz_config_get_i(core->config, "http.colon");
-	const char *port = rz_config_get(core->config, "http.port");
+	const bool colon = rz_config_get_b(core->config, "http.colon");
+	const char *port = rz_config_get_s(core->config, "http.port");
 	if (colon && rs->path[5] != ':') {
 		rz_socket_http_response(rs, 403, "Permission denied", 0, headers);
 	} else {
 		char *cmd = rs->path + 5;
-		const char *httpcmd = rz_config_get(core->config, "http.uri");
-		const char *httpref = rz_config_get(core->config, "http.referer");
+		const char *httpcmd = rz_config_get_s(core->config, "http.uri");
+		const char *httpref = rz_config_get_s(core->config, "http.referer");
 		const bool httpref_enabled = (httpref && *httpref);
 		char *refstr = NULL;
 		if (httpref_enabled) {
@@ -125,7 +125,7 @@ static int rz_core_rtr_http_handler_get_cmd(RzCore *core, RzSocketHTTPRequest *r
 			} else {
 				char *out = NULL, *cmd = rs->path + 5;
 				rz_str_uri_decode(cmd);
-				rz_config_set(core->config, "scr.interactive", "false");
+				rz_config_set_b(core->config, "scr.interactive", false);
 
 				rz_core_rtr_http_cmd(core, rs, cmd, out, headers);
 
@@ -147,14 +147,14 @@ static int rz_core_rtr_http_handler_get_cmd(RzCore *core, RzSocketHTTPRequest *r
 
 static int rz_core_rtr_http_handler_get_index(RzCore *core, RzSocketHTTPRequest *rs, char *headers) {
 	char *dir = NULL;
-	const char *index = rz_config_get(core->config, "http.index");
-	if (rz_config_get_i(core->config, "http.dirlist")) {
+	const char *index = rz_config_get_s(core->config, "http.index");
+	if (rz_config_get_b(core->config, "http.dirlist")) {
 		if (rz_file_is_directory(rs->path)) {
 			dir = rz_str_dup(rs->path);
 		}
 	}
-	const char *root = rz_config_get(core->config, "http.root");
-	const char *homeroot = rz_config_get(core->config, "http.homeroot");
+	const char *root = rz_config_get_s(core->config, "http.root");
+	const char *homeroot = rz_config_get_s(core->config, "http.homeroot");
 	char *path = NULL;
 	if (!strcmp(rs->path, "/")) {
 		free(rs->path);
@@ -234,7 +234,7 @@ static int rz_core_rtr_http_handler_post_upload(RzCore *core, RzSocketHTTPReques
 	ut8 *ret;
 	int retlen;
 	char buf[128];
-	if (rz_config_get_i(core->config, "http.upload")) {
+	if (rz_config_get_b(core->config, "http.upload")) {
 		ret = rz_socket_http_handle_upload(rs->data, rs->data_length, &retlen);
 		if (ret) {
 			ut64 size = rz_config_get_i(core->config, "http.maxsize");
@@ -242,7 +242,7 @@ static int rz_core_rtr_http_handler_post_upload(RzCore *core, RzSocketHTTPReques
 				rz_socket_http_response(rs, 403, "403 File too big\n", 0, headers);
 			} else {
 				char *filename = rz_file_root(
-					rz_config_get(core->config, "http.uproot"),
+					rz_config_get_s(core->config, "http.uproot"),
 					rs->path + 8);
 				http_logf(core, "UPLOADED '%s'\n", filename);
 				rz_file_dump(filename, ret, retlen, 0);
@@ -262,7 +262,7 @@ static int rz_core_rtr_http_handler_post_upload(RzCore *core, RzSocketHTTPReques
 
 static int rz_core_rtr_http_handler_post_cmd(RzCore *core, RzSocketHTTPRequest *rs, char *headers) {
 	char *out = NULL;
-	rz_config_set(core->config, "scr.interactive", "false");
+	rz_config_set_b(core->config, "scr.interactive", false);
 	rz_core_rtr_http_cmd(core, rs, (char *)rs->data, out, headers);
 	if (!strcmp((char *)rs->data, "Rh*")) {
 		rz_socket_http_close(rs);
@@ -316,7 +316,7 @@ static int rtr_http_stop(RzCore *u) {
 	rz_socket_http_server_set_breaked(&rz_cons_singleton()->context->breaked);
 #endif
 	if (((size_t)u) > 0xff) {
-		port = rz_config_get(core->config, "http.port");
+		port = rz_config_get_s(core->config, "http.port");
 		sock = rz_socket_new(0);
 		(void)rz_socket_connect(sock, "localhost", port, RZ_SOCKET_PROTO_TCP, timeout);
 		rz_socket_free(sock);
@@ -334,12 +334,12 @@ static int rz_core_rtr_http_run(RzCore *core, bool open_browser) {
 	RzSocket *s;
 	RzSocketHTTPOptions so;
 	char *dir;
-	const char *bind = rz_config_get(core->config, "http.bind");
-	const char *root = rz_config_get(core->config, "http.root");
-	const char *homeroot = rz_config_get(core->config, "http.homeroot");
-	const char *port = rz_config_get(core->config, "http.port");
-	const char *allow = rz_config_get(core->config, "http.allow");
-	const char *httpauthfile = rz_config_get(core->config, "http.authfile");
+	const char *bind = rz_config_get_s(core->config, "http.bind");
+	const char *root = rz_config_get_s(core->config, "http.root");
+	const char *homeroot = rz_config_get_s(core->config, "http.homeroot");
+	const char *port = rz_config_get_s(core->config, "http.port");
+	const char *allow = rz_config_get_s(core->config, "http.allow");
+	const char *httpauthfile = rz_config_get_s(core->config, "http.authfile");
 	char *pfile = NULL;
 
 	if (!rz_file_is_directory(root)) {
@@ -358,12 +358,12 @@ static int rz_core_rtr_http_run(RzCore *core, bool open_browser) {
 	}
 
 	if (open_browser) {
-		const char *browser = rz_config_get(core->config, "http.browser");
+		const char *browser = rz_config_get_s(core->config, "http.browser");
 		rz_sys_cmdf("%s http://%s:%s/cmd/ &",
 			browser, bind, port);
 	}
 
-	so.httpauth = rz_config_get_i(core->config, "http.auth");
+	so.httpauth = rz_config_get_b(core->config, "http.auth");
 
 	if (so.httpauth) {
 		if (!httpauthfile) {
@@ -387,17 +387,16 @@ static int rz_core_rtr_http_run(RzCore *core, bool open_browser) {
 	}
 
 	// store current configs
-	RzConfigHold *hc = rz_config_hold_new(core->config);
+	RzConfigHold *hc = rz_config_hold_new2(core->config, "scr.color", "scr.html", "scr.interactive", "asm.cmt.right", "asm.bytes");
 	if (!hc) {
 		return 0;
 	}
-	rz_config_hold_var(hc, "scr.color", "scr.html", "scr.interactive", "asm.cmt.right", "asm.bytes", NULL);
 
 	// set new configs
-	rz_config_set(core->config, "asm.cmt.right", "false");
+	rz_config_set_b(core->config, "asm.cmt.right", false);
 	rz_config_set_i(core->config, "scr.color", COLOR_MODE_DISABLED);
-	rz_config_set(core->config, "asm.bytes", "false");
-	rz_config_set(core->config, "scr.interactive", "false");
+	rz_config_set_b(core->config, "asm.bytes", false);
+	rz_config_set_b(core->config, "scr.interactive", false);
 
 	RZ_LOG_WARN("core: Starting http server...\nTo open a remote session, please use `rizin -C http://%s:%s/cmd/`\n", bind, port);
 	core->http_up = true;
@@ -408,8 +407,7 @@ static int rz_core_rtr_http_run(RzCore *core, bool open_browser) {
 
 	newblk = malloc(core->blocksize);
 	if (!newblk) {
-		rz_config_hold_restore(hc);
-		rz_config_hold_free(hc);
+		rz_config_hold_restore_and_free(hc);
 		rz_socket_free(s);
 		rz_list_free(so.authtokens);
 		free(pfile);
@@ -493,17 +491,17 @@ static int rz_core_rtr_http_run(RzCore *core, bool open_browser) {
 			rz_socket_http_response(rs, 401, "", 0, NULL);
 		}
 
-		if (rz_config_get_i(core->config, "http.verbose")) {
+		if (rz_config_get_b(core->config, "http.verbose")) {
 			char *peer = rz_socket_to_string(rs->s);
 			http_logf(core, "[HTTP] %s %s\n", peer, rs->path);
 			free(peer);
 		}
-		if (rz_config_get_i(core->config, "http.dirlist")) {
+		if (rz_config_get_b(core->config, "http.dirlist")) {
 			if (rz_file_is_directory(rs->path)) {
 				dir = rz_str_dup(rs->path);
 			}
 		}
-		if (rz_config_get_i(core->config, "http.cors")) {
+		if (rz_config_get_b(core->config, "http.cors")) {
 			strcpy(headers, "Access-Control-Allow-Origin: *\n"
 					"Access-Control-Allow-Headers: Origin, "
 					"X-Requested-With, Content-Type, Accept\n");
@@ -527,8 +525,7 @@ the_end:
 	rz_socket_free(s);
 
 	// restore saved configs
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	return ret;
 }
 

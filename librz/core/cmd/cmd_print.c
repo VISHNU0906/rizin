@@ -203,14 +203,6 @@ static ut64 findClassBounds(RzCore *core, int *len) {
 	return 0;
 }
 
-RZ_API void rz_core_set_asm_configs(RzCore *core, char *arch, ut32 bits, int segoff) {
-	rz_config_set(core->config, "asm.arch", arch);
-	rz_config_set_i(core->config, "asm.bits", bits);
-	// XXX - this needs to be done here, because
-	// if arch == x86 and bits == 16, segoff automatically changes
-	rz_config_set_i(core->config, "asm.segoff", segoff);
-}
-
 RZ_IPI RzCmdStatus rz_cmd_print_timestamp_unix_handler(RzCore *core, int argc, const char **argv) {
 	char *date = NULL;
 	const ut8 *block = core->block;

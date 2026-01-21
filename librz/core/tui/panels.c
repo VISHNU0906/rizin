@@ -675,7 +675,7 @@ bool __check_if_mouse_y_illegal(RzPanelsTab *tab, int y) {
 bool __check_if_mouse_x_on_edge(RzCore *core, int x, int y) {
 	RzCoreVisual *visual = core->visual;
 	RzPanelsTab *tab = visual->panels_root->active_tab;
-	const int edge_x = rz_config_get_i(core->config, "scr.panelborder") ? 3 : 1;
+	const int edge_x = rz_config_get_b(core->config, "scr.panelborder") ? 3 : 1;
 	for (int i = 0; i < tab->n_panels; i++) {
 		RzPanel *panel = __get_panel(tab, i);
 		if (x > panel->view->pos.x - (edge_x - 1) && x <= panel->view->pos.x + edge_x) {
@@ -690,7 +690,7 @@ bool __check_if_mouse_x_on_edge(RzCore *core, int x, int y) {
 bool __check_if_mouse_y_on_edge(RzCore *core, int x, int y) {
 	RzCoreVisual *visual = core->visual;
 	RzPanelsTab *tab = visual->panels_root->active_tab;
-	const int edge_y = rz_config_get_i(core->config, "scr.panelborder") ? 3 : 1;
+	const int edge_y = rz_config_get_b(core->config, "scr.panelborder") ? 3 : 1;
 	for (int i = 0; i < tab->n_panels; i++) {
 		RzPanel *panel = __get_panel(tab, i);
 		if (x > panel->view->pos.x && x <= panel->view->pos.x + panel->view->pos.w + edge_y) {
@@ -3312,7 +3312,7 @@ int __config_value_cb(void *user) {
 	RzStrBuf *tmp = rz_strbuf_new(child->name);
 	(void)rz_str_split(rz_strbuf_get(tmp), ':');
 	const char *v = __show_status_input(core, "New value: ");
-	rz_config_set(core->config, rz_strbuf_get(tmp), v);
+	rz_config_set_any(core->config, rz_strbuf_get(tmp), v);
 	rz_strbuf_free(tmp);
 	free(parent->p->model->title);
 	parent->p->model->title = rz_strbuf_drain(__draw_menu(core, parent));
@@ -4402,9 +4402,9 @@ void __init_menu_disasm_settings_layout(void *_core, const char *parent) {
 			__add_menu(core, parent, pos, __open_menu_cb);
 			__init_menu_disasm_asm_settings_layout(core, "Settings.Disassembly.asm");
 		} else {
-			rz_strbuf_set(rsb, pos);
-			rz_strbuf_append(rsb, ": ");
-			rz_strbuf_append(rsb, rz_config_get(core->config, pos));
+			char *value = rz_config_get_as_string(core->config, pos);
+			rz_strbuf_setf(rsb, "%s: %s", pos, value);
+			free(value);
 			__add_menu(core, parent, rz_strbuf_get(rsb), __config_toggle_cb);
 		}
 	}
@@ -4419,9 +4419,9 @@ static void __init_menu_disasm_asm_settings_layout(void *_core, const char *pare
 	RzStrBuf *rsb = rz_strbuf_new(NULL);
 	rz_pvector_foreach (list, iter) {
 		char *pos = *iter;
-		rz_strbuf_set(rsb, pos);
-		rz_strbuf_append(rsb, ": ");
-		rz_strbuf_append(rsb, rz_config_get(core->config, pos));
+		char *value = rz_config_get_as_string(core->config, pos);
+		rz_strbuf_setf(rsb, "%s: %s", pos, value);
+		free(value);
 		if (!strcmp(pos, "asm.var.summary") ||
 			!strcmp(pos, "asm.arch") ||
 			!strcmp(pos, "asm.bits") ||
@@ -4441,9 +4441,9 @@ static void __init_menu_screen_settings_layout(void *_core, const char *parent) 
 	int i = 0;
 	while (menus_settings_screen[i]) {
 		const char *menu = menus_settings_screen[i];
-		rz_strbuf_set(rsb, menu);
-		rz_strbuf_append(rsb, ": ");
-		rz_strbuf_append(rsb, rz_config_get(core->config, menu));
+		char *value = rz_config_get_as_string(core->config, menu);
+		rz_strbuf_setf(rsb, "%s: %s", menu, value);
+		free(value);
 		if (!strcmp(menus_settings_screen[i], "scr.color")) {
 			__add_menu(core, parent, rz_strbuf_get(rsb), __config_value_cb);
 		} else {
@@ -6083,12 +6083,12 @@ void __rotate_asmemu(RzCore *core, RzPanel *p) {
 	const bool isEmu = rz_config_get_b(core->config, "asm.emu");
 	if (isEmu) {
 		if (isEmuStr) {
-			rz_config_set(core->config, "emu.str", "false");
+			rz_config_set_b(core->config, "emu.str", false);
 		} else {
-			rz_config_set(core->config, "asm.emu", "false");
+			rz_config_set_b(core->config, "asm.emu", false);
 		}
 	} else {
-		rz_config_set(core->config, "emu.str", "true");
+		rz_config_set_b(core->config, "emu.str", true);
 	}
 	p->view->refresh = true;
 }
@@ -6169,7 +6169,7 @@ RZ_IPI bool rz_core_visual_panels_root(RzCore *core, RzPanelsRoot *panels_root) 
 	}
 	panels_root->from_visual = core->vmode;
 	{
-		const char *l = rz_config_get(core->config, "scr.layout");
+		const char *l = rz_config_get_s(core->config, "scr.layout");
 		if (RZ_STR_ISNOTEMPTY(l)) {
 			rz_load_panels_layout(core, l);
 		}
@@ -6505,7 +6505,7 @@ void __panels_process(RzCore *core, RzPanelsTab *tab) {
 	bool originVmode = core->vmode;
 	core->vmode = true;
 	{
-		const char *layout = rz_config_get(core->config, "scr.layout");
+		const char *layout = rz_config_get_s(core->config, "scr.layout");
 		if (RZ_STR_ISNOTEMPTY(layout)) {
 			rz_load_panels_layout(core, layout);
 		}
@@ -6771,13 +6771,13 @@ repeat:
 		break;
 	case 'n':
 		if (__check_panel_type(cur, PANEL_CMD_DISASSEMBLY)) {
-			rz_core_seek_next(core, rz_config_get(core->config, "scr.nkey"), true);
+			rz_core_seek_next(core, rz_config_get_s(core->config, "scr.nkey"), true);
 			__set_panel_addr(core, cur, core->offset);
 		}
 		break;
 	case 'N':
 		if (__check_panel_type(cur, PANEL_CMD_DISASSEMBLY)) {
-			rz_core_seek_prev(core, rz_config_get(core->config, "scr.nkey"), true);
+			rz_core_seek_prev(core, rz_config_get_s(core->config, "scr.nkey"), true);
 			__set_panel_addr(core, cur, core->offset);
 		}
 		break;
@@ -6930,13 +6930,13 @@ repeat:
 		__toggle_cache(core, __get_cur_panel(tab));
 		break;
 	case RZ_CONS_KEY_F1:
-		cmd = rz_config_get(core->config, "key.f1");
+		cmd = rz_config_get_s(core->config, "key.f1");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F2:
-		cmd = rz_config_get(core->config, "key.f2");
+		cmd = rz_config_get_s(core->config, "key.f2");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		} else {
@@ -6944,31 +6944,31 @@ repeat:
 		}
 		break;
 	case RZ_CONS_KEY_F3:
-		cmd = rz_config_get(core->config, "key.f3");
+		cmd = rz_config_get_s(core->config, "key.f3");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F4:
-		cmd = rz_config_get(core->config, "key.f4");
+		cmd = rz_config_get_s(core->config, "key.f4");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F5:
-		cmd = rz_config_get(core->config, "key.f5");
+		cmd = rz_config_get_s(core->config, "key.f5");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F6:
-		cmd = rz_config_get(core->config, "key.f6");
+		cmd = rz_config_get_s(core->config, "key.f6");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F7:
-		cmd = rz_config_get(core->config, "key.f7");
+		cmd = rz_config_get_s(core->config, "key.f7");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		} else {
@@ -6979,7 +6979,7 @@ repeat:
 		}
 		break;
 	case RZ_CONS_KEY_F8:
-		cmd = rz_config_get(core->config, "key.f8");
+		cmd = rz_config_get_s(core->config, "key.f8");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		} else {
@@ -6990,7 +6990,7 @@ repeat:
 		}
 		break;
 	case RZ_CONS_KEY_F9:
-		cmd = rz_config_get(core->config, "key.f9");
+		cmd = rz_config_get_s(core->config, "key.f9");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		} else {
@@ -7001,19 +7001,19 @@ repeat:
 		}
 		break;
 	case RZ_CONS_KEY_F10:
-		cmd = rz_config_get(core->config, "key.f10");
+		cmd = rz_config_get_s(core->config, "key.f10");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F11:
-		cmd = rz_config_get(core->config, "key.f11");
+		cmd = rz_config_get_s(core->config, "key.f11");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F12:
-		cmd = rz_config_get(core->config, "key.f12");
+		cmd = rz_config_get_s(core->config, "key.f12");
 		if (RZ_STR_ISNOTEMPTY(cmd)) {
 			(void)rz_core_cmd0(core, cmd);
 		}

@@ -733,12 +733,12 @@ RZ_API void rz_core_global_vars_propagate_types(RzCore *core, RzAnalysisFunction
 	RzAnalysisBlock *bb;
 	void **it;
 	RzAnalysisOp aop = { 0 };
-	bool ioCache = rz_config_get_i(core->config, "io.cache");
+	bool ioCache = rz_config_get_b(core->config, "io.cache");
 	bool stack_set = false;
 	bool resolved = false;
 	int dbg_follow = rz_config_get_i(core->config, "dbg.follow");
 	RzAnalysisEsil *esil;
-	int iotrap = rz_config_get_i(core->config, "esil.iotrap");
+	int iotrap = rz_config_get_b(core->config, "esil.iotrap");
 	int stacksize = rz_config_get_i(core->config, "esil.stack.depth");
 	unsigned int addrsize = rz_config_get_i(core->config, "esil.addr.size");
 	const char *pc_name = rz_reg_get_name(core->analysis->reg, RZ_REG_NAME_PC);
@@ -776,7 +776,7 @@ RZ_API void rz_core_global_vars_propagate_types(RzCore *core, RzAnalysisFunction
 		rz_core_analysis_esil_init_mem(core, NULL, UT64_MAX, UT32_MAX);
 		stack_set = true;
 	}
-	rz_config_set_i(core->config, "io.cache", 1);
+	rz_config_set_b(core->config, "io.cache", 1);
 	rz_config_set_i(core->config, "dbg.follow", 0);
 	ut64 oldoff = core->offset;
 	rz_cons_break_push(NULL, NULL);
@@ -880,7 +880,7 @@ RZ_API void rz_core_global_vars_propagate_types(RzCore *core, RzAnalysisFunction
 	}
 beach:
 	rz_io_cache_reset(core->io, core->io->cached); // drop cache writes
-	rz_config_set_i(core->config, "io.cache", ioCache);
+	rz_config_set_b(core->config, "io.cache", ioCache);
 	rz_config_set_i(core->config, "dbg.follow", dbg_follow);
 	if (stack_set) {
 		rz_core_analysis_esil_init_mem_del(core, NULL, UT64_MAX, UT32_MAX);
@@ -965,7 +965,7 @@ RZ_IPI void rz_types_define(RzCore *core, const char *type) {
 }
 
 RZ_IPI bool rz_types_open_file(RzCore *core, const char *path) {
-	const char *dir = rz_config_get(core->config, "dir.types");
+	const char *dir = rz_config_get_s(core->config, "dir.types");
 	RzTypeDB *typedb = core->analysis->typedb;
 	if (!strcmp(path, "-")) {
 		char *tmp = rz_core_editor(core, "*.h", "");

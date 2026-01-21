@@ -55,20 +55,20 @@ RZ_IPI void rz_core_visual_applyHexMode(RzCore *core, int hexMode) {
 	case 3: /* prx */
 	case 6: /* pxw */
 	case 9: /* pxr */
-		rz_config_set(core->config, "hex.compact", "false");
-		rz_config_set(core->config, "hex.comments", "true");
+		rz_config_set_b(core->config, "hex.compact", false);
+		rz_config_set_b(core->config, "hex.comments", true);
 		break;
 	case 1: /* pxa */
 	case 4: /* pxb */
 	case 7: /* pxq */
-		rz_config_set(core->config, "hex.compact", "true");
-		rz_config_set(core->config, "hex.comments", "true");
+		rz_config_set_b(core->config, "hex.compact", true);
+		rz_config_set_b(core->config, "hex.comments", true);
 		break;
 	case 2: /* pxr */
 	case 5: /* pxh */
 	case 8: /* pxd */
-		rz_config_set(core->config, "hex.compact", "false");
-		rz_config_set(core->config, "hex.comments", "false");
+		rz_config_set_b(core->config, "hex.compact", false);
+		rz_config_set_b(core->config, "hex.comments", false);
 		break;
 	}
 }
@@ -96,33 +96,31 @@ RZ_IPI void rz_core_visual_toggle_decompiler_disasm(RzCore *core, bool for_graph
 	RzConfigHold *hold = visual->util.hold;
 
 	if (hold) {
-		rz_config_hold_restore(hold);
-		rz_config_hold_free(hold);
+		rz_config_hold_restore_and_free(hold);
 		hold = NULL;
 		return;
 	}
 	if (reset) {
 		return;
 	}
-	hold = rz_config_hold_new(core->config);
-	rz_config_hold_var(hold, "asm.hint.pos", "asm.cmt.col", "asm.offset", "asm.lines",
+	hold = rz_config_hold_new2(core->config, "asm.hint.pos", "asm.cmt.col", "asm.offset", "asm.lines",
 		"asm.indent", "asm.bytes", "asm.comments", "asm.debuginfo", "asm.usercomments", "asm.instr", NULL);
 	if (for_graph) {
-		rz_config_set(core->config, "asm.hint.pos", "-2");
-		rz_config_set(core->config, "asm.lines", "false");
-		rz_config_set(core->config, "asm.indent", "false");
+		rz_config_set_i(core->config, "asm.hint.pos", -2);
+		rz_config_set_b(core->config, "asm.lines", false);
+		rz_config_set_b(core->config, "asm.indent", false);
 	} else {
-		rz_config_set(core->config, "asm.hint.pos", "0");
-		rz_config_set(core->config, "asm.indent", "true");
-		rz_config_set(core->config, "asm.lines", "true");
+		rz_config_set_i(core->config, "asm.hint.pos", 0);
+		rz_config_set_b(core->config, "asm.indent", true);
+		rz_config_set_b(core->config, "asm.lines", true);
 	}
-	rz_config_set(core->config, "asm.cmt.col", "0");
-	rz_config_set(core->config, "asm.offset", "false");
-	rz_config_set(core->config, "asm.debuginfo", "true");
-	rz_config_set(core->config, "asm.bytes", "false");
-	rz_config_set(core->config, "asm.comments", "false");
-	rz_config_set(core->config, "asm.usercomments", "true");
-	rz_config_set(core->config, "asm.instr", "false");
+	rz_config_set_i(core->config, "asm.cmt.col", 0);
+	rz_config_set_b(core->config, "asm.offset", false);
+	rz_config_set_b(core->config, "asm.debuginfo", true);
+	rz_config_set_b(core->config, "asm.bytes", false);
+	rz_config_set_b(core->config, "asm.comments", false);
+	rz_config_set_b(core->config, "asm.usercomments", true);
+	rz_config_set_b(core->config, "asm.instr", false);
 }
 
 static void setcursor(RzCore *core, bool cur) {
@@ -145,39 +143,39 @@ RZ_IPI void rz_core_visual_applyDisMode(RzCore *core, int disMode) {
 	visual->currentFormat = RZ_ABS(disMode) % 5;
 	switch (visual->currentFormat) {
 	case 0:
-		rz_config_set(core->config, "asm.pseudo", "false");
-		rz_config_set(core->config, "asm.bytes", "true");
-		rz_config_set(core->config, "asm.esil", "false");
-		rz_config_set(core->config, "emu.str", "false");
-		rz_config_set(core->config, "asm.emu", "false");
+		rz_config_set_b(core->config, "asm.pseudo", false);
+		rz_config_set_b(core->config, "asm.bytes", true);
+		rz_config_set_b(core->config, "asm.esil", false);
+		rz_config_set_b(core->config, "emu.str", false);
+		rz_config_set_b(core->config, "asm.emu", false);
 		break;
 	case 1:
-		rz_config_set(core->config, "asm.pseudo", "false");
-		rz_config_set(core->config, "asm.bytes", "true");
-		rz_config_set(core->config, "asm.esil", "false");
-		rz_config_set(core->config, "asm.emu", "false");
-		rz_config_set(core->config, "emu.str", "true");
+		rz_config_set_b(core->config, "asm.pseudo", false);
+		rz_config_set_b(core->config, "asm.bytes", true);
+		rz_config_set_b(core->config, "asm.esil", false);
+		rz_config_set_b(core->config, "asm.emu", false);
+		rz_config_set_b(core->config, "emu.str", true);
 		break;
 	case 2:
-		rz_config_set(core->config, "asm.pseudo", "true");
-		rz_config_set(core->config, "asm.bytes", "true");
-		rz_config_set(core->config, "asm.esil", "true");
-		rz_config_set(core->config, "emu.str", "true");
-		rz_config_set(core->config, "asm.emu", "true");
+		rz_config_set_b(core->config, "asm.pseudo", true);
+		rz_config_set_b(core->config, "asm.bytes", true);
+		rz_config_set_b(core->config, "asm.esil", true);
+		rz_config_set_b(core->config, "emu.str", true);
+		rz_config_set_b(core->config, "asm.emu", true);
 		break;
 	case 3:
-		rz_config_set(core->config, "asm.pseudo", "false");
-		rz_config_set(core->config, "asm.bytes", "false");
-		rz_config_set(core->config, "asm.esil", "false");
-		rz_config_set(core->config, "asm.emu", "false");
-		rz_config_set(core->config, "emu.str", "true");
+		rz_config_set_b(core->config, "asm.pseudo", false);
+		rz_config_set_b(core->config, "asm.bytes", false);
+		rz_config_set_b(core->config, "asm.esil", false);
+		rz_config_set_b(core->config, "asm.emu", false);
+		rz_config_set_b(core->config, "emu.str", true);
 		break;
 	case 4:
-		rz_config_set(core->config, "asm.pseudo", "true");
-		rz_config_set(core->config, "asm.bytes", "false");
-		rz_config_set(core->config, "asm.esil", "false");
-		rz_config_set(core->config, "asm.emu", "false");
-		rz_config_set(core->config, "emu.str", "true");
+		rz_config_set_b(core->config, "asm.pseudo", true);
+		rz_config_set_b(core->config, "asm.bytes", false);
+		rz_config_set_b(core->config, "asm.esil", false);
+		rz_config_set_b(core->config, "asm.emu", false);
+		rz_config_set_b(core->config, "emu.str", true);
 		break;
 	}
 }
@@ -214,7 +212,7 @@ static const char *__core_visual_print_command(RzCore *core) {
 			return tab->name + 1;
 		}
 	}
-	if (rz_config_get_i(core->config, "scr.dumpcols")) {
+	if (rz_config_get_b(core->config, "scr.dumpcols")) {
 		free(core->stkcmd);
 		core->stkcmd = rz_str_dup(stackPrintCommand(core));
 		return printfmtColumns[PIDX];
@@ -377,12 +375,12 @@ static const char *rotateAsmemu(RzCore *core) {
 	const bool isEmu = rz_config_get_b(core->config, "asm.emu");
 	if (isEmu) {
 		if (isEmuStr) {
-			rz_config_set(core->config, "emu.str", "false");
+			rz_config_set_b(core->config, "emu.str", false);
 		} else {
-			rz_config_set(core->config, "asm.emu", "false");
+			rz_config_set_b(core->config, "asm.emu", false);
 		}
 	} else {
-		rz_config_set(core->config, "emu.str", "true");
+		rz_config_set_b(core->config, "emu.str", true);
 	}
 	return "pd";
 }
@@ -730,7 +728,7 @@ static int visual_nkey(RzCore *core, int ch) {
 
 	switch (ch) {
 	case RZ_CONS_KEY_F1:
-		cmd = rz_config_get(core->config, "key.f1");
+		cmd = rz_config_get_s(core->config, "key.f1");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		} else {
@@ -738,7 +736,7 @@ static int visual_nkey(RzCore *core, int ch) {
 		}
 		break;
 	case RZ_CONS_KEY_F2:
-		cmd = rz_config_get(core->config, "key.f2");
+		cmd = rz_config_get_s(core->config, "key.f2");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		} else {
@@ -746,13 +744,13 @@ static int visual_nkey(RzCore *core, int ch) {
 		}
 		break;
 	case RZ_CONS_KEY_F3:
-		cmd = rz_config_get(core->config, "key.f3");
+		cmd = rz_config_get_s(core->config, "key.f3");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F4:
-		cmd = rz_config_get(core->config, "key.f4");
+		cmd = rz_config_get_s(core->config, "key.f4");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		} else {
@@ -763,19 +761,19 @@ static int visual_nkey(RzCore *core, int ch) {
 		}
 		break;
 	case RZ_CONS_KEY_F5:
-		cmd = rz_config_get(core->config, "key.f5");
+		cmd = rz_config_get_s(core->config, "key.f5");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F6:
-		cmd = rz_config_get(core->config, "key.f6");
+		cmd = rz_config_get_s(core->config, "key.f6");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F7:
-		cmd = rz_config_get(core->config, "key.f7");
+		cmd = rz_config_get_s(core->config, "key.f7");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		} else {
@@ -783,7 +781,7 @@ static int visual_nkey(RzCore *core, int ch) {
 		}
 		break;
 	case RZ_CONS_KEY_F8:
-		cmd = rz_config_get(core->config, "key.f8");
+		cmd = rz_config_get_s(core->config, "key.f8");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		} else {
@@ -791,7 +789,7 @@ static int visual_nkey(RzCore *core, int ch) {
 		}
 		break;
 	case RZ_CONS_KEY_F9:
-		cmd = rz_config_get(core->config, "key.f9");
+		cmd = rz_config_get_s(core->config, "key.f9");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		} else {
@@ -799,19 +797,19 @@ static int visual_nkey(RzCore *core, int ch) {
 		}
 		break;
 	case RZ_CONS_KEY_F10:
-		cmd = rz_config_get(core->config, "key.f10");
+		cmd = rz_config_get_s(core->config, "key.f10");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F11:
-		cmd = rz_config_get(core->config, "key.f11");
+		cmd = rz_config_get_s(core->config, "key.f11");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		}
 		break;
 	case RZ_CONS_KEY_F12:
-		cmd = rz_config_get(core->config, "key.f12");
+		cmd = rz_config_get_s(core->config, "key.f12");
 		if (cmd && *cmd) {
 			ch = rz_core_cmd0(core, cmd);
 		}
@@ -824,11 +822,15 @@ static int visual_nkey(RzCore *core, int ch) {
 }
 
 static void setdiff(RzCore *core) {
-	char from[64], to[64];
-	prompt_read("diff from: ", from, sizeof(from));
-	rz_config_set(core->config, "diff.from", from);
-	prompt_read("diff to: ", to, sizeof(to));
-	rz_config_set(core->config, "diff.to", to);
+	char tmp[64];
+	ut64 from = 0, to = 0;
+	prompt_read("diff from: ", tmp, sizeof(tmp));
+	from = rz_num_get(core->num, tmp);
+	prompt_read("diff to: ", tmp, sizeof(tmp));
+	to = rz_num_get(core->num, tmp);
+
+	rz_config_set_i(core->config, "diff.from", from);
+	rz_config_set_i(core->config, "diff.to", to);
 }
 
 static void findPair(RzCore *core) {
@@ -1259,15 +1261,10 @@ repeat:
 				if (idx == skip) {
 					free(dis);
 					curat = xaddr1;
-					RzConfigHold *hc = rz_config_hold_new(core->config);
-					if (!hc) {
-						return RZ_CMD_STATUS_ERROR;
-					}
-					rz_config_hold_var(hc, "asm.flags.limit", NULL);
+					ut64 asm_flags_limit = rz_config_get_i(core->config, "asm.flags.limit");
 					rz_config_set_i(core->config, "asm.flags.limit", 1);
 					char *res = rz_core_print_cons_disassembly(core, xaddr2, 4, 0);
-					rz_config_hold_restore(hc);
-					rz_config_hold_free(hc);
+					rz_config_set_i(core->config, "asm.flags.limit", asm_flags_limit);
 					dis = NULL;
 					/* Draw a separator */
 					if (rz_config_get_b(core->config, "scr.utf8")) {
@@ -1452,8 +1449,8 @@ void SetWindow(int Width, int Height) {
 // unnecesarily public
 char *getcommapath(RzCore *core) {
 	char *cwd;
-	const char *dir = rz_config_get(core->config, "dir.projects");
-	const char *prj = rz_config_get(core->config, "prj.name");
+	const char *dir = rz_config_get_s(core->config, "dir.projects");
+	const char *prj = rz_config_get_s(core->config, "prj.name");
 	if (dir && *dir && prj && *prj) {
 		char *abspath = rz_file_abspath(dir);
 		/* use prjdir as base directory for comma-ent files */
@@ -1562,7 +1559,7 @@ static void cursor_nextrow(RzCore *core, bool use_ocur) {
 		return;
 	}
 
-	if (PIDX == 7 || !strcmp("prc", rz_config_get(core->config, "cmd.visual"))) {
+	if (PIDX == 7 || !strcmp("prc", rz_config_get_s(core->config, "cmd.visual"))) {
 		p->cur += rz_config_get_i(core->config, "hex.cols");
 		return;
 	}
@@ -1644,7 +1641,7 @@ static void cursor_prevrow(RzCore *core, bool use_ocur) {
 		return;
 	}
 
-	if (PIDX == 7 || !strcmp("prc", rz_config_get(core->config, "cmd.visual"))) {
+	if (PIDX == 7 || !strcmp("prc", rz_config_get_s(core->config, "cmd.visual"))) {
 		int cols = rz_config_get_i(core->config, "hex.cols");
 		p->cur -= RZ_MAX(cols, 0);
 		return;
@@ -2138,7 +2135,11 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 	if (isNumber(core, ch)) {
 		// only in disasm and debug prints..
 		if (isDisasmPrint(visual->printidx)) {
-			if (rz_config_get_b(core->config, "asm.hints") && (rz_config_get_b(core->config, "asm.hint.jmp") || rz_config_get_b(core->config, "asm.hint.lea") || rz_config_get_b(core->config, "asm.hint.emu") || rz_config_get_b(core->config, "asm.hint.call"))) {
+			if (rz_config_get_b(core->config, "asm.hints") &&
+				(rz_config_get_b(core->config, "asm.hint.jmp") ||
+					rz_config_get_b(core->config, "asm.hint.lea") ||
+					rz_config_get_b(core->config, "asm.hint.emu") ||
+					rz_config_get_b(core->config, "asm.hint.call"))) {
 				rz_core_visual_jump(core, ch);
 			} else {
 				numbuf_append(&visual->util, ch);
@@ -2264,19 +2265,19 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 			rz_core_visual_showcursor(core, true);
 			const char *buf = NULL;
 #define I core->cons
-			const char *cmd = rz_config_get(core->config, "cmd.vprompt");
+			const char *cmd = rz_config_get_s(core->config, "cmd.vprompt");
 			rz_line_set_prompt(line, "cmd.vprompt> ");
 			I->line->contents = rz_str_dup(cmd);
 			buf = rz_line_readline(line);
 			I->line->contents = NULL;
-			(void)rz_config_set(core->config, "cmd.vprompt", buf);
+			(void)rz_config_set_s(core->config, "cmd.vprompt", buf);
 			rz_core_visual_showcursor(core, false);
 		} break;
 		case '|': { // TODO: edit
 			rz_core_visual_showcursor(core, true);
 			const char *buf = NULL;
 #define I core->cons
-			const char *cmd = rz_config_get(core->config, "cmd.cprompt");
+			const char *cmd = rz_config_get_s(core->config, "cmd.cprompt");
 			rz_line_set_prompt(line, "cmd.cprompt> ");
 			line->contents = rz_str_dup(cmd);
 			buf = rz_line_readline(line);
@@ -2284,10 +2285,10 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 				RZ_FREE(line->contents);
 				core->print->cur_enabled = true;
 				core->print->cur = 0;
-				(void)rz_config_set(core->config, "cmd.cprompt", "p=e $r-2");
+				(void)rz_config_set_s(core->config, "cmd.cprompt", "p=e $r-2");
 			} else {
 				RZ_FREE(line->contents);
-				(void)rz_config_set(core->config, "cmd.cprompt", buf ? buf : "");
+				(void)rz_config_set_s(core->config, "cmd.cprompt", buf);
 			}
 			rz_core_visual_showcursor(core, false);
 		} break;
@@ -2455,10 +2456,10 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 			rz_core_visual_closetab(core);
 			break;
 		case 'n':
-			rz_core_seek_next(core, rz_config_get(core->config, "scr.nkey"), true);
+			rz_core_seek_next(core, rz_config_get_s(core->config, "scr.nkey"), true);
 			break;
 		case 'N':
-			rz_core_seek_prev(core, rz_config_get(core->config, "scr.nkey"), true);
+			rz_core_seek_prev(core, rz_config_get_s(core->config, "scr.nkey"), true);
 			break;
 		case 'i':
 		case 'I': {
@@ -2643,7 +2644,7 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 						distance = 1;
 					}
 					for (i = 0; i < distance; i++) {
-						const char *nkey = rz_config_get(core->config, "scr.nkey");
+						const char *nkey = rz_config_get_s(core->config, "scr.nkey");
 						rz_core_seek_next(core, nkey, true);
 					}
 				} else {
@@ -2723,7 +2724,7 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 						distance = 1;
 					}
 					for (i = 0; i < distance; i++) {
-						rz_core_seek_prev(core, rz_config_get(core->config, "scr.nkey"), true);
+						rz_core_seek_prev(core, rz_config_get_s(core->config, "scr.nkey"), true);
 					}
 				} else {
 					int times = wheelspeed;
@@ -2804,7 +2805,7 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 			}
 			break;
 		case 's':
-			key_s = rz_config_get(core->config, "key.s");
+			key_s = rz_config_get_s(core->config, "key.s");
 			if (key_s && *key_s) {
 				rz_core_cmd0(core, key_s);
 			} else {
@@ -2812,7 +2813,7 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 			}
 			break;
 		case 'S':
-			key_s = rz_config_get(core->config, "key.S");
+			key_s = rz_config_get_s(core->config, "key.S");
 			if (key_s && *key_s) {
 				rz_core_cmd0(core, key_s);
 			} else {
@@ -3220,7 +3221,7 @@ RZ_IPI void rz_core_visual_title(RzCore *core, int color) {
 	if (color) {
 		rz_cons_strcat(BEGIN);
 	}
-	const char *cmd_visual = rz_config_get(core->config, "cmd.visual");
+	const char *cmd_visual = rz_config_get_s(core->config, "cmd.visual");
 	if (cmd_visual && *cmd_visual) {
 		rz_str_ncpy(bar, cmd_visual, sizeof(bar) - 1);
 		bar[10] = '.'; // chop cmdfmt
@@ -3610,7 +3611,7 @@ static void visual_refresh(RzCore *core) {
 	int split_w = 12 + 4 + hex_cols + (hex_cols * 3);
 	bool ce = core->print->cur_enabled;
 
-	vi = rz_config_get(core->config, "cmd.cprompt");
+	vi = rz_config_get_s(core->config, "cmd.cprompt");
 	bool vsplit = (vi && *vi);
 
 	if (vsplit) {
@@ -3636,12 +3637,12 @@ static void visual_refresh(RzCore *core) {
 		}
 		rz_cons_gotoxy(0, 0);
 	}
-	vi = rz_config_get(core->config, "cmd.vprompt");
+	vi = rz_config_get_s(core->config, "cmd.vprompt");
 	if (vi && *vi) {
 		rz_core_cmd0(core, vi);
 	}
 	rz_core_visual_title(core, visual->color);
-	vcmd = rz_config_get(core->config, "cmd.visual");
+	vcmd = rz_config_get_s(core->config, "cmd.visual");
 	if (vcmd && *vcmd) {
 		// disable screen bounds when it's a user-defined command
 		// because it can cause some issues
@@ -3814,15 +3815,15 @@ RZ_IPI int rz_core_visual(RzCore *core, const char *input) {
 		skip = fix_cursor(core);
 		rz_cons_show_cursor(false);
 		rz_cons_set_raw(1);
-		const int ref = rz_config_get_b(core->config, "dbg.slow");
+		const bool ref = rz_config_get_b(core->config, "dbg.slow");
 #if 1
 		// This is why multiple debug views dont work
 		if (visual->printidx == RZ_CORE_VISUAL_MODE_DB) {
 			const bool pxa = rz_config_get_b(core->config, "stack.anotated"); // stack.anotated
-			const char *reg = rz_config_get(core->config, "stack.reg");
+			const char *reg = rz_config_get_s(core->config, "stack.reg");
 			const int size = rz_config_get_i(core->config, "stack.size");
 			const int delta = rz_config_get_i(core->config, "stack.delta");
-			const char *cmdvhex = rz_config_get(core->config, "cmd.stack");
+			const char *cmdvhex = rz_config_get_s(core->config, "cmd.stack");
 
 			if (cmdvhex && *cmdvhex) {
 				rz_strf(visual->util.debugstr_core,
@@ -3858,7 +3859,7 @@ RZ_IPI int rz_core_visual(RzCore *core, const char *input) {
 		flags |= RZ_PRINT_FLAGS_HEADER;
 		rz_print_set_flags(core->print, flags);
 		scrseek = rz_num_math(core->num,
-			rz_config_get(core->config, "scr.seek"));
+			rz_config_get_s(core->config, "scr.seek"));
 		if (scrseek != 0LL) {
 			rz_core_seek(core, scrseek, true);
 		}

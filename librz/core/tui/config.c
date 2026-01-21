@@ -13,7 +13,6 @@
 #include <cmd_descs.h>
 
 typedef struct config_visual_ctx {
-	RzCore *core;
 	const char *fs;
 	const char *fs2;
 	const char *desc;
@@ -99,7 +98,7 @@ static void show_config_options(RzCore *core, const char *name) {
 	free(s);
 }
 
-static bool core_visual_config_flag_space(const char *name, const char *description, ut32 flags, void *user) {
+static bool core_visual_config_flag_space(const RzConfig *, const char *name, const char *description, ut32 flags, void *user) {
 	ConfigVisualCtx *ctx = (ConfigVisualCtx *)user;
 
 	if (ctx->option == ctx->i) {
@@ -127,7 +126,7 @@ static bool core_visual_config_flag_space(const char *name, const char *descript
 	return true;
 }
 
-static bool core_visual_config_flag_selection(const char *name, const char *desc, ut32 flags, void *user) {
+static bool core_visual_config_flag_selection(const RzConfig *config, const char *name, const char *desc, ut32 flags, void *user) {
 	ConfigVisualCtx *ctx = (ConfigVisualCtx *)user;
 	if (!rz_str_ccmp(name, ctx->fs, '.')) {
 		if (ctx->option == ctx->i) {
@@ -137,7 +136,7 @@ static bool core_visual_config_flag_selection(const char *name, const char *desc
 		}
 		if ((ctx->i >= ctx->option - ctx->delta) && ((ctx->i < ctx->option + ctx->delta) || ((ctx->option < ctx->delta) && (ctx->i < (ctx->delta << 1))))) {
 			// TODO: Better align
-			char *value = rz_config_get_as_string(ctx->core->config, name);
+			char *value = rz_config_get_as_string(config, name);
 			rz_cons_printf(" %c  %s = %s\n", (ctx->option == ctx->i) ? '>' : ' ', name, value);
 			free(value);
 			ctx->j++;
@@ -150,7 +149,6 @@ static bool core_visual_config_flag_selection(const char *name, const char *desc
 RZ_IPI void rz_core_visual_config(RzCore *core) {
 	int ch = 0;
 	ConfigVisualCtx ctx = { 0 };
-	ctx.core = core;
 	ctx._option = 0;
 	ctx.delta = 9;
 	ctx.menu = 0;

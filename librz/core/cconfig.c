@@ -104,7 +104,7 @@ typedef struct core_config_in_space_s {
 	RzList /*<char *>*/ *list;
 } CoreConfigInSpace;
 
-static bool core_config_in_space_iterator(const char *var_name, const char *desc, ut32 flags, void *user) {
+static bool core_config_in_space_iterator(const RzConfig *conf, const char *var_name, const char *desc, ut32 flags, void *user) {
 	CoreConfigInSpace *ccis = (CoreConfigInSpace *)user;
 
 	char *name = rz_str_dup(var_name);

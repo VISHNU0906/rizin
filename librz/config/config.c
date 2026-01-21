@@ -206,7 +206,7 @@ RZ_API void rz_config_iterate_vars(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL Rz
 	const RzListIter *iter;
 	const RzConfigNode *node;
 	rz_list_foreach (cfg->nodes, iter, node) {
-		if (!iterator(node->name, node->desc, node->flags, user)) {
+		if (!iterator(cfg, node->name, node->desc, node->flags, user)) {
 			return;
 		}
 	}
@@ -912,7 +912,7 @@ RZ_API bool rz_config_toggle_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 	return rz_config_node_set_bool(cfg, node, !value);
 }
 
-RZ_IPI RZ_BORROW const char *rz_config_node_get_string(RzConfig *cfg, const RzConfigNode *node) {
+RZ_IPI RZ_BORROW const char *rz_config_node_get_string(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_STR)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as string but is %s\n", node->name, config_node_get_type(node));
 #if RZ_CHECKS_LEVEL != 0
@@ -934,7 +934,7 @@ RZ_IPI RZ_BORROW const char *rz_config_node_get_string(RzConfig *cfg, const RzCo
 	return safe_val ? safe_val : "";
 }
 
-RZ_IPI ut64 rz_config_node_get_integer(RzConfig *cfg, const RzConfigNode *node) {
+RZ_IPI ut64 rz_config_node_get_integer(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_INT)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as integer but is %s\n", node->name, config_node_get_type(node));
 #if RZ_CHECKS_LEVEL != 0
@@ -955,7 +955,7 @@ RZ_IPI ut64 rz_config_node_get_integer(RzConfig *cfg, const RzConfigNode *node) 
 	return node->value.integer;
 }
 
-RZ_IPI bool rz_config_node_get_bool(RzConfig *cfg, const RzConfigNode *node) {
+RZ_IPI bool rz_config_node_get_bool(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_BOOL)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as boolean but is %s\n", node->name, config_node_get_type(node));
 		return 0;
@@ -970,7 +970,7 @@ RZ_IPI bool rz_config_node_get_bool(RzConfig *cfg, const RzConfigNode *node) {
 	return node->value.boolean;
 }
 
-RZ_IPI RZ_BORROW const RzList /*<char *>*/ *rz_config_node_get_list(RzConfig *cfg, const RzConfigNode *node) {
+RZ_IPI RZ_BORROW const RzList /*<char *>*/ *rz_config_node_get_list(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_BOOL)) {
 		RZ_LOG_ERROR("config: variable %s was accessed as list but is %s\n", node->name, config_node_get_type(node));
 		return NULL;
@@ -993,7 +993,7 @@ RZ_IPI RZ_BORROW const RzList /*<char *>*/ *rz_config_node_get_list(RzConfig *cf
  *
  * \return     On success returns true, otherwise false
  */
-RZ_API RZ_BORROW const char *rz_config_get_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+RZ_API RZ_BORROW const char *rz_config_get_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
@@ -1011,7 +1011,7 @@ RZ_API RZ_BORROW const char *rz_config_get_string(RZ_NONNULL RzConfig *cfg, RZ_N
  *
  * \return     On success returns true, otherwise false
  */
-RZ_API ut64 rz_config_get_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+RZ_API ut64 rz_config_get_integer(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
@@ -1029,7 +1029,7 @@ RZ_API ut64 rz_config_get_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
  *
  * \return     On success returns true, otherwise false
  */
-RZ_API bool rz_config_get_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+RZ_API bool rz_config_get_bool(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
@@ -1047,7 +1047,7 @@ RZ_API bool rz_config_get_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
  *
  * \return     On success returns a valid pointer, otherwise NULL
  */
-RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
@@ -1065,7 +1065,7 @@ RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL RzConf
  *
  * \return     On success returns a valid string, otherwise NULL
  */
-RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
@@ -1099,7 +1099,7 @@ RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL
  *
  * \return     On success returns a valid pointer, otherwise NULL
  */
-RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
@@ -1117,7 +1117,7 @@ RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL RzC
  *
  * \return     On success returns a valid pointer, otherwise NULL
  */
-RZ_API const ut32 rz_config_get_flags(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name) {
+RZ_API const ut32 rz_config_get_flags(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name) {
 	RzConfigNode *node = rz_config_node_get(cfg, name);
 	if (!node) {
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);

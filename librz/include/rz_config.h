@@ -29,13 +29,13 @@ typedef enum {
 #define rz_config_var_is_writable(flags) (flags & RZ_CONFIG_VAR_WRITABLE)
 #define rz_config_var_is_readonly(flags) (!rz_config_var_is_writable(flags))
 
+typedef struct rz_config_hold_t RzConfigHold;
+typedef struct rz_config_t RzConfig;
+
 typedef bool (*RzConfigCallbackGet)(void *user, void *data);
 typedef bool (*RzConfigCallbackSet)(void *user, const void *data);
 typedef bool (*RzConfigCallbackOpt)(void *user, RzList /*<char *>*/ **data);
-typedef bool (*RzConfigIterator)(const char *name, const char *description, ut32 flags, void *user);
-
-typedef struct rz_config_hold_t RzConfigHold;
-typedef struct rz_config_t RzConfig;
+typedef bool (*RzConfigIterator)(const RzConfig *conf, const char *name, const char *description, ut32 flags, void *user);
 
 #define rz_config_get_b rz_config_get_bool
 #define rz_config_get_i rz_config_get_integer
@@ -86,14 +86,14 @@ RZ_API bool rz_config_set_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 RZ_API bool rz_config_set_list2(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, ...);
 RZ_API bool rz_config_set_any(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *value);
 
-RZ_API RZ_BORROW const char *rz_config_get_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
-RZ_API ut64 rz_config_get_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
-RZ_API bool rz_config_get_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
-RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API RZ_BORROW const char *rz_config_get_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API ut64 rz_config_get_integer(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API bool rz_config_get_bool(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 
-RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
-RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
-RZ_API const ut32 rz_config_get_flags(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API const ut32 rz_config_get_flags(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 
 /* hold.c */
 RZ_API RzConfigHold *rz_config_hold_new(RZ_NONNULL RzConfig *cfg);

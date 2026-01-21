@@ -19,7 +19,7 @@ static bool analysis_emul_init(RzCore *core, RzConfigHold *hc, RzDebugTrace **dt
 	core->dbg->trace = rz_debug_trace_new();
 	core->analysis->esil->trace = rz_analysis_esil_trace_new(core->analysis->esil);
 
-	rz_config_hold_variable(hc, "esil.romem", "dbg.trace", "esil.nonull", "dbg.follow", NULL);
+	rz_config_hold_var(hc, "esil.romem", "dbg.trace", "esil.nonull", "dbg.follow", NULL);
 	rz_config_set_b(core->config, "esil.romem", true);
 	rz_config_set_b(core->config, "dbg.trace", true);
 	rz_config_set_b(core->config, "esil.nonull", true);

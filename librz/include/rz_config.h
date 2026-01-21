@@ -44,16 +44,17 @@ typedef struct rz_config_t RzConfig;
 #define rz_config_set_i rz_config_set_integer
 #define rz_config_set_s rz_config_set_string
 
-#define rz_config_add_b rz_config_add_string
+#define rz_config_add_b rz_config_add_bool
 #define rz_config_add_i rz_config_add_integer
-#define rz_config_add_s rz_config_add_bool
+#define rz_config_add_s rz_config_add_string
 #define rz_config_add_l rz_config_add_list
 #define rz_config_add_o rz_config_add_options
 
-#define rz_config_add_b_bind rz_config_add_string_bind
+#define rz_config_add_b_bind rz_config_add_bool_bind
 #define rz_config_add_i_bind rz_config_add_integer_bind
-#define rz_config_add_s_bind rz_config_add_bool_bind
+#define rz_config_add_s_bind rz_config_add_string_bind
 #define rz_config_add_l_bind rz_config_add_list_bind
+#define rz_config_add_o_bind rz_config_add_options_bind
 
 #ifdef RZ_API
 
@@ -93,7 +94,7 @@ RZ_API const ut32 rz_config_get_flags(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const
 /* hold.c */
 RZ_API RzConfigHold *rz_config_hold_new(RZ_NONNULL RzConfig *cfg);
 RZ_API RzConfigHold *rz_config_hold_new2(RZ_NONNULL RzConfig *cfg, ...);
-RZ_API bool rz_config_hold_variable(RZ_NONNULL RzConfigHold *hold, ...);
+RZ_API bool rz_config_hold_var(RZ_NONNULL RzConfigHold *hold, ...);
 RZ_API void rz_config_hold_free(RZ_NULLABLE RzConfigHold *h);
 RZ_API void rz_config_hold_restore(RZ_NULLABLE RzConfigHold *hold);
 RZ_API void rz_config_hold_restore_and_free(RZ_NULLABLE RzConfigHold *hold);

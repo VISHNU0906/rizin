@@ -1533,11 +1533,11 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_fromto_op) {
 	RzConfigHold *hc = rz_config_hold_new(core->config);
 	int i;
 	for (i = 0; fromvars[i]; i++) {
-		rz_config_hold_variable(hc, fromvars[i], NULL);
+		rz_config_hold_var(hc, fromvars[i], NULL);
 		rz_config_set_i(core->config, fromvars[i], from_val);
 	}
 	for (i = 0; tovars[i]; i++) {
-		rz_config_hold_variable(hc, tovars[i], NULL);
+		rz_config_hold_var(hc, tovars[i], NULL);
 		rz_config_set_i(core->config, tovars[i], to_val);
 	}
 
@@ -1660,7 +1660,7 @@ DEFINE_HANDLE_TS_FCN_AND_SYMBOL(tmp_eval_op) {
 		char *eq = strchr(arg_str, '=');
 		if (eq) {
 			*eq = 0;
-			rz_config_hold_variable(hc, arg_str, NULL);
+			rz_config_hold_var(hc, arg_str, NULL);
 			rz_config_set(core->config, arg_str, eq + 1);
 		} else {
 			RZ_LOG_ERROR("core: Missing '=' in e: expression (%s)\n", arg_str);

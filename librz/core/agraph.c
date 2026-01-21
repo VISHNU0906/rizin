@@ -4483,7 +4483,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			g->need_reload_nodes = true;
 			grp_ctx.scroll_position = 0;
 			agraph_update_seek(g, get_anode(g->curnode), true);
-			// rz_config_toggle_boolean (core->config, "graph.hints");
+			// rz_config_toggle_bool (core->config, "graph.hints");
 			break;
 		case 'p':
 			g->mode = next_mode(g->mode);
@@ -4571,7 +4571,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			break;
 		case '\'':
 			if (fcn) {
-				rz_config_toggle_boolean(core->config, "graph.comments");
+				rz_config_toggle_bool(core->config, "graph.comments");
 				g->need_reload_nodes = true;
 			}
 			break;
@@ -4739,7 +4739,7 @@ RZ_IPI int rz_core_visual_graph(RzCore *core, RzAGraph *g, RzAnalysisFunction *_
 			agraph_update_seek(g, get_anode(g->curnode), true);
 			break;
 		case ',':
-			rz_config_toggle_boolean(core->config, "graph.few");
+			rz_config_toggle_bool(core->config, "graph.few");
 			g->need_reload_nodes = true;
 			agraph_update_seek(g, get_anode(g->curnode), true);
 			break;

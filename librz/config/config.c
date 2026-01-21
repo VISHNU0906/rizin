@@ -34,35 +34,6 @@ static inline bool config_node_has_string(const RzConfigNode *node) {
 	return node->flags & RZ_CONFIG_VAR_STR && node->value.string;
 }
 
-static RzConfigNode *config_node_clone(const RzConfigNode *original) {
-	RzConfigNode *copy = RZ_NEW0(RzConfigNode);
-	if (!copy) {
-		return NULL;
-	}
-	bool has_string = config_node_has_string(original);
-
-	copy->name = rz_str_dup(original->name);
-	copy->desc = rz_str_dup(original->desc);
-	copy->flags = original->flags;
-	if (has_string) {
-		copy->value.string = rz_str_dup(original->value.string);
-	}
-	copy->setter = original->setter;
-	copy->getter = original->getter;
-	copy->setopt = original->setopt;
-	copy->options = rz_list_clone(original->options);
-
-	if ((original->options && !copy->options) ||
-		(original->name && !copy->name) ||
-		(original->desc && !copy->desc) ||
-		(has_string && !copy->value.string)) {
-		config_node_free(copy);
-		return NULL;
-	}
-
-	return copy;
-}
-
 RZ_IPI RZ_OWN RzList /*<char *>*/ *rz_config_string_list_dup(RZ_NULLABLE const RzList /*<char *>*/ *list) {
 	const char *elem;
 	const RzListIter *it;
@@ -82,6 +53,35 @@ RZ_IPI RZ_OWN RzList /*<char *>*/ *rz_config_string_list_dup(RZ_NULLABLE const R
 		}
 	}
 	return dup;
+}
+
+static RzConfigNode *config_node_clone(const RzConfigNode *original) {
+	RzConfigNode *copy = RZ_NEW0(RzConfigNode);
+	if (!copy) {
+		return NULL;
+	}
+	bool has_string = config_node_has_string(original);
+
+	copy->name = rz_str_dup(original->name);
+	copy->desc = rz_str_dup(original->desc);
+	copy->flags = original->flags;
+	if (has_string) {
+		copy->value.string = rz_str_dup(original->value.string);
+	}
+	copy->setter = original->setter;
+	copy->getter = original->getter;
+	copy->setopt = original->setopt;
+	copy->options = rz_config_string_list_dup(original->options);
+
+	if ((original->options && !copy->options) ||
+		(original->name && !copy->name) ||
+		(original->desc && !copy->desc) ||
+		(has_string && !copy->value.string)) {
+		config_node_free(copy);
+		return NULL;
+	}
+
+	return copy;
 }
 
 /**
@@ -289,7 +289,9 @@ static RzConfigNode *config_node_new_bind(const char *name, const char *desc, ut
 
 	node->name = rz_str_dup(name);
 	node->desc = rz_str_dup(desc);
-	if (!node->name) {
+	node->options = rz_list_newf(free);
+	if (!node->name ||
+		!node->options) {
 		config_node_free(node);
 		return NULL;
 	}
@@ -546,6 +548,13 @@ static bool config_add_bind(RzConfig *cfg, const char *name, const char *desc, R
 	if (!node) {
 		RZ_LOG_ERROR("config: failed to allocate memory for variable '%s'.\n", name);
 		return false;
+	}
+
+	if (node->setopt &&
+		!node->setopt(cfg->user, (void *)&node->options)) {
+		RZ_LOG_ERROR("config: failed to get options for variable '%s'.\n", name);
+		config_node_free(node);
+		return NULL;
 	}
 
 	ht_sp_insert(cfg->ht, node->name, node);

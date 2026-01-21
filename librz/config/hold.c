@@ -35,7 +35,7 @@ static void config_hold_variable_add(RzConfigHold *hold, const char *name) {
  * \param ...   List of config variables to save, terminated by NULL.
  * \return      Returns true if at least one variable is correctly saved, false otherwise
  */
-RZ_API bool rz_config_hold_variable(RZ_NONNULL RzConfigHold *hold, ...) {
+RZ_API bool rz_config_hold_var(RZ_NONNULL RzConfigHold *hold, ...) {
 	rz_return_val_if_fail(hold, false);
 
 	va_list ap;

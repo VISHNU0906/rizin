@@ -137,8 +137,8 @@ RZ_API bool rz_analysis_walkthrough_casetbl(RZ_NONNULL RzAnalysis *analysis, RZ_
 				break;
 			}
 		}
-		if (analysis->limit) {
-			if (jmpptr < analysis->limit->from || jmpptr > analysis->limit->to) {
+		if (analysis->limit.enabled) {
+			if (jmpptr < analysis->limit.from || jmpptr > analysis->limit.to) {
 				break;
 			}
 		}
@@ -235,8 +235,8 @@ RZ_API bool rz_analysis_walkthrough_jmptbl(RZ_NONNULL RzAnalysis *analysis, RZ_N
 				break;
 			}
 		}
-		if (analysis->limit) {
-			if (jmpptr < analysis->limit->from || jmpptr > analysis->limit->to) {
+		if (analysis->limit.enabled) {
+			if (jmpptr < analysis->limit.from || jmpptr > analysis->limit.to) {
 				break;
 			}
 		}

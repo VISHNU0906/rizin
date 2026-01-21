@@ -55,6 +55,7 @@ typedef struct {
 } RzAnalysisMetaUserItem;
 
 typedef struct rz_analysis_range_t {
+	bool enabled;
 	ut64 from;
 	ut64 to;
 	int bits;
@@ -506,7 +507,7 @@ typedef struct rz_analysis_t {
 	struct rz_analysis_esil_inter_state_t *esilinterstate;
 	RzAnalysisILVM *il_vm; ///< user-faced VM, NEVER use this for any analysis passes!
 	struct rz_analysis_plugin_t *cur;
-	RzAnalysisRange *limit; // analysis.from, analysis.to
+	RzAnalysisRange limit; // analysis.from, analysis.to
 	HtSP /*<RzAnalysisPlugin *>*/ *plugins;
 	Sdb *sdb_noret;
 	Sdb *sdb_fmts;
@@ -2242,8 +2243,10 @@ RZ_API bool rz_analysis_function_delete_label(RzAnalysisFunction *fcn, const cha
 RZ_API bool rz_analysis_function_delete_label_at(RzAnalysisFunction *fcn, ut64 addr);
 
 /* limits */
-RZ_API void rz_analysis_set_limits(RzAnalysis *analysis, ut64 from, ut64 to);
-RZ_API void rz_analysis_unset_limits(RzAnalysis *analysis);
+RZ_API void rz_analysis_set_limits(RZ_NONNULL RzAnalysis *analysis, ut64 from, ut64 to);
+RZ_API void rz_analysis_get_limits(RZ_NONNULL RzAnalysis *analysis, RZ_NULLABLE ut64 *from, RZ_NULLABLE ut64 *to);
+RZ_API void rz_analysis_enable_limits(RZ_NONNULL RzAnalysis *analysis, bool enabled);
+RZ_API bool rz_analysis_are_limits_enabled(RZ_NONNULL RzAnalysis *analysis);
 
 /* no-return stuff */
 RZ_API bool rz_analysis_noreturn_add(RzAnalysis *analysis, const char *name, ut64 addr);

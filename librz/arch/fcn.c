@@ -677,7 +677,7 @@ static RzAnalysisBBEndCause run_basic_block_analysis(RzAnalysisTaskItem *item, R
 	bool last_is_mov_lr_pc = false;
 	bool last_is_add_lr_pc = false;
 	ut64 last_push_addr = UT64_MAX;
-	if (analysis->limit && addr + idx < analysis->limit->from) {
+	if (analysis->limit.enabled && addr + idx < analysis->limit.from) {
 		gotoBeach(RZ_ANALYSIS_RET_END);
 	}
 	RzAnalysisFunction *tmp_fcn = rz_analysis_get_fcn_in(analysis, addr, 0);
@@ -717,7 +717,7 @@ static RzAnalysisBBEndCause run_basic_block_analysis(RzAnalysisTaskItem *item, R
 			free(last_reg_mov_lea_name);
 			last_reg_mov_lea_name = NULL;
 		}
-		if (analysis->limit && analysis->limit->to <= addr + idx) {
+		if (analysis->limit.enabled && analysis->limit.to <= addr + idx) {
 			break;
 		}
 	repeat:

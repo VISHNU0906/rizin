@@ -27,17 +27,48 @@ RZ_API ut32 rz_analysis_guessed_mem_access_width(RZ_NONNULL const RzAnalysis *an
 	return analysis->bits / 8;
 }
 
-RZ_API void rz_analysis_set_limits(RzAnalysis *analysis, ut64 from, ut64 to) {
-	free(analysis->limit);
-	analysis->limit = RZ_NEW0(RzAnalysisRange);
-	if (analysis->limit) {
-		analysis->limit->from = from;
-		analysis->limit->to = to;
+/**
+ * \brief      Sets the limits of the analysis range [from : to]
+ *
+ * \param      analysis  The current RzAnalysis in use.
+ * \param[in]  from      The from address to set
+ * \param[in]  to        The to address to set
+ */
+RZ_API void rz_analysis_set_limits(RZ_NONNULL RzAnalysis *analysis, ut64 from, ut64 to) {
+	rz_return_if_fail(analysis);
+	if (from > to) {
+		RZ_LOG_WARN("analysis: invalid limits from (%" PFMT64x ") > to (%" PFMT64x ")\n", from, to);
+	}
+
+	analysis->limit.from = from;
+	analysis->limit.to = to;
+}
+
+/**
+ * \brief      Sets the limits of the analysis range [from : to]
+ *
+ * \param      analysis  The current RzAnalysis in use.
+ * \param[in]  from      The from address to get.
+ * \param[in]  to        The to address to get.
+ */
+RZ_API void rz_analysis_get_limits(RZ_NONNULL RzAnalysis *analysis, RZ_NULLABLE ut64 *from, RZ_NULLABLE ut64 *to) {
+	rz_return_if_fail(analysis);
+	if (from) {
+		*from = analysis->limit.from;
+	}
+	if (to) {
+		*to = analysis->limit.to;
 	}
 }
 
-RZ_API void rz_analysis_unset_limits(RzAnalysis *analysis) {
-	RZ_FREE(analysis->limit);
+RZ_API void rz_analysis_enable_limits(RZ_NONNULL RzAnalysis *analysis, bool enabled) {
+	rz_return_if_fail(analysis);
+	analysis->limit.enabled = enabled;
+}
+
+RZ_API bool rz_analysis_are_limits_enabled(RZ_NONNULL RzAnalysis *analysis) {
+	rz_return_val_if_fail(analysis, false);
+	return analysis->limit.enabled;
 }
 
 static void meta_unset_for(RzEvent *ev, int type, void *user, void *data) {
@@ -161,6 +192,9 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->lea_jmptbl_ip = UT64_MAX;
 	analysis->gnu_thumb1_case_uqi_addr = 0;
 	analysis->ht_virtual_xrefs = ht_sp_new(HT_STR_DUP, NULL, (HtSPFreeValue)rz_set_u_free);
+
+	rz_analysis_enable_limits(analysis, false);
+	rz_analysis_set_limits(analysis, UT64_MAX, UT64_MAX);
 	return analysis;
 }
 

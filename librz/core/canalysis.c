@@ -652,7 +652,7 @@ static void rz_analysis_set_stringrefs(RzCore *core, RzAnalysisFunction *fcn) {
 	rz_list_free(xrefs);
 }
 
-static bool rz_analysis_try_get_fcn(RzCore *core, RzAnalysisXRef *xref, int fcndepth, int refdepth) {
+static bool core_analysis_try_get_fcn(RzCore *core, RzAnalysisXRef *xref, int fcndepth, int refdepth) {
 	if (!refdepth) {
 		return false;
 	}
@@ -664,53 +664,55 @@ static bool rz_analysis_try_get_fcn(RzCore *core, RzAnalysisXRef *xref, int fcnd
 	if (map->perm & RZ_PERM_X) {
 		ut8 buf[64];
 		rz_io_read_at_mapped(core->io, xref->to, buf, sizeof(buf));
-		bool looksLikeAFunction = rz_analysis_check_fcn(core->analysis, buf, sizeof(buf), xref->to, map->itv.addr,
+		bool looks_like_a_function = rz_analysis_check_fcn(core->analysis, buf, sizeof(buf), xref->to, map->itv.addr,
 			map->itv.addr + map->itv.size);
-		if (looksLikeAFunction) {
-			if (core->analysis->limit) {
-				if (xref->to < core->analysis->limit->from ||
-					xref->to > core->analysis->limit->to) {
-					return 1;
+		if (looks_like_a_function) {
+			if (rz_analysis_are_limits_enabled(core->analysis)) {
+				ut64 analysis_from = UT64_MAX, analysis_to = UT64_MAX;
+				rz_analysis_get_limits(core->analysis, &analysis_from, &analysis_to);
+				if (xref->to < analysis_from || xref->to > analysis_to) {
+					return true;
 				}
 			}
 			rz_core_analysis_fcn(core, xref->to, xref->from, xref->type, fcndepth - 1);
 		}
-	} else {
-		ut64 offs = 0;
-		ut64 sz = core->analysis->bits >> 3;
-		RzAnalysisXRef xref1;
-		xref1.type = RZ_ANALYSIS_XREF_TYPE_DATA;
-		xref1.from = xref->to;
-		xref1.to = 0;
-		ut32 i32;
-		ut16 i16;
-		ut8 i8;
-		ut64 offe = offs + 1024;
-		for (offs = 0; offs < offe; offs += sz, xref1.from += sz) {
-			ut8 bo[8];
-			rz_io_read_at_mapped(core->io, xref->to + offs, bo, RZ_MIN(sizeof(bo), sz));
-			bool be = core->analysis->big_endian;
-			switch (sz) {
-			case 1:
-				i8 = rz_read_ble8(bo);
-				xref1.to = (ut64)i8;
-				break;
-			case 2:
-				i16 = rz_read_ble16(bo, be);
-				xref1.to = (ut64)i16;
-				break;
-			case 4:
-				i32 = rz_read_ble32(bo, be);
-				xref1.to = (ut64)i32;
-				break;
-			case 8:
-				xref1.to = rz_read_ble64(bo, be);
-				break;
-			}
-			rz_analysis_try_get_fcn(core, &xref1, fcndepth, refdepth - 1);
-		}
+		return true;
 	}
-	return 1;
+
+	ut64 offs = 0;
+	ut64 sz = core->analysis->bits >> 3;
+	RzAnalysisXRef xref1;
+	xref1.type = RZ_ANALYSIS_XREF_TYPE_DATA;
+	xref1.from = xref->to;
+	xref1.to = 0;
+	ut32 i32;
+	ut16 i16;
+	ut8 i8;
+	ut64 offe = offs + 1024;
+	for (offs = 0; offs < offe; offs += sz, xref1.from += sz) {
+		ut8 bo[8];
+		rz_io_read_at_mapped(core->io, xref->to + offs, bo, RZ_MIN(sizeof(bo), sz));
+		bool be = core->analysis->big_endian;
+		switch (sz) {
+		case 1:
+			i8 = rz_read_ble8(bo);
+			xref1.to = (ut64)i8;
+			break;
+		case 2:
+			i16 = rz_read_ble16(bo, be);
+			xref1.to = (ut64)i16;
+			break;
+		case 4:
+			i32 = rz_read_ble32(bo, be);
+			xref1.to = (ut64)i32;
+			break;
+		case 8:
+			xref1.to = rz_read_ble64(bo, be);
+			break;
+		}
+		core_analysis_try_get_fcn(core, &xref1, fcndepth, refdepth - 1);
+	}
+	return true;
 }
 
 static int rz_analysis_analyze_fcn_refs(RzCore *core, RzAnalysisFunction *fcn, int depth) {
@@ -725,7 +727,7 @@ static int rz_analysis_analyze_fcn_refs(RzCore *core, RzAnalysisFunction *fcn, i
 		switch (xref->type) {
 		case RZ_ANALYSIS_XREF_TYPE_DATA:
 			if (core->analysis->opt.followdatarefs) {
-				rz_analysis_try_get_fcn(core, xref, depth, 2);
+				core_analysis_try_get_fcn(core, xref, depth, 2);
 			}
 			break;
 		case RZ_ANALYSIS_XREF_TYPE_CODE:

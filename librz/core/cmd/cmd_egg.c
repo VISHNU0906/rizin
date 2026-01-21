@@ -96,8 +96,8 @@ static bool rz_core_egg_compile(RzEgg *egg) {
 
 static RzEgg *rz_core_egg_setup(RzCore *core) {
 	RzEgg *egg = core->egg;
-	const char *arch = rz_config_get(core->config, "asm.arch");
-	const char *os = rz_config_get(core->config, "asm.os");
+	const char *arch = rz_config_get_s(core->config, "asm.arch");
+	const char *os = rz_config_get_s(core->config, "asm.os");
 	int bits = rz_config_get_i(core->config, "asm.bits");
 
 	if (!rz_egg_setup(egg, arch, bits, 0, os)) {

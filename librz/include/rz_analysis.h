@@ -434,7 +434,7 @@ typedef struct rz_analysis_options_t {
 	int afterjmp; // continue analysis after jmp eax or forward jmp // option
 	int aftertrap; // continue analysis after trap instructions
 	int recont; // continue on recurse analysis mode
-	int noncode;
+	bool noncode; // when enabled it is used to enable search of xrefs in non-executable memory areas
 	int nopskip; // skip nops at the beginning of functions
 	int hpskip; // skip `mov reg,reg` and `lea reg,[reg]`
 	int jmptbl; // analyze jump tables

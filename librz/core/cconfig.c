@@ -40,37 +40,10 @@ static RZ_OWN RzList /*<char *>*/ *core_config_string_list_dup(RZ_NULLABLE const
 #include "cconfig_sign.c"
 
 RZ_API int rz_core_config_init(RzCore *core) {
-	int i;
-	char buf[128], *p, *tmpdir;
-	RzConfigNode *n;
 	RzConfig *cfg = core->config = rz_config_new(core);
 	if (!cfg) {
 		return 0;
 	}
-	cfg->num = core->num;
-	/* dir.prefix is used in other modules, set it first */
-	{
-		char *pfx = rz_sys_getenv("RZ_PREFIX");
-		if (!pfx) {
-			const char *pfx_const = rz_path_prefix(core->sys_path);
-			SETCB("dir.prefix", pfx_const, NULL, "Default prefix rizin was compiled for");
-		} else {
-			SETCB("dir.prefix", pfx, NULL, "Default prefix rizin was compiled for");
-			free(pfx);
-		}
-	}
-#if __ANDROID__
-	{ // use dir.home and also adjust check for permissions in directory before choosing a home
-		char *h = rz_sys_getenv(RZ_SYS_HOME);
-		if (h) {
-			if (!strcmp(h, "/")) {
-				rz_sys_setenv(RZ_SYS_HOME, "/data/local/tmp");
-			}
-			free(h);
-		}
-	}
-#endif
-
 	return core_config_add_arch_variables(core) &&
 		core_config_add_sign_variables(core) &&
 		// to be removed later.
@@ -126,6 +99,38 @@ RZ_API void rz_core_parse_rizinrc(RzCore *r) {
 	}
 }
 
+typedef struct core_config_in_space_s {
+	const char *space;
+	RzList /*<char *>*/ *list;
+} CoreConfigInSpace;
+
+static bool core_config_in_space_iterator(const char *var_name, const char *desc, ut32 flags, void *user) {
+	CoreConfigInSpace *ccis = (CoreConfigInSpace *)user;
+
+	char *name = rz_str_dup(var_name);
+	if (!name) {
+		return false;
+	}
+
+	char *dot = strchr(name, '.');
+	if (dot) {
+		*dot = 0;
+	}
+
+	if (RZ_STR_ISNOTEMPTY(ccis->space)) {
+		if (0 == strcmp(name, ccis->space) && dot && !rz_list_find(ccis->list, dot + 1, (RzListComparator)strcmp, NULL)) {
+			rz_list_append(ccis->list, rz_str_dup(dot + 1));
+		}
+	} else {
+		if (!rz_list_find(ccis->list, name, (RzListComparator)strcmp, NULL)) {
+			rz_list_append(ccis->list, rz_str_dup(name));
+		}
+	}
+	free(name);
+
+	return true;
+}
+
 /**
  * \brief Get config variable spaces
  * \param core The RzCore instance
@@ -138,28 +143,10 @@ RZ_API RZ_OWN RzList /*<char *>*/ *rz_core_config_in_space(RZ_NONNULL RzCore *co
 	if (!list) {
 		return NULL;
 	}
-	RzConfigNode *node;
-	RzListIter *iter;
-	rz_list_foreach (core->config->nodes, iter, node) {
-		char *name = rz_str_dup(node->name);
-		if (!name) {
-			continue;
-		}
-		char *dot = strchr(name, '.');
-		if (dot) {
-			*dot = 0;
-		}
 
-		if (RZ_STR_ISNOTEMPTY(space)) {
-			if (0 == strcmp(name, space) && dot && !rz_list_find(list, dot + 1, (RzListComparator)strcmp, NULL)) {
-				rz_list_append(list, rz_str_dup(dot + 1));
-			}
-		} else {
-			if (!rz_list_find(list, name, (RzListComparator)strcmp, NULL)) {
-				rz_list_append(list, rz_str_dup(name));
-			}
-		}
-		free(name);
-	}
+	CoreConfigInSpace ctx = { space, list };
+
+	rz_config_iterate_vars(core->config, core_config_in_space_iterator, &ctx);
+
 	return list;
 }

@@ -3,6 +3,63 @@
 
 #include <rz_core.h>
 
+typedef struct core_supported_map_info {
+	const char *option;
+	const char *description;
+} CoreSupportedMapInfo;
+
+// TODO: Would be more easy to use flags.
+static const CoreSupportedMapInfo core_supported_maps[] = {
+	{ "analysis.bb", "current basic-block" },
+	{ "analysis.fcn", "current function" },
+	{ "bin.section", "current section" },
+	{ "bin.sections", "all loaded sections" },
+	{ "bin.sections.r", "all loaded sections with read permissions" },
+	{ "bin.sections.rw", "all loaded sections with read-write permissions" },
+	{ "bin.sections.rwx", "all loaded sections with read-write-exec permissions" },
+	{ "bin.sections.rx", "all loaded sections with read-exec permissions" },
+	{ "bin.sections.w", "all loaded sections with write permissions" },
+	{ "bin.sections.wx", "all loaded sections with write-exec permissions" },
+	{ "bin.sections.x", "all loaded sections with exec permissions" },
+	{ "bin.segment", "current segment" },
+	{ "bin.segments", "all loaded segments" },
+	{ "bin.segments.r", "all loaded segments with read permissions" },
+	{ "bin.segments.x", "all loaded segments with exec permissions" },
+	{ "block", "current read block" },
+	{ "dbg.heap", "current debugger memory heap" },
+	{ "dbg.map", "current debugger memory map" },
+	{ "dbg.maps", "all memory maps of the current debugger" },
+	{ "dbg.maps.r", "all memory maps of the current debugger with read permissions" },
+	{ "dbg.maps.rw", "all memory maps of the current debugger with read-write permissions" },
+	{ "dbg.maps.rwx", "all memory maps of the current debugger with read-write-exec permissions" },
+	{ "dbg.maps.rx", "all memory maps of the current debugger with read-exec permissions" },
+	{ "dbg.maps.w", "all memory maps of the current debugger with write permissions" },
+	{ "dbg.maps.wx", "all memory maps of the current debugger with write-exec permissions" },
+	{ "dbg.maps.x", "all memory maps of the current debugger with exec permissions" },
+	{ "dbg.program", "debugger program (exec only)" },
+	{ "dbg.stack", "current debugger memory stack" },
+	{ "file", "all the raw file" },
+	{ "io.map", "current io map" },
+	{ "io.maps", "all io maps" },
+	{ "io.maps.r", "all io maps with read permissions" },
+	{ "io.maps.rw", "all io maps with read-write permissions" },
+	{ "io.maps.rwx", "all io maps with read-write-exec permissions" },
+	{ "io.maps.rx", "all io maps with read-exec permissions" },
+	{ "io.maps.w", "all io maps with write permissions" },
+	{ "io.maps.wx", "all io maps with write-exec permissions" },
+	{ "io.maps.x", "all io maps with exec permissions" },
+	{ "io.sky", "all skyline segments" },
+	{ "io.sky.r", "all skyline segments with read permissions" },
+	{ "io.sky.rw", "all skyline segments with read-write permissions" },
+	{ "io.sky.rwx", "all skyline segments with read-write-exec permissions" },
+	{ "io.sky.rx", "all skyline segments with read-exec permissions" },
+	{ "io.sky.w", "all skyline segments with write permissions" },
+	{ "io.sky.wx", "all skyline segments with write-exec permissions" },
+	{ "io.sky.x", "all skyline segments with exec permissions" },
+	{ "range", "search only within the range selected range" },
+	{ "raw", "all raw memory (alias for 'file')" },
+};
+
 static bool add_interval(RzIO *io, RzList /*<RzIOMap *>*/ *list, const RzInterval boundaries, const RzInterval interval, int perms) {
 	RzInterval map_itv = { 0 };
 	RzIOMap *map = NULL;
@@ -698,6 +755,78 @@ RZ_API RZ_OWN RzList /*<RzIOMap *>*/ *rz_core_get_boundaries_debug_program(RZ_NO
 	}
 
 	return list;
+}
+
+/**
+ * \brief      Returns the list of supported search maps names.
+ *
+ * \return     On success returns a valid list pointer, otherwise NULL.
+ */
+RZ_API RZ_OWN RzList /*<const char *>*/ *rz_core_get_supported_search_maps(void) {
+	RzList *list = rz_list_new();
+	if (!list) {
+		return NULL;
+	}
+
+	for (size_t i = 0; i < RZ_ARRAY_SIZE(core_supported_maps); ++i) {
+		const CoreSupportedMapInfo *map = &core_supported_maps[i];
+		rz_list_append(list, (void *)map->option);
+	}
+
+	return list;
+}
+
+/**
+ * \brief      Returns true if the given map is valid.
+ *
+ * \param[in]  map_name  The map name to test
+ *
+ * \return     On success returns true, otherwise false.
+ */
+RZ_API bool rz_core_is_supported_search_map(RZ_NULLABLE const char *map_name) {
+	if (RZ_STR_ISEMPTY(map_name)) {
+		return false;
+	}
+
+	for (size_t i = 0; i < RZ_ARRAY_SIZE(core_supported_maps); ++i) {
+		const CoreSupportedMapInfo *map = &core_supported_maps[i];
+		if (RZ_STR_EQ(map_name, map->option)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+RZ_API const char *rz_core_get_current_search_map(RZ_NONNULL RzCore *core) {
+	rz_return_val_if_fail(core, NULL);
+
+	return core->search_map;
+}
+
+RZ_API bool rz_core_set_current_search_map(RZ_NONNULL RzCore *core, RZ_NULLABLE const char *map_name) {
+	rz_return_val_if_fail(core, false);
+
+	if (RZ_STR_ISNOTEMPTY(map_name) && !rz_core_is_supported_search_map(map_name)) {
+		return false;
+	} else if (RZ_STR_ISEMPTY(map_name)) {
+		// default search map
+		map_name = "io.maps.x";
+	}
+
+	core->search_map = rz_str_dup(map_name);
+	return true;
+}
+
+/**
+ * \brief  Prints the supported search maps & their description.
+ */
+RZ_IPI void rz_core_print_supported_search_maps(void) {
+	rz_cons_printf("Valid values for search.in (depends on .from/.to and io.va):\n");
+	for (size_t i = 0; i < RZ_ARRAY_SIZE(core_supported_maps); ++i) {
+		const CoreSupportedMapInfo *map = &core_supported_maps[i];
+		rz_cons_printf("%-18s - %s\n", map->option, map->description);
+	}
 }
 
 /**

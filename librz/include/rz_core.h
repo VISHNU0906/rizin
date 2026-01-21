@@ -327,6 +327,7 @@ struct rz_core_t {
 	RzDebug *dbg;
 	RzFlag *flags;
 	RzMark *marks;
+	char *search_map; ///< Current selected search map
 	char *lastsearch; ///< Legacy search. Will be removed
 	RzSearch *search; ///< Legacy search. Will be removed
 	RzEgg *egg;
@@ -1202,6 +1203,11 @@ RZ_API RZ_OWN RzList /*<RzIOMap *>*/ *rz_core_get_boundaries_debug_heap(RZ_NONNU
 RZ_API RZ_OWN RzList /*<RzIOMap *>*/ *rz_core_get_boundaries_debug_stack(RZ_NONNULL RzCore *core, const RzInterval interval);
 RZ_API RZ_OWN RzList /*<RzIOMap *>*/ *rz_core_get_boundaries_debug_program(RZ_NONNULL RzCore *core, const RzInterval interval);
 RZ_API RZ_OWN RzList /*<RzIOMap *>*/ *rz_core_get_boundaries_select(RZ_NONNULL RzCore *core, RZ_NONNULL const char *from_key, RZ_NONNULL const char *to_key, RZ_NONNULL const char *in_key);
+
+RZ_API RZ_OWN RzList /*<const char *>*/ *rz_core_get_supported_search_maps(void);
+RZ_API bool rz_core_is_supported_search_map(RZ_NULLABLE const char *map_name);
+RZ_API const char *rz_core_get_current_search_map(RZ_NONNULL RzCore *core);
+RZ_API bool rz_core_set_current_search_map(RZ_NONNULL RzCore *core, RZ_NULLABLE const char *map);
 
 RZ_API bool rz_core_hack(RzCore *core, const char *op);
 RZ_API bool rz_core_dump(RzCore *core, const char *file, ut64 addr, ut64 size, int append);

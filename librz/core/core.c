@@ -1801,6 +1801,7 @@ RZ_API bool rz_core_init(RzCore *core) {
 		}
 	}
 	rz_core_analysis_type_init(core);
+	rz_core_set_current_search_map(core, NULL);
 	return 0;
 }
 
@@ -1868,6 +1869,7 @@ RZ_API void rz_core_fini(RzCore *c) {
 	should probably need to add a rz_config_free_payload callback */
 	rz_cons_free();
 	rz_cons_singleton()->teefile = NULL; // HACK
+	RZ_FREE(c->search_map);
 	RZ_FREE_CUSTOM(c->search, rz_search_free);
 	RZ_FREE_CUSTOM(c->flags, rz_flag_free);
 	RZ_FREE_CUSTOM(c->egg, rz_egg_free);

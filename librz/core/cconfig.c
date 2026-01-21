@@ -37,6 +37,7 @@ static RZ_OWN RzList /*<char *>*/ *core_config_string_list_dup(RZ_NULLABLE const
 }
 
 #include "cconfig_arch.c"
+#include "cconfig_sign.c"
 
 RZ_API int rz_core_config_init(RzCore *core) {
 	int i;
@@ -71,6 +72,7 @@ RZ_API int rz_core_config_init(RzCore *core) {
 #endif
 
 	return core_config_add_arch_variables(core) &&
+		core_config_add_sign_variables(core) &&
 		// to be removed later.
 		true;
 }

@@ -75,16 +75,16 @@ RZ_IPI void rz_core_visual_applyHexMode(RzCore *core, int hexMode) {
 
 RZ_IPI void rz_core_visual_toggle_hints(RzCore *core) {
 	if (rz_config_get_b(core->config, "asm.hint.call")) {
-		rz_config_toggle_boolean(core->config, "asm.hint.call");
+		rz_config_toggle_bool(core->config, "asm.hint.call");
 		rz_config_set_b(core->config, "asm.hint.jmp", true);
 	} else if (rz_config_get_b(core->config, "asm.hint.jmp")) {
-		rz_config_toggle_boolean(core->config, "asm.hint.jmp");
+		rz_config_toggle_bool(core->config, "asm.hint.jmp");
 		rz_config_set_b(core->config, "asm.hint.emu", true);
 	} else if (rz_config_get_b(core->config, "asm.hint.emu")) {
-		rz_config_toggle_boolean(core->config, "asm.hint.emu");
+		rz_config_toggle_bool(core->config, "asm.hint.emu");
 		rz_config_set_b(core->config, "asm.hint.lea", true);
 	} else if (rz_config_get_b(core->config, "asm.hint.lea")) {
-		rz_config_toggle_boolean(core->config, "asm.hint.lea");
+		rz_config_toggle_bool(core->config, "asm.hint.lea");
 		rz_config_set_b(core->config, "asm.hint.call", true);
 	} else {
 		rz_config_set_b(core->config, "asm.hint.call", true);
@@ -2820,7 +2820,7 @@ RZ_IPI int rz_core_visual_cmd(RzCore *core, const char *arg) {
 			}
 			break;
 		case '"':
-			rz_config_toggle_boolean(core->config, "scr.dumpcols");
+			rz_config_toggle_bool(core->config, "scr.dumpcols");
 			break;
 		case 'p':
 			rz_core_visual_toggle_decompiler_disasm(core, false, true);

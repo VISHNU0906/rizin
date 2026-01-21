@@ -172,7 +172,7 @@ RZ_IPI int rz_core_visual_trackflags(RzCore *core) {
 		ch = rz_cons_arrow_to_hjkl(ch); // get ESC+char, return 'hjkl' char
 		switch (ch) {
 		case 'C':
-			rz_config_toggle_boolean(core->config, "scr.color");
+			rz_config_toggle_bool(core->config, "scr.color");
 			break;
 		case '_':
 			if (rz_core_visual_hudstuff(core)) {

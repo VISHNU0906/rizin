@@ -199,7 +199,7 @@ RZ_API int rz_core_search_preludes(RzCore *core, bool log) {
 	ut64 to = UT64_MAX;
 	int keyword_length = 0;
 	ut8 *keyword = NULL;
-	const char *prelude = rz_config_get(core->config, "analysis.prelude");
+	const char *prelude = rz_config_get_s(core->config, "analysis.prelude");
 	ut64 limit = rz_config_get_i(core->config, "analysis.prelude.limit");
 
 	RzList *list = rz_core_get_boundaries_select(core, "search.from", "search.to", "search.in");
@@ -463,7 +463,7 @@ static void do_syscall_search(RzCore *core, struct search_parameters *param) {
 	RzAnalysisEsil *esil;
 	int align = core->search->align;
 	int stacksize = rz_config_get_i(core->config, "esil.stack.depth");
-	int iotrap = rz_config_get_i(core->config, "esil.iotrap");
+	bool iotrap = rz_config_get_b(core->config, "esil.iotrap");
 	unsigned int addrsize = rz_config_get_i(core->config, "esil.addr.size");
 
 	if (!(esil = rz_analysis_esil_new(stacksize, iotrap, addrsize))) {
@@ -837,7 +837,7 @@ static void do_asm_search(RzCore *core, struct search_parameters *param, const c
 	}
 
 	maxhits = (int)rz_config_get_i(core->config, "search.maxhits");
-	filter = (int)rz_config_get_i(core->config, "asm.sub.names");
+	filter = (int)rz_config_get_b(core->config, "asm.sub.names");
 	if (param->outmode == RZ_OUTPUT_MODE_JSON) {
 		pj_a(param->pj);
 	}
@@ -860,7 +860,7 @@ static void do_asm_search(RzCore *core, struct search_parameters *param, const c
 		hits = rz_core_asm_strsearch(core, end_cmd,
 			from, to, maxhits, regexp, everyByte, mode);
 		if (hits) {
-			const char *cmdhit = rz_config_get(core->config, "cmd.hit");
+			const char *cmdhit = rz_config_get_s(core->config, "cmd.hit");
 			rz_list_foreach (hits, iter, hit) {
 				if (rz_cons_is_breaked()) {
 					rz_list_free(hits);
@@ -1114,7 +1114,7 @@ void _CbInRangeSearchV(RzCore *core, ut64 from, ut64 to, int vsize, void *user) 
 	bool isarm = isArm(core);
 	// this is expensive operation that could be cached but is a callback
 	// and for not messing adding a new param
-	const char *prefix = rz_config_get(core->config, "search.prefix");
+	const char *prefix = rz_config_get_s(core->config, "search.prefix");
 	if (isarm) {
 		if (to & 1) {
 			to--;
@@ -1130,7 +1130,7 @@ void _CbInRangeSearchV(RzCore *core, ut64 from, ut64 to, int vsize, void *user) 
 	}
 	rz_core_cmdf(core, "f %s.value.0x%08" PFMT64x " %d @ 0x%08" PFMT64x " \n", prefix, to, vsize, to); // flag at value of hit
 	rz_core_cmdf(core, "f %s.offset.0x%08" PFMT64x " %d @ 0x%08" PFMT64x " \n", prefix, from, vsize, from); // flag at offset of hit
-	const char *cmdHit = rz_config_get(core->config, "cmd.hit");
+	const char *cmdHit = rz_config_get_s(core->config, "cmd.hit");
 	if (cmdHit && *cmdHit) {
 		ut64 addr = core->offset;
 		rz_core_seek(core, from, true);
@@ -1225,7 +1225,7 @@ static int cmd_search_legacy_handler(void *data, const char *input) {
 	RzCore *core = (RzCore *)data;
 	struct search_parameters param = {
 		.core = core,
-		.cmd_hit = rz_config_get(core->config, "cmd.hit"),
+		.cmd_hit = rz_config_get_s(core->config, "cmd.hit"),
 		.outmode = RZ_OUTPUT_MODE_STANDARD,
 		.inverse = false,
 		.aes_search = false,
@@ -1280,15 +1280,15 @@ static int cmd_search_legacy_handler(void *data, const char *input) {
 		search_itv.size = UT64_MAX;
 	}
 
-	param.searchshow = rz_config_get_i(core->config, "search.show");
-	param.mode = rz_config_get(core->config, "search.in");
+	param.searchshow = rz_config_get_b(core->config, "search.show");
+	param.mode = rz_config_get_s(core->config, "search.in");
 	param.boundaries = rz_core_get_boundaries_select(core, "search.from", "search.to", "search.in");
 
 	core->search->align = rz_config_get_i(core->config, "search.align");
-	param.searchflags = rz_config_get_i(core->config, "search.flags");
+	param.searchflags = rz_config_get_b(core->config, "search.flags");
 	core->search->maxhits = rz_config_get_i(core->config, "search.maxhits");
-	param.hit_prefix = rz_config_get(core->config, "search.prefix");
-	core->search->overlap = rz_config_get_i(core->config, "search.overlap");
+	param.hit_prefix = rz_config_get_s(core->config, "search.prefix");
+	core->search->overlap = rz_config_get_b(core->config, "search.overlap");
 
 	/* Quick & dirty check for json output */
 	if (input[0] && (input[1] == 'j') && (input[0] != ' ')) {
@@ -1577,7 +1577,7 @@ static RzCmdStatus cmd_core_handle_search_hits(RzCore *core, RzCmdStateOutput *s
 		return RZ_CMD_STATUS_ERROR;
 	}
 
-	if (!rz_str_is_false(rz_config_get(core->config, "search.show_progress"))) {
+	if (!rz_str_is_false(rz_config_get_s(core->config, "search.show_progress"))) {
 		// clear last progress notification, if any
 		rz_cons_clear_line(stderr);
 	}
@@ -1587,8 +1587,8 @@ static RzCmdStatus cmd_core_handle_search_hits(RzCore *core, RzCmdStateOutput *s
 	const char *cmd_hit = NULL;
 	const char *search_prefix = NULL;
 
-	cmd_hit = rz_config_get(core->config, "cmd.hit");
-	search_prefix = rz_config_get(core->config, "search.prefix");
+	cmd_hit = rz_config_get_s(core->config, "cmd.hit");
+	search_prefix = rz_config_get_s(core->config, "search.prefix");
 	if (RZ_STR_ISEMPTY(search_prefix)) {
 		search_prefix = "hit";
 	}
@@ -1636,7 +1636,7 @@ static RzSearchOpt *setup_search_options(RzCore *core) {
 	ut32 max_threads = rz_th_max_threads(rz_config_get_i(core->config, "search.max_threads"));
 	ut32 max_hits = rz_config_get_i(core->config, "search.maxhits");
 	ut32 search_chunk = rz_config_get_i(core->config, "search.chunk");
-	const char *show_progress = rz_config_get(core->config, "search.show_progress");
+	const char *show_progress = rz_config_get_s(core->config, "search.show_progress");
 	if (!(rz_search_opt_set_max_threads(search_opts, max_threads) &&
 		    rz_search_opt_set_max_hits(search_opts, max_hits) &&
 		    rz_search_opt_set_show_progress_from_str(search_opts, show_progress))) {
@@ -1715,7 +1715,7 @@ static RzCmdStatus value_range_search(RzCore *core, RZ_OWN RzVector /*<RzSearchV
 
 	CMD_SEARCH_BEGIN();
 
-	bool progress = !rz_str_is_false(rz_config_get(core->config, "search.show_progress"));
+	bool progress = !rz_str_is_false(rz_config_get_s(core->config, "search.show_progress"));
 	if (!rz_search_opt_set_cancel_cb(search_opts, cmd_search_progress_cancel, progress ? state : NULL)) {
 		RZ_LOG_ERROR("code: Failed to setup default search options.\n");
 		rz_vector_free(ranges);
@@ -1878,8 +1878,8 @@ RZ_IPI RzCmdStatus rz_cmd_search_cryptographic_material_handler(RzCore *core, in
 
 	CMD_SEARCH_BEGIN();
 
-	bool progress = rz_config_get_b(core->config, "search.show_progress");
-	if (!rz_search_opt_set_cancel_cb(search_opts, cmd_search_progress_cancel, progress ? state : NULL)) {
+	const char *progress = rz_config_get_s(core->config, "search.show_progress");
+	if (!rz_search_opt_set_cancel_cb(search_opts, cmd_search_progress_cancel, rz_str_is_false(progress) ? NULL : state)) {
 		RZ_LOG_ERROR("code: Failed to setup default search options.\n");
 		goto error;
 	}
@@ -1918,8 +1918,8 @@ RZ_IPI RzCmdStatus rz_cmd_search_hash_block_handler(RzCore *core, int argc, cons
 
 	CMD_SEARCH_BEGIN();
 
-	bool progress = rz_config_get_b(core->config, "search.show_progress");
-	if (!rz_search_opt_set_cancel_cb(search_opts, cmd_search_progress_cancel, progress ? state : NULL)) {
+	const char *progress = rz_config_get_s(core->config, "search.show_progress");
+	if (!rz_search_opt_set_cancel_cb(search_opts, cmd_search_progress_cancel, rz_str_is_false(progress) ? NULL : state)) {
 		RZ_LOG_ERROR("search: Failed to setup default search options.\n");
 		goto error;
 	}
@@ -1957,8 +1957,8 @@ static RzCmdStatus cmd_search_hash_entropy_handler(RzCore *core, int argc, const
 
 	CMD_SEARCH_BEGIN();
 
-	bool progress = rz_config_get_b(core->config, "search.show_progress");
-	if (!rz_search_opt_set_cancel_cb(search_opts, cmd_search_progress_cancel, progress ? state : NULL)) {
+	const char *progress = rz_config_get_s(core->config, "search.show_progress");
+	if (!rz_search_opt_set_cancel_cb(search_opts, cmd_search_progress_cancel, rz_str_is_false(progress) ? NULL : state)) {
 		RZ_LOG_ERROR("search: Failed to setup default search options.\n");
 		goto error;
 	}
@@ -1999,16 +1999,16 @@ RZ_IPI RzCmdStatus rz_cmd_search_deltified_handler(RzCore *core, int argc, const
 }
 
 static void legacy_param_setup(RzCore *core, struct search_parameters *param, size_t mode) {
-	param->mode = rz_config_get(core->config, "search.in");
+	param->mode = rz_config_get_s(core->config, "search.in");
 	param->core = core;
-	param->cmd_hit = rz_config_get(core->config, "cmd.hit");
+	param->cmd_hit = rz_config_get_s(core->config, "cmd.hit");
 	if (!param->cmd_hit) {
 		param->cmd_hit = "";
 	}
-	param->hit_prefix = rz_config_get(core->config, "search.prefix");
+	param->hit_prefix = rz_config_get_s(core->config, "search.prefix");
 	param->outmode = mode;
-	param->searchshow = rz_config_get_i(core->config, "search.show");
-	param->searchflags = rz_config_get_i(core->config, "search.flags");
+	param->searchshow = rz_config_get_b(core->config, "search.show");
+	param->searchflags = rz_config_get_b(core->config, "search.flags");
 	param->boundaries = rz_core_get_boundaries_select(core, "search.from", "search.to", "search.in");
 	if (param->outmode == RZ_OUTPUT_MODE_JSON) {
 		param->pj = pj_new();
@@ -2410,7 +2410,7 @@ static RzCmdStatus cmd_string_search_generic(RzCore *core, const char *string, c
 
 	expected = rz_str_enc_string_as_type(encoding);
 	if (expected == RZ_STRING_ENC_SETTINGS) {
-		expected = rz_str_enc_string_as_type(rz_config_get(core->config, "str.encoding"));
+		expected = rz_str_enc_string_as_type(rz_config_get_s(core->config, "str.encoding"));
 	}
 	if (!RZ_STR_EQ(encoding, "guess") && expected == RZ_STRING_ENC_GUESS) {
 		if (!RZ_STR_EQ(encoding, "settings")) {

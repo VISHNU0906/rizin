@@ -881,6 +881,36 @@ RZ_API bool rz_config_set_list2(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char 
 }
 
 /**
+ * \brief      Sets the string value of a given variable of the config (with automatic cast to the correct type)
+ *
+ * \param      cfg    The RzConfig to modify
+ * \param[in]  name   The name of the variable
+ * \param[in]  value  The list to set
+ *
+ * \return     On success returns true, otherwise false
+ */
+RZ_API bool rz_config_set_any(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *value) {
+	RzConfigNode *node = rz_config_node_get(cfg, name);
+	if (!node) {
+		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
+		return false;
+	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
+		RZ_LOG_ERROR("config: variable %s is read only\n", node->name);
+		return false;
+	}
+
+	if (node->flags & (RZ_CONFIG_VAR_LIST | RZ_CONFIG_VAR_STR)) {
+		return rz_config_node_set_string(cfg, node, value);
+	} else if (node->flags & RZ_CONFIG_VAR_BOOL) {
+		bool boolean = rz_str_is_true(value);
+		return rz_config_node_set_bool(cfg, node, boolean);
+	}
+
+	ut64 num = rz_num_get(NULL, value);
+	return rz_config_node_set_integer(cfg, node, num);
+}
+
+/**
  * \brief      Toggles (i.e. inverts) the value of a boolean
  *
  * \param      cfg    The RzConfig to modify

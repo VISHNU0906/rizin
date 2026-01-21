@@ -148,12 +148,10 @@ static bool hexagon_init(void **plugin_data) {
 	rz_return_val_if_fail(cfg, false);
 
 	// Add nodes
-	rz_config_lock(cfg, false);
 	rz_config_add_b_bind(cfg, "plugins.hexagon.imm.hash", "Display ## before 32bit immediates and # before immidiates with other width.", hexagon_config_imm_hash_get, hexagon_config_imm_hash_set);
 	rz_config_add_b_bind(cfg, "plugins.hexagon.imm.sign", "True: Print them with sign. False: Print signed immediates in unsigned representation.", hexagon_config_imm_sign_get, hexagon_config_imm_sign_set);
 	rz_config_add_b_bind(cfg, "plugins.hexagon.sdk", "Print packet syntax in objdump style.", hexagon_config_sdk_get, hexagon_config_sdk_set);
 	rz_config_add_b_bind(cfg, "plugins.hexagon.reg.alias", "Print the alias of registers (Alias from C0 = SA0).", hexagon_config_reg_alias_get, hexagon_config_reg_alias_set);
-	rz_config_lock(cfg, true);
 
 	if (!state->token_patterns) {
 		state->token_patterns = get_token_patterns();

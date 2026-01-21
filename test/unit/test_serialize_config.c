@@ -18,7 +18,6 @@ bool test_config_save() {
 	rz_config_set(config, "somestring", "somevalue");
 	rz_config_set_i(config, "someint", 42);
 	rz_config_set_i(config, "somebiggerint", 0x1337);
-	rz_config_lock(config, true);
 
 	Sdb *db = sdb_new0();
 	rz_serialize_config_save(db, config);
@@ -36,7 +35,6 @@ bool test_config_load() {
 	rz_config_set(config, "somestring", "someoldvalue");
 	rz_config_set_i(config, "someint", 0);
 	rz_config_set_i(config, "somebiggerint", 0);
-	rz_config_lock(config, true);
 
 	Sdb *db = ref_db();
 	sdb_set(db, "sneaky", "not part of config");
@@ -62,7 +60,6 @@ bool test_config_load_exclude() {
 	rz_config_set(config, "somestring", "someoldvalue");
 	rz_config_set_i(config, "someint", 123);
 	rz_config_set_i(config, "somebiggerint", 0);
-	rz_config_lock(config, true);
 
 	Sdb *db = ref_db();
 	bool loaded = rz_serialize_config_load(db, config, exclude, NULL);

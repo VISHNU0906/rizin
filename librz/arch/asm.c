@@ -432,7 +432,6 @@ RZ_API bool rz_asm_use_assembler(RzAsm *a, const char *name) {
  */
 static void set_plugin_configs(RZ_BORROW RzCore *core, const char *plugin_name, RZ_OWN RzConfig *pcfg) {
 	rz_return_if_fail(pcfg && core);
-	rz_config_lock(pcfg, 1);
 	if (!ht_sp_insert(core->plugin_configs, plugin_name, pcfg)) {
 		RZ_LOG_WARN("Plugin '%s' was already added.\n", plugin_name);
 	}

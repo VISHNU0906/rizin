@@ -118,7 +118,6 @@ RZ_API RZ_OWN RzConfig *rz_config_new(RZ_NULLABLE void *user) {
 		return NULL;
 	}
 	cfg->user = user;
-	cfg->lock = false;
 	return cfg;
 }
 
@@ -146,25 +145,13 @@ RZ_API RZ_OWN RzConfig *rz_config_clone(RZ_NONNULL RzConfig *cfg) {
 		ht_sp_insert(c->ht, node->name, nn);
 		rz_list_append(c->nodes, nn);
 	}
-	c->lock = cfg->lock;
 	return c;
-}
-
-/**
- * \brief      Enable or disable the lock of a given RzConfig which allows or disallows to add new variables
- *
- * \param      cfg          The RzConfig to lock/unlock
- * \param[in]  enable_lock  When true locks the RzConfig structure.
- */
-RZ_API void rz_config_lock(RZ_NONNULL RzConfig *cfg, bool enable_lock) {
-	rz_return_if_fail(cfg);
-	cfg->lock = enable_lock;
 }
 
 /**
  * \brief      Sets a given variable to readonly or writable mode.
  *
- * \param      cfg        The RzConfig to lock/unlock
+ * \param      cfg        The RzConfig to modify
  * \param      name       The name of the variable to set as RO/RW
  * \param[in]  read_only  When true sets the variable to readonly mode otherwise allows writing.
  *
@@ -191,7 +178,7 @@ RZ_API bool rz_config_set_readonly(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const ch
 /**
  * \brief      Gets if a given variable is readonly or not.
  *
- * \param      cfg        The RzConfig to lock/unlock
+ * \param      cfg        The RzConfig to use
  * \param      name       The name of the variable to set as RO/RW
  *
  * \return     Returns true if the key is readonly, otherwise false.
@@ -336,11 +323,6 @@ static RzConfigNode *config_node_new_bind(const char *name, const char *desc, ut
  */
 RZ_API bool rz_config_add_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, RZ_NULLABLE const char *value) {
 	rz_return_val_if_fail(cfg && RZ_STR_ISNOTEMPTY(name), NULL);
-	if (cfg->lock) {
-		RZ_LOG_ERROR("config: cannot create variable '%s' when the config is locked.\n", name);
-		return false;
-	}
-
 	if (rz_config_node_get(cfg, name)) {
 		RZ_LOG_ERROR("config: variable '%s' already exists.\n", name);
 		return false;
@@ -374,11 +356,6 @@ RZ_API bool rz_config_add_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char
  */
 RZ_API bool rz_config_add_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, ut64 value) {
 	rz_return_val_if_fail(cfg && RZ_STR_ISNOTEMPTY(name), NULL);
-	if (cfg->lock) {
-		RZ_LOG_ERROR("config: cannot create variable '%s' when the config is locked.\n", name);
-		return false;
-	}
-
 	if (rz_config_node_get(cfg, name)) {
 		RZ_LOG_ERROR("config: variable '%s' already exists.\n", name);
 		return false;
@@ -408,11 +385,6 @@ RZ_API bool rz_config_add_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
  */
 RZ_API bool rz_config_add_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, bool value) {
 	rz_return_val_if_fail(cfg && RZ_STR_ISNOTEMPTY(name), NULL);
-	if (cfg->lock) {
-		RZ_LOG_ERROR("config: cannot create variable '%s' when the config is locked.\n", name);
-		return false;
-	}
-
 	if (rz_config_node_get(cfg, name)) {
 		RZ_LOG_ERROR("config: variable '%s' already exists.\n", name);
 		return false;
@@ -457,11 +429,6 @@ RZ_API bool rz_config_add_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 	rz_return_val_if_fail(cfg && RZ_STR_ISNOTEMPTY(name), NULL);
 	va_list argp;
 
-	if (cfg->lock) {
-		RZ_LOG_ERROR("config: cannot create variable '%s' when the config is locked.\n", name);
-		return false;
-	}
-
 	if (rz_config_node_get(cfg, name)) {
 		RZ_LOG_ERROR("config: variable '%s' already exists.\n", name);
 		return false;
@@ -500,11 +467,6 @@ RZ_API bool rz_config_add_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 RZ_API bool rz_config_add_options(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, ...) {
 	rz_return_val_if_fail(cfg && RZ_STR_ISNOTEMPTY(name), NULL);
 	va_list argp;
-
-	if (cfg->lock) {
-		RZ_LOG_ERROR("config: cannot create variable '%s' when the config is locked.\n", name);
-		return false;
-	}
 
 	if (rz_config_node_get(cfg, name)) {
 		RZ_LOG_ERROR("config: variable '%s' already exists.\n", name);
@@ -546,11 +508,6 @@ RZ_API bool rz_config_add_options(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 
 static bool config_add_bind(RzConfig *cfg, const char *name, const char *desc, RzConfigCallbackGet getter, RzConfigCallbackSet setter, RzConfigCallbackOpt setopt, ut32 flags) {
 	rz_return_val_if_fail(cfg && RZ_STR_ISNOTEMPTY(name) && getter && setter, NULL);
-	if (cfg->lock) {
-		RZ_LOG_ERROR("config: cannot create variable '%s' when the config is locked.\n", name);
-		return false;
-	}
-
 	if (rz_config_node_get(cfg, name)) {
 		RZ_LOG_ERROR("config: variable '%s' already exists.\n", name);
 		return false;

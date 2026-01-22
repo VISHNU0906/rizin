@@ -352,7 +352,7 @@ beach:
 }
 
 static bool mustSaveHistory(RzConfig *c) {
-	if (!rz_config_get_i(c, "scr.histsave")) {
+	if (!rz_config_get_b(c, "scr.histsave")) {
 		return false;
 	}
 	if (!rz_cons_is_interactive()) {
@@ -525,13 +525,13 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 		case '0':
 			zerosep = true;
 			/* implicit -q */
-			rz_config_set(r->config, "scr.interactive", "false");
-			rz_config_set(r->config, "scr.prompt", "false");
+			rz_config_set_b(r->config, "scr.interactive", false);
+			rz_config_set_b(r->config, "scr.prompt", false);
 			rz_config_set_i(r->config, "scr.color", COLOR_MODE_DISABLED);
 			quiet = true;
 			break;
 		case 'u':
-			rz_config_set(r->config, "bin.filter", "false");
+			rz_config_set_b(r->config, "bin.filter", false);
 			break;
 		case 'a':
 			asmarch = opt.arg;
@@ -549,7 +549,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			baddr = rz_num_math(r->num, opt.arg);
 			break;
 		case 'X':
-			rz_config_set(r->config, "bin.usextr", "false");
+			rz_config_set_b(r->config, "bin.usextr", false);
 			break;
 		case 'c':
 			rz_list_append(cmds, (void *)opt.arg);
@@ -659,8 +659,8 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			rz_config_set_i(r->config, "file.offset", mapaddr);
 			break;
 		case 'M':
-			rz_config_set(r->config, "bin.demangle", "false");
-			rz_config_set(r->config, "asm.demangle", "false");
+			rz_config_set_b(r->config, "bin.demangle", false);
+			rz_config_set_b(r->config, "asm.demangle", false);
 			break;
 		case 'n':
 			if (load_bin == LOAD_BIN_ALL) { // "-n"
@@ -668,7 +668,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			} else if (load_bin == LOAD_BIN_NOTHING) { // second n => "-nn"
 				load_bin = LOAD_BIN_STRUCTURES_ONLY;
 			}
-			rz_config_set(r->config, "file.info", "false");
+			rz_config_set_b(r->config, "file.info", false);
 			break;
 		case 'N':
 			if (run_rc) {
@@ -681,9 +681,9 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			prj = *opt.arg ? opt.arg : NULL;
 			break;
 		case 'q':
-			rz_config_set(r->config, "scr.interactive", "false");
-			rz_config_set(r->config, "scr.prompt", "false");
-			rz_config_set(r->config, "cfg.fortunes", "false");
+			rz_config_set_b(r->config, "scr.interactive", false);
+			rz_config_set_b(r->config, "scr.prompt", false);
+			rz_config_set_b(r->config, "cfg.fortunes", false);
 			if (quiet) {
 				forcequit = true;
 			}
@@ -696,7 +696,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 				goto beach;
 			}
 			haveRarunProfile = true;
-			rz_config_set(r->config, "dbg.profile", opt.arg);
+			rz_config_set_s(r->config, "dbg.profile", opt.arg);
 			break;
 		case 'R':
 			customRarunProfile = rz_str_appendf(customRarunProfile, "%s\n", opt.arg);
@@ -728,7 +728,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			break;
 		case 'x':
 			perms &= ~RZ_PERM_X;
-			rz_config_set(r->config, "io.exec", "false");
+			rz_config_set_b(r->config, "io.exec", false);
 			break;
 		default:
 			help++;
@@ -771,7 +771,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 		}
 	}
 	{
-		const char *dbg_profile = rz_config_get(r->config, "dbg.profile");
+		const char *dbg_profile = rz_config_get_s(r->config, "dbg.profile");
 		if (dbg_profile && *dbg_profile) {
 			char *msg = rz_file_slurp(dbg_profile, NULL);
 			if (msg) {
@@ -805,7 +805,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 	}
 
 	if (do_list_io_plugins) {
-		if (rz_config_get_i(r->config, "cfg.plugins")) {
+		if (rz_config_get_b(r->config, "cfg.plugins")) {
 			rz_core_loadlibs(r, RZ_CORE_LOADLIBS_ALL);
 		}
 		run_commands(r, NULL, prefiles, false, do_analysis);
@@ -833,7 +833,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			eprintf("Cannot create %s\n", tfn);
 		} else {
 			haveRarunProfile = true;
-			rz_config_set(r->config, "dbg.profile", tfn);
+			rz_config_set_s(r->config, "dbg.profile", tfn);
 		}
 		free(tfn);
 	}
@@ -867,10 +867,10 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 
 	tmp = NULL;
 	if (!load_l || (tmp = rz_sys_getenv("RZ_NOPLUGINS"))) {
-		rz_config_set_i(r->config, "cfg.plugins", 0);
+		rz_config_set_b(r->config, "cfg.plugins", false);
 		free(tmp);
 	}
-	if (rz_config_get_i(r->config, "cfg.plugins")) {
+	if (rz_config_get_b(r->config, "cfg.plugins")) {
 		rz_core_loadlibs(r, RZ_CORE_LOADLIBS_ALL);
 	}
 	run_commands(r, NULL, prefiles, false, do_analysis);
@@ -903,7 +903,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 
 	switch (zflag) {
 	case 1:
-		rz_config_set(r->config, "bin.strings", "false");
+		rz_config_set_b(r->config, "bin.strings", false);
 		break;
 	default:
 		break;
@@ -916,7 +916,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 	if (run_rc) {
 		rz_core_parse_rizinrc(r);
 	} else {
-		rz_config_set(r->config, "scr.utf8", "false");
+		rz_config_set_b(r->config, "scr.utf8", false);
 	}
 
 	if (pfile && rz_file_is_directory(pfile)) {
@@ -952,13 +952,13 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 		const char *con_dev = "/dev/tty";
 #endif
 		ut64 scr_color = rz_config_get_i(r->config, "scr.color");
-		const char *scr_interactive = rz_config_get(r->config, "scr.interactive");
-		while (rz_cons_free())
-			;
+		bool scr_interactive = rz_config_get_b(r->config, "scr.interactive");
+		while (rz_cons_free()) {
+		}
 		rz_xfreopen(con_dev, "r", stdin);
 		rz_cons_new();
 		rz_config_set_i(r->config, "scr.color", scr_color);
-		rz_config_set(r->config, "scr.interactive", scr_interactive);
+		rz_config_set_b(r->config, "scr.interactive", scr_interactive);
 		if (buf && sz > 0) {
 			char *path = rz_str_newf("malloc://%d", sz);
 			fh = rz_core_file_open(r, path, perms, mapaddr);
@@ -977,13 +977,13 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			free(buf);
 			free(path);
 			if (asmarch) {
-				rz_config_set(r->config, "asm.arch", asmarch);
+				rz_config_set_s(r->config, "asm.arch", asmarch);
 			}
 			if (asmbits) {
-				rz_config_set(r->config, "asm.bits", asmbits);
+				rz_config_set_any(r->config, "asm.bits", asmbits);
 			}
 			if (asmos) {
-				rz_config_set(r->config, "asm.os", asmos);
+				rz_config_set_s(r->config, "asm.os", asmos);
 			}
 			if (endianness != RZ_SYS_ENDIAN_NONE) {
 				rz_config_set_b(r->config, "cfg.bigendian", endianness == RZ_SYS_ENDIAN_BIG);
@@ -998,10 +998,10 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 	} else if (has_file_arg(argc, argv, &opt)) {
 		if (debug) {
 			if (asmbits) {
-				rz_config_set(r->config, "asm.bits", asmbits);
+				rz_config_set_any(r->config, "asm.bits", asmbits);
 			}
-			rz_config_set(r->config, "search.in", "dbg.map"); // implicit?
-			rz_config_set(r->config, "cfg.debug", "true");
+			rz_config_set_s(r->config, "search.in", "dbg.map"); // implicit?
+			rz_config_set_b(r->config, "cfg.debug", true);
 			perms = RZ_PERM_RWX;
 			if (opt.ind >= argc) {
 				RZ_LOG_ERROR("No program given to -d\n");
@@ -1012,7 +1012,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			if (debug == 2) {
 				// autodetect backend with -D
 				if (strcmp(debugbackend, "dmp")) {
-					rz_config_set(r->config, "dbg.backend", debugbackend);
+					rz_config_set_s(r->config, "dbg.backend", debugbackend);
 				}
 				if (strcmp(debugbackend, "native")) {
 					if (!haveRarunProfile) {
@@ -1028,7 +1028,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 					fh = rz_core_file_open(r, pfile, perms, mapaddr);
 					iod = (r->io && fh) ? rz_io_desc_get(r->io, fh->fd) : NULL;
 					if (!strcmp(debugbackend, "gdb") || !strcmp(debugbackend, "dmp")) {
-						const char *filepath = rz_config_get(r->config, "dbg.exe.path");
+						const char *filepath = rz_config_get_s(r->config, "dbg.exe.path");
 						ut64 addr = baddr;
 						if (addr == UINT64_MAX) {
 							addr = rz_config_get_i(r->config, "bin.baddr");
@@ -1113,19 +1113,19 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			}
 		}
 		if (asmarch) {
-			rz_config_set(r->config, "asm.arch", asmarch);
+			rz_config_set_s(r->config, "asm.arch", asmarch);
 		}
 		if (asmbits) {
-			rz_config_set(r->config, "asm.bits", asmbits);
+			rz_config_set_any(r->config, "asm.bits", asmbits);
 		}
 		if (asmos) {
-			rz_config_set(r->config, "asm.os", asmos);
+			rz_config_set_s(r->config, "asm.os", asmos);
 		}
 		if (endianness != RZ_SYS_ENDIAN_NONE) {
 			rz_config_set_b(r->config, "cfg.bigendian", endianness == RZ_SYS_ENDIAN_BIG);
 		}
 		if (!debug || debug == 2) {
-			const char *dbg_profile = rz_config_get(r->config, "dbg.profile");
+			const char *dbg_profile = rz_config_get_s(r->config, "dbg.profile");
 			if (opt.ind == argc && dbg_profile && *dbg_profile) {
 				if (RZ_STR_ISEMPTY(pfile)) {
 					RZ_LOG_ERROR("Missing file to open\n");
@@ -1149,7 +1149,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 					}
 					if (perms & RZ_PERM_CREAT) {
 						if (fh) {
-							rz_config_set_i(r->config, "io.va", false);
+							rz_config_set_b(r->config, "io.va", false);
 						} else {
 							eprintf("rz_io_create: Permission denied.\n");
 						}
@@ -1196,7 +1196,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 				}
 			}
 			if (mapaddr) {
-				if (rz_config_get_i(r->config, "file.info")) {
+				if (rz_config_get_b(r->config, "file.info")) {
 					int fd = rz_io_fd_get_current(r->io);
 					RzIODesc *desc = rz_io_desc_get(r->io, fd);
 					if (desc) {
@@ -1284,13 +1284,13 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			rz_core_seek(r, mapaddr, true);
 		}
 		if (asmarch) {
-			rz_config_set(r->config, "asm.arch", asmarch);
+			rz_config_set_s(r->config, "asm.arch", asmarch);
 		}
 		if (asmbits) {
-			rz_config_set(r->config, "asm.bits", asmbits);
+			rz_config_set_any(r->config, "asm.bits", asmbits);
 		}
 		if (asmos) {
-			rz_config_set(r->config, "asm.os", asmos);
+			rz_config_set_s(r->config, "asm.os", asmos);
 		}
 		if (endianness != RZ_SYS_ENDIAN_NONE) {
 			rz_config_set_b(r->config, "cfg.bigendian", endianness == RZ_SYS_ENDIAN_BIG);
@@ -1339,9 +1339,9 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 		/* check if file.path has changed */
 		if (iod && !strstr(iod->uri, "://")) {
 			const char *npath;
-			char *path = rz_str_dup(rz_config_get(r->config, "file.path"));
+			char *path = rz_config_get_as_string(r->config, "file.path");
 			iod = r->io ? rz_io_desc_get(r->io, fh->fd) : NULL;
-			npath = rz_config_get(r->config, "file.path");
+			npath = rz_config_get_s(r->config, "file.path");
 			if (!quiet && path && *path && npath && strcmp(path, npath)) {
 				eprintf("WARNING: file.path change: %s => %s\n", path, npath);
 			}
@@ -1373,13 +1373,13 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 		rz_core_block_read(r);
 
 		if (asmarch) {
-			rz_config_set(r->config, "asm.arch", asmarch);
+			rz_config_set_s(r->config, "asm.arch", asmarch);
 		}
 		if (asmbits) {
-			rz_config_set(r->config, "asm.bits", asmbits);
+			rz_config_set_any(r->config, "asm.bits", asmbits);
 		}
 		if (asmos) {
-			rz_config_set(r->config, "asm.os", asmos);
+			rz_config_set_s(r->config, "asm.os", asmos);
 		}
 		if (endianness != RZ_SYS_ENDIAN_NONE) {
 			rz_config_set_b(r->config, "cfg.bigendian", endianness == RZ_SYS_ENDIAN_BIG);
@@ -1436,16 +1436,16 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 		ret = 0;
 		goto beach;
 	}
-	if (rz_config_get_i(r->config, "scr.prompt")) {
-		if (run_rc && rz_config_get_i(r->config, "cfg.fortunes")) {
+	if (rz_config_get_b(r->config, "scr.prompt")) {
+		if (run_rc && rz_config_get_b(r->config, "cfg.fortunes")) {
 			rz_core_fortune_print_random(r);
 			rz_cons_flush();
 		}
 	}
 	if (quiet) {
-		rz_config_set(r->config, "scr.wheel", "false");
-		rz_config_set(r->config, "scr.interactive", "false");
-		rz_config_set(r->config, "scr.prompt", "false");
+		rz_config_set_b(r->config, "scr.wheel", false);
+		rz_config_set_b(r->config, "scr.interactive", false);
+		rz_config_set_b(r->config, "scr.prompt", false);
 	}
 	r->num->value = 0;
 	if (zerosep) {
@@ -1460,7 +1460,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 	for (;;) {
 		rz_core_prompt_loop(r);
 		ret = r->num->value;
-		debug = rz_config_get_i(r->config, "cfg.debug");
+		debug = rz_config_get_b(r->config, "cfg.debug");
 		if (ret != -1 && rz_cons_is_interactive()) {
 			char *question;
 			bool no_question_debug = ret & 1;
@@ -1477,7 +1477,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 				}
 			}
 
-			prj = rz_config_get(r->config, "prj.file");
+			prj = rz_config_get_s(r->config, "prj.file");
 			bool compress = rz_config_get_b(r->config, "prj.compress");
 			RzProjectErr prj_err = RZ_PROJECT_ERR_SUCCESS;
 			if (no_question_save) {
@@ -1496,7 +1496,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 				continue;
 			}
 
-			if (rz_config_get_i(r->config, "scr.confirmquit")) {
+			if (rz_config_get_b(r->config, "scr.confirmquit")) {
 				if (!rz_cons_yesno('n', "Do you want to quit? (Y/n)")) {
 					continue;
 				}
@@ -1504,10 +1504,10 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 
 			if (debug) {
 				if (no_question_debug) {
-					if (rz_config_get_i(r->config, "dbg.exitkills") && y_kill_debug) {
+					if (rz_config_get_b(r->config, "dbg.exitkills") && y_kill_debug) {
 						rz_debug_kill(r->dbg, r->dbg->pid, r->dbg->tid, 9); // KILL
 					}
-				} else if (rz_config_get_i(r->config, "dbg.exitkills") &&
+				} else if (rz_config_get_b(r->config, "dbg.exitkills") &&
 					rz_debug_can_kill(r->dbg) &&
 					rz_cons_yesno('y', "Do you want to kill the process? (Y/n)")) {
 					rz_debug_kill(r->dbg, r->dbg->pid, r->dbg->tid, 9); // KILL
@@ -1515,7 +1515,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 			}
 		} else {
 			// rz_core_project_save (r, prj);
-			if (debug && rz_config_get_i(r->config, "dbg.exitkills")) {
+			if (debug && rz_config_get_b(r->config, "dbg.exitkills")) {
 				rz_debug_kill(r->dbg, 0, false, 9); // KILL
 			}
 		}
@@ -1532,7 +1532,7 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 	ret = r->num->value;
 beach:
 	if (!rz_debug_is_dead(r->dbg)) {
-		if (!rz_cons_is_interactive() && rz_config_get_i(r->config, "dbg.exitkills") &&
+		if (!rz_cons_is_interactive() && rz_config_get_b(r->config, "dbg.exitkills") &&
 			rz_debug_can_kill(r->dbg)) {
 			rz_debug_kill(r->dbg, r->dbg->pid, r->dbg->tid, 9); // KILL
 		}

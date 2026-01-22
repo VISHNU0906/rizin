@@ -381,7 +381,7 @@ bool test_rz_analysis_function_var_expr_for_reg_access_at() {
 bool test_rz_analysis_var_is_arg() {
 	RzCore *core = rz_core_new();
 	RzAnalysis *analysis = core->analysis;
-	rz_config_set(core->config, "analysis.arch", "x86");
+	rz_config_set_s(core->config, "analysis.arch", "x86");
 	rz_analysis_set_bits(core->analysis, 64);
 	rz_core_analysis_cc_init_by_path(core, TEST_BUILD_TYPES_DIR, NULL);
 

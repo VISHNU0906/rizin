@@ -34,7 +34,7 @@ static bool apply_config_from_sdb(void *user, const SdbKv *kv) {
 
 	RzConfigNode *node = rz_config_node_get(config, name);
 	if (!node) {
-		RZ_LOG_WARN("config-sdb: failed to get node named '%s'\n", name);
+		RZ_LOG_WARN("config-sdb: failed to find variable named '%s'\n", name);
 		return true;
 	}
 

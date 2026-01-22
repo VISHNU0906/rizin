@@ -4,9 +4,10 @@
 #ifndef RZ_CONFIG_H
 #define RZ_CONFIG_H
 
-#include "rz_types.h"
-#include "rz_util.h"
-#include "rz_util/rz_serialize.h"
+#include <rz_types.h>
+#include <rz_util.h>
+#include <rz_list.h>
+#include <rz_util/rz_serialize.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +35,7 @@ typedef struct rz_config_t RzConfig;
 
 typedef bool (*RzConfigCallbackGet)(void *user, void *data);
 typedef bool (*RzConfigCallbackSet)(void *user, const void *data);
-typedef bool (*RzConfigCallbackOpt)(void *user, RzList /*<char *>*/ **data);
+typedef bool (*RzConfigCallbackOpt)(void *user, const RzList /*<char *>*/ **data);
 typedef bool (*RzConfigIterator)(const RzConfig *conf, const char *name, const char *description, ut32 flags, void *user);
 
 #define rz_config_get_b rz_config_get_bool
@@ -78,7 +79,7 @@ RZ_API bool rz_config_add_string_bind(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const
 RZ_API bool rz_config_add_integer_bind(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, RZ_NONNULL RzConfigCallbackGet getter, RZ_NONNULL RzConfigCallbackSet setter);
 RZ_API bool rz_config_add_bool_bind(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, RZ_NONNULL RzConfigCallbackGet getter, RZ_NONNULL RzConfigCallbackSet setter);
 RZ_API bool rz_config_add_list_bind(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, RZ_NONNULL RzConfigCallbackGet getter, RZ_NONNULL RzConfigCallbackSet setter);
-RZ_API bool rz_config_add_options_bind(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, RZ_NONNULL RzConfigCallbackGet getter, RZ_NONNULL RzConfigCallbackSet setter, RZ_NONNULL RzConfigCallbackOpt options);
+RZ_API bool rz_config_add_options_bind(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *desc, RZ_NONNULL RzConfigCallbackGet getter, RZ_NONNULL RzConfigCallbackSet setter, RZ_NONNULL RzConfigCallbackOpt getopt);
 
 RZ_API bool rz_config_set_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *value);
 RZ_API bool rz_config_set_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, ut64 value);
@@ -88,15 +89,18 @@ RZ_API bool rz_config_set_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 RZ_API bool rz_config_set_list2(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, ...);
 RZ_API bool rz_config_set_any(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE const char *value);
 
-RZ_API RZ_BORROW const char *rz_config_get_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API const char *rz_config_get_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API ut64 rz_config_get_integer(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API bool rz_config_get_bool(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
-RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 
 RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
-RZ_API RZ_BORROW const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+RZ_API bool rz_config_set_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE RZ_OWN RzList /*<char *>*/ *options);
 RZ_API const ut32 rz_config_get_flags(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API const char *rz_config_get_type(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
+
+RZ_API bool rz_config_eval(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *str);
 
 /* hold.c */
 RZ_API RzConfigHold *rz_config_hold_new(RZ_NONNULL RzConfig *cfg);

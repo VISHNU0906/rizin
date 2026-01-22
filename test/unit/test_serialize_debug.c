@@ -22,8 +22,8 @@ bool test_debug_serialize_save() {
 	RzCore *core = rz_core_new();
 	mu_assert_notnull(core, "core null");
 	rz_core_file_open(core, "malloc://0x3000", RZ_PERM_R, 0);
-	rz_config_set(core->config, "asm.arch", "x86");
-	rz_config_set(core->config, "asm.bits", "64");
+	rz_config_set_s(core->config, "asm.arch", "x86");
+	rz_config_set_s(core->config, "asm.bits", "64");
 	RzDebug *debug = core->dbg;
 	mu_assert_notnull(debug, "debug null");
 
@@ -68,8 +68,8 @@ bool test_debug_serialize_load() {
 	RzCore *core = rz_core_new();
 	mu_assert_notnull(core, "core null");
 	rz_core_file_open(core, "malloc://0x3000", RZ_PERM_R, 0);
-	rz_config_set(core->config, "asm.arch", "x86");
-	rz_config_set(core->config, "asm.bits", "64");
+	rz_config_set_s(core->config, "asm.arch", "x86");
+	rz_config_set_s(core->config, "asm.bits", "64");
 	RzDebug *debug = core->dbg;
 	mu_assert_notnull(debug, "debug null");
 

@@ -13,7 +13,7 @@ static bool test_analysis_il_vm_step() {
 	RzCoreFile *cf = rz_core_file_open(core, "hex://a9754937", RZ_PERM_RWX, 0);
 	mu_assert_notnull(cf, "open hex file");
 	rz_core_bin_load(core, NULL, 0);
-	rz_config_set(core->config, "asm.arch", "6502");
+	rz_config_set_s(core->config, "asm.arch", "6502");
 
 	RzReg *reg = rz_reg_new();
 	mu_assert_notnull(reg, "create reg");

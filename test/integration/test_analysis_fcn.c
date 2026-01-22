@@ -16,7 +16,7 @@ static bool test_analysis_fcn_large() {
 	RzCoreFile *cf = rz_core_file_open(core, "malloc://240000", RZ_PERM_RWX, 0);
 	mu_assert_notnull(cf, "open 0 file");
 	rz_core_bin_load(core, NULL, 0);
-	rz_config_set(core->config, "asm.arch", "x86");
+	rz_config_set_s(core->config, "asm.arch", "x86");
 	rz_config_set_i(core->config, "asm.bits", 64);
 
 	rz_core_analysis_fcn(core, 0, -1, RZ_ANALYSIS_XREF_TYPE_NULL, 5);

@@ -972,10 +972,10 @@ static bool test_load_v12() {
 	RzCore *core = rz_core_new();
 	BEGIN_LOAD_TEST(core, 12, "prj/v12-types-empty.rzdb");
 
-	mu_assert_notnull(rz_config_get(core->config, "asm.debuginfo"), "asm.debuginfo");
-	mu_assert_notnull(rz_config_get(core->config, "asm.debuginfo.abspath"), "asm.debuginfo.abspath");
-	mu_assert_notnull(rz_config_get(core->config, "asm.debuginfo.file"), "asm.debuginfo.file");
-	mu_assert_notnull(rz_config_get(core->config, "asm.debuginfo.lines"), "asm.debuginfo.lines");
+	mu_assert_notnull(rz_config_get_s(core->config, "asm.debuginfo"), "asm.debuginfo");
+	mu_assert_notnull(rz_config_get_s(core->config, "asm.debuginfo.abspath"), "asm.debuginfo.abspath");
+	mu_assert_notnull(rz_config_get_s(core->config, "asm.debuginfo.file"), "asm.debuginfo.file");
+	mu_assert_notnull(rz_config_get_s(core->config, "asm.debuginfo.lines"), "asm.debuginfo.lines");
 
 	rz_core_free(core);
 	mu_end;
@@ -1030,7 +1030,7 @@ static bool test_load_v15_19_str_config() {
 	// Load version 15 config but check if the v19 values were converted correctly.
 	BEGIN_LOAD_TEST(core, 15, "prj/v15-str-config.rzdb");
 	mu_assert_eq(rz_config_get_i(core->config, "search.str.min_length"), 6, "search.str.min_length");
-	mu_assert_streq(rz_config_get(core->config, "str.encoding"), "utf8", "str.encoding");
+	mu_assert_streq(rz_config_get_s(core->config, "str.encoding"), "utf8", "str.encoding");
 	mu_assert_eq(rz_config_get_i(core->config, "search.str.max_length"), 0x00b00123, "search.str.max_length");
 	rz_core_free(core);
 	mu_end;

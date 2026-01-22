@@ -19,28 +19,28 @@ typedef struct rz_config_node_t {
 		ut64 integer;
 		bool boolean;
 		RzList /*<char *>*/ *list;
-	} value; ///< Variable held value unless setter/getter are defined.
+	} value;
 	RzConfigCallbackGet getter; ///< Gets the value via the callback (`data` can be `const char **` or `ut64 *` or `bool *`)
 	RzConfigCallbackSet setter; ///< Sets the value via the callback (`data` can be `const char **` or `ut64 *` or `bool *`)
-	RzConfigCallbackOpt setopt; ///< Sets the options via the callback (`data` is always RzList <char *> *` which can be modified)
+	RzConfigCallbackOpt getopt; ///< Sets the options via the callback (`data` is always RzList <char *> *` which can be modified)
 } RzConfigNode;
 
 struct rz_config_t {
 	bool lock; ///< When true forbids the add/remove of variables
-	void *user; ///< Pointer passed to the callbacks (getter, setter, setopt)
+	void *user; ///< Pointer passed to the callbacks (getter, setter, getopt)
 	RzList /*<RzConfigNode *>*/ *nodes; ///< List of stored variables.
 	HtSP *ht; ///< HashMap for fast access to the nodes.
 };
 
 typedef struct config_value_t {
-	ut32 flags;
-	char *name;
+	ut32 flags; ///< Copy of the variable flags (type RzConfigNodeFlags)
+	char *name; ///< Copy of the variable name
 	union {
 		char *string;
 		ut64 integer;
 		bool boolean;
 		RzList /*<char *>*/ *list;
-	} value;
+	} value; ///< Copy of the variable value
 } ConfigValue;
 
 struct rz_config_hold_t {
@@ -59,9 +59,9 @@ RZ_IPI bool rz_config_node_set_integer(RzConfig *cfg, RzConfigNode *node, ut64 v
 RZ_IPI bool rz_config_node_set_string(RzConfig *cfg, RzConfigNode *node, const char *value);
 RZ_IPI bool rz_config_node_set_list(RzConfig *cfg, RzConfigNode *node, RZ_NULLABLE const RzList /*<char *>*/ *value);
 
-RZ_IPI RZ_BORROW const char *rz_config_node_get_string(const RzConfig *cfg, const RzConfigNode *node);
+RZ_IPI const char *rz_config_node_get_string(const RzConfig *cfg, const RzConfigNode *node);
 RZ_IPI ut64 rz_config_node_get_integer(const RzConfig *cfg, const RzConfigNode *node);
 RZ_IPI bool rz_config_node_get_bool(const RzConfig *cfg, const RzConfigNode *node);
-RZ_IPI RZ_BORROW const RzList /*<char *>*/ *rz_config_node_get_list(const RzConfig *cfg, const RzConfigNode *node);
+RZ_IPI const RzList /*<char *>*/ *rz_config_node_get_list(const RzConfig *cfg, const RzConfigNode *node);
 
 #endif /* CONFIG_INTERNAL_H */

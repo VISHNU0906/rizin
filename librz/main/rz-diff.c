@@ -638,7 +638,7 @@ static RzCoreFile *rz_diff_load_file_with_core(const char *filename, const char 
 	}
 
 	if (architecture) {
-		rz_config_set(core->config, "asm.arch", architecture);
+		rz_config_set_s(core->config, "asm.arch", architecture);
 	}
 
 	if (arch_bits) {
@@ -1470,8 +1470,8 @@ rz_diff_unified_files_bad:
 
 /**************************************** graphs ***************************************/
 
-static const char *get_config_or_default(RzCore *core, const char *key, const char *def_value) {
-	const char *value = rz_config_get(core->config, key);
+static const char *get_config_str_or_default(RzCore *core, const char *key, const char *def_value) {
+	const char *value = rz_config_get_s(core->config, key);
 	if (RZ_STR_ISEMPTY(value)) {
 		return def_value;
 	}
@@ -1479,10 +1479,10 @@ static const char *get_config_or_default(RzCore *core, const char *key, const ch
 }
 
 static void graphviz_dot_header(RzCore *core_a) {
-	const char *font = get_config_or_default(core_a, "graph.font", "Courier");
-	const char *gv_edge = get_config_or_default(core_a, "graph.gv.edge", "arrowhead=\"normal\"");
-	const char *gv_node = get_config_or_default(core_a, "graph.gv.node", "fillcolor=gray style=filled shape=box");
-	const char *gv_spline = get_config_or_default(core_a, "graph.gv.spline", "splines=\"ortho\"");
+	const char *font = get_config_str_or_default(core_a, "graph.font", "Courier");
+	const char *gv_edge = get_config_str_or_default(core_a, "graph.gv.edge", "arrowhead=\"normal\"");
+	const char *gv_node = get_config_str_or_default(core_a, "graph.gv.node", "fillcolor=gray style=filled shape=box");
+	const char *gv_spline = get_config_str_or_default(core_a, "graph.gv.spline", "splines=\"ortho\"");
 	rz_cons_printf("digraph code {\n"
 		       "\tgraph [bgcolor=azure fontsize=8 fontname=\"%s\" %s];\n"
 		       "\tnode [%s];\n"
@@ -1504,17 +1504,17 @@ static char *basic_block_opcodes(RzCore *core, RzAnalysisBlock *bbi) {
 	RzConfigHold *hc = NULL;
 	ut8 *block = NULL;
 
-	if (!(hc = rz_config_hold_new(core->config))) {
+	hc = rz_config_hold_new2(core->config, "scr.color", "scr.utf8", "asm.offset", "asm.lines", "asm.cmt.right", "asm.lines.fcn", "asm.bytes", "asm.comments", NULL);
+	if (!hc) {
 		return NULL;
 	}
-	rz_config_hold_var(hc, "scr.color", "scr.utf8", "asm.offset", "asm.lines", "asm.cmt.right", "asm.lines.fcn", "asm.bytes", "asm.comments", NULL);
-	rz_config_set_i(core->config, "scr.utf8", 0);
-	rz_config_set_i(core->config, "asm.offset", 0);
-	rz_config_set_i(core->config, "asm.lines", 0);
-	rz_config_set_i(core->config, "asm.cmt.right", 0);
-	rz_config_set_i(core->config, "asm.lines.fcn", 0);
-	rz_config_set_i(core->config, "asm.bytes", 0);
-	rz_config_set_i(core->config, "asm.comments", 0);
+	rz_config_set_b(core->config, "scr.utf8", 0);
+	rz_config_set_b(core->config, "asm.offset", 0);
+	rz_config_set_b(core->config, "asm.lines", 0);
+	rz_config_set_b(core->config, "asm.cmt.right", 0);
+	rz_config_set_b(core->config, "asm.lines.fcn", 0);
+	rz_config_set_b(core->config, "asm.bytes", 0);
+	rz_config_set_b(core->config, "asm.comments", 0);
 	rz_config_set_i(core->config, "scr.color", COLOR_MODE_DISABLED);
 
 	rz_cons_push();
@@ -1542,8 +1542,7 @@ exit:
 	rz_cons_pop();
 	rz_cons_echo(NULL);
 	free(block);
-	rz_config_hold_restore(hc);
-	rz_config_hold_free(hc);
+	rz_config_hold_restore_and_free(hc);
 	return opcodes;
 }
 
@@ -1562,7 +1561,7 @@ static void graphviz_dot_nodes(RzCore *core_a, RzAnalysisFunction *fcn_a, RzCore
 	RzAnalysisMatchPair *pair = NULL;
 	RzAnalysisBlock *bbi = NULL;
 	RzListIter *iter = NULL;
-	const char *font = get_config_or_default(core_a, "graph.font", "Courier");
+	const char *font = get_config_str_or_default(core_a, "graph.font", "Courier");
 
 	rz_strf(addr_a, "0x%08" PFMT64x, fcn_a->addr);
 	rz_strf(addr_b, "0x%08" PFMT64x, fcn_b->addr);
@@ -2294,7 +2293,7 @@ static bool rz_diff_graphs_files(DiffContext *ctx) {
 				goto rz_diff_graphs_files_bad;
 			}
 		} else {
-			bool analyze_recursively = rz_config_get_i(a->core->config, "analysis.calls");
+			bool analyze_recursively = rz_config_get_b(a->core->config, "analysis.calls");
 			if (!rz_core_analysis_function_add(a->core, NULL, address_a, analyze_recursively)) {
 				rz_diff_error("cannot find function at '%s' in '%s' \n", ctx->input_a, ctx->file_a);
 				goto rz_diff_graphs_files_bad;

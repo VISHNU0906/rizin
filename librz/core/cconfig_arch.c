@@ -203,19 +203,6 @@ static bool core_config_set_string_analysis_in(void *user, const void *data) {
 	return true;
 }
 
-/* analysis.in OPTIONS */
-static bool core_config_opt_string_analysis_in(void *user, RzList /*<char *>*/ **options) {
-	if (!rz_list_empty(*options)) {
-		// this list of options never changes.
-		return true;
-	}
-
-	rz_list_free(*options);
-	*options = rz_core_get_supported_search_maps();
-
-	return *options != NULL;
-}
-
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -234,7 +221,8 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_i_bind(cfg, "analysis.limits.from", "Sets the lower limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_from, core_config_set_integer_analysis_limits_from) &&
 		rz_config_add_i_bind(cfg, "analysis.limits.to", "Sets the upper limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_to, core_config_set_integer_analysis_limits_to) &&
 		rz_config_add_b_bind(cfg, "analysis.recursive.noreturn", "When enabled, performs recursive no return check analysis (experimental)", core_config_get_bool_analysis_recursive_noreturn, core_config_set_bool_analysis_recursive_noreturn) &&
-		rz_config_add_o_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in, core_config_opt_string_analysis_in) &&
+		rz_config_add_s_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in) &&
+		rz_config_set_options(cfg, "analysis.in", rz_core_get_supported_search_maps()) &&
 
 		/* end */
 		true;

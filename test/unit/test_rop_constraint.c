@@ -31,7 +31,7 @@
 	"gpr    bh     .8     41    0\n"
 
 static void setup_rz_core(RzCore *core) {
-	rz_config_set(core->config, "analysis.arch", "x86");
+	rz_config_set_s(core->config, "analysis.arch", "x86");
 	rz_analysis_set_bits(core->analysis, 64);
 	rz_reg_set_profile_string(core->analysis->reg, REGISTER_PROFILE_STRING);
 }

@@ -107,7 +107,8 @@ bool test_rz_analysis_op_val() {
 
 bool test_rz_core_analysis_bytes() {
 	RzCore *core = rz_core_new();
-	rz_core_set_asm_configs(core, "x86", 64, 0);
+	RzAnalysis *analysis = core->analysis;
+	SWITCH_TO_ARCH_BITS("x86", 64);
 	ut8 buf[128];
 	int len = rz_hex_str2bin("554889e5897dfc", buf);
 	RzIterator *iter = rz_core_analysis_bytes(core, core->offset, buf, len, 0);
@@ -131,8 +132,9 @@ bool test_rz_core_analysis_bytes() {
 
 bool test_rz_core_print_disasm() {
 	RzCore *core = rz_core_new();
+	RzAnalysis *analysis = core->analysis;
 	rz_io_open_at(core->io, "malloc://0x100", RZ_PERM_RX, 0644, 0, NULL); // needed to get arrow info (is_valid_offset checks)
-	rz_core_set_asm_configs(core, "x86", 64, 0);
+	SWITCH_TO_ARCH_BITS("x86", 64);
 	rz_config_set_b(core->config, "asm.lines", false); // arrow info in struct, but not in textual disasm
 	ut8 buf[128];
 	int len = rz_hex_str2bin("554889e5897dfcebf8", buf);

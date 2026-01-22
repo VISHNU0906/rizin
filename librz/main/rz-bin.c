@@ -756,11 +756,11 @@ RZ_API int rz_main_rz_bin(int argc, const char **argv) {
 		free(tmp);
 	}
 	if ((tmp = rz_sys_getenv("RZ_BIN_LANG"))) {
-		rz_config_set(core.config, "bin.lang", tmp);
+		rz_config_set_s(core.config, "bin.lang", tmp);
 		free(tmp);
 	}
 	if ((tmp = rz_sys_getenv("RZ_BIN_DEMANGLE"))) {
-		rz_config_set(core.config, "bin.demangle", tmp);
+		rz_config_set_any(core.config, "bin.demangle", tmp);
 		free(tmp);
 	}
 	if ((tmp = rz_sys_getenv("RZ_BIN_MAXSTRBUF"))) {
@@ -771,15 +771,15 @@ RZ_API int rz_main_rz_bin(int argc, const char **argv) {
 		free(tmp);
 	}
 	if ((tmp = rz_sys_getenv("RZ_BIN_STRFILTER"))) {
-		rz_config_set(core.config, "bin.str.filter", tmp);
+		rz_config_set_s(core.config, "bin.str.filter", tmp);
 		free(tmp);
 	}
 	if ((tmp = rz_sys_getenv("RZ_BIN_STRPURGE"))) {
-		rz_config_set(core.config, "bin.str.purge", tmp);
+		rz_config_set_s(core.config, "bin.str.purge", tmp);
 		free(tmp);
 	}
 	if ((tmp = rz_sys_getenv("RZ_BIN_PDBSERVER"))) {
-		rz_config_set(core.config, "pdb.server", tmp);
+		rz_config_set_s(core.config, "pdb.server", tmp);
 		free(tmp);
 	}
 
@@ -892,8 +892,8 @@ RZ_API int rz_main_rz_bin(int argc, const char **argv) {
 		case 'D':
 			if (argv[opt.ind] && argv[opt.ind + 1] &&
 				(!argv[opt.ind + 1][0] || !strcmp(argv[opt.ind + 1], "all"))) {
-				rz_config_set(core.config, "bin.lang", argv[opt.ind]);
-				rz_config_set(core.config, "bin.demangle", "true");
+				rz_config_set_s(core.config, "bin.lang", argv[opt.ind]);
+				rz_config_set_b(core.config, "bin.demangle", true);
 				opt.ind += 2;
 			} else {
 				do_demangle = argv[opt.ind];
@@ -1287,28 +1287,28 @@ RZ_API int rz_main_rz_bin(int argc, const char **argv) {
 	free(machine);
 	if (action & RZ_BIN_REQ_PDB_DWNLD) {
 		SPDBOptions pdbopts;
-		pdbopts.symbol_server = (char *)rz_config_get(core.config, "pdb.server");
+		pdbopts.symbol_server = (char *)rz_config_get_s(core.config, "pdb.server");
 		pdbopts.extract = rz_config_get_i(core.config, "pdb.extract");
 
 		if ((tmp = rz_sys_getenv("RZ_BIN_SYMSTORE"))) {
-			rz_config_set(core.config, "pdb.symstore", tmp);
+			rz_config_set_s(core.config, "pdb.symstore", tmp);
 			RZ_FREE(tmp);
 		}
-		pdbopts.symbol_store_path = (char *)rz_config_get(core.config, "pdb.symstore");
+		pdbopts.symbol_store_path = (char *)rz_config_get_s(core.config, "pdb.symstore");
 		result = rz_bin_pdb_download(core.bin, state.mode == RZ_OUTPUT_MODE_JSON ? state.d.pj : NULL, ismodejson, &pdbopts);
 	}
 	if (action & RZ_BIN_REQ_DEBUGINFOD) {
 		rz_config_set_b(core.config, "bin.dbginfo.debuginfod", true);
 		if ((tmp = rz_sys_getenv("RZ_BIN_DEBUGINFOD_URLS"))) {
 			if (RZ_STR_ISNOTEMPTY(tmp)) {
-				rz_config_set(core.config, "bin.dbginfo.debuginfod_urls", tmp);
+				rz_config_set_s(core.config, "bin.dbginfo.debuginfod_urls", tmp);
 			}
 			free(tmp);
 		}
 	}
 
 	if ((tmp = rz_sys_getenv("RZ_BIN_PREFIX"))) {
-		rz_config_set(core.config, "bin.prefix", tmp);
+		rz_config_set_s(core.config, "bin.prefix", tmp);
 		free(tmp);
 	}
 

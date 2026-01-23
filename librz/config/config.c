@@ -321,7 +321,7 @@ static int config_cmp_node(RzConfigNode *a, RzConfigNode *b, void *user) {
 
 static bool config_add_node_internal(RzConfig *cfg, RzConfigNode *node) {
 	return ht_sp_insert(cfg->ht, node->name, node) &&
-			rz_list_add_sorted(cfg->nodes, node, (RzListComparator) config_cmp_node, NULL);
+		rz_list_add_sorted(cfg->nodes, node, (RzListComparator)config_cmp_node, NULL);
 }
 
 /**
@@ -339,10 +339,6 @@ RZ_API bool rz_config_add_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char
 	if (rz_config_node_get(cfg, name)) {
 		RZ_LOG_ERROR("config: variable '%s' already exists.\n", name);
 		return false;
-	}
-
-	if (rz_str_is_bool(value)) {
-		RZ_LOG_WARN("config: variable '%s' is boolean.\n", name);
 	}
 
 	RzConfigNode *node = config_node_new_string(name, desc, value);
@@ -603,7 +599,7 @@ static int config_compare_options(const void *_value, const void *_entry, void *
 	return rz_str_casecmp(value, rz_str_get(entry));
 }
 
-static const char* config_find_option(const RzList /*<char *>*/ *options, const char *safe_val) {
+static const char *config_find_option(const RzList /*<char *>*/ *options, const char *safe_val) {
 	if (rz_list_empty(options)) {
 		// when empty, we accept the option?
 		return safe_val;
@@ -636,7 +632,7 @@ RZ_IPI bool rz_config_node_set_string(RzConfig *cfg, RzConfigNode *node, RZ_NULL
 	const char *safe_val = rz_str_get(value);
 	if (node->getopt) {
 		const RzList *options = NULL;
-		if(!node->getopt(cfg->user, &options)) {
+		if (!node->getopt(cfg->user, &options)) {
 			RZ_LOG_ERROR("config: failed to get bind options for variable '%s'.\n", node->name);
 			return false;
 		}
@@ -1116,7 +1112,7 @@ RZ_API const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfi
 	}
 
 	const RzList *options = NULL;
-	if(!node->getopt(cfg->user, &options)) {
+	if (!node->getopt(cfg->user, &options)) {
 		RZ_LOG_ERROR("config: failed to get bind options for variable '%s'.\n", node->name);
 		return NULL;
 	}

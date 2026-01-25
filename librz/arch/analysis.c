@@ -143,6 +143,7 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->opt.depth = 32;
 	analysis->opt.noncode = false; // do not analyze data by default
 	analysis->opt.retpoline = true; // analyze retpoline
+	analysis->opt.armthumb = false;
 	analysis->opt.bb_max_size = RZ_ANALYSIS_BLOCK_MAX_SIZE;
 	analysis->opt.fcn_max_size = 256 * 1024;
 	rz_spaces_init(&analysis->meta_spaces, "CS");

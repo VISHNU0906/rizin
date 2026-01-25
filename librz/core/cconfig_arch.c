@@ -402,10 +402,51 @@ static bool core_config_set_bool_analysis_strings(void *user, const void *data) 
 	return rz_config_set_b(core->config, "bin.strings", !*value);
 }
 
+/* analysis.vars GET */
+static bool core_config_get_bool_analysis_vars(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.vars;
+	return true;
+}
+
+/* analysis.vars SET */
+static bool core_config_set_bool_analysis_vars(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.vars = *value;
+	return true;
+}
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
 	return
+		/* analysis binds */
+		rz_config_add_b_bind(cfg, "analysis.armthumb", "aae computes arm/thumb changes (lot of false positives ahead)", core_config_get_bool_analysis_armthumb, core_config_set_bool_analysis_armthumb) &&
+		rz_config_add_b_bind(cfg, "analysis.delay", "Enable delay slot analysis if supported by the architecture", core_config_get_bool_analysis_delay, core_config_set_bool_analysis_delay) &&
+		rz_config_add_b_bind(cfg, "analysis.ignbithints", "Ignore the ahb hints (only obey asm.bits)", core_config_get_bool_analysis_ignbithints, core_config_set_bool_analysis_ignbithints) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.after", "Continue analysis after jmp/ujmp", core_config_get_bool_analysis_jmp_after, core_config_set_bool_analysis_jmp_after) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.retpoline", "Analyze retpolines, may be slower if not needed", core_config_get_bool_analysis_jmp_retpoline, core_config_set_bool_analysis_jmp_retpoline) &&
+		rz_config_add_b_bind(cfg, "analysis.limits", "When enabled, restricts the analysis to the range [analysis.limits.from : analysis.limits.to]", core_config_get_bool_analysis_limits, core_config_set_bool_analysis_limits) &&
+		rz_config_add_b_bind(cfg, "analysis.recursive.noreturn", "When enabled, performs recursive no return check analysis (experimental)", core_config_get_bool_analysis_recursive_noreturn, core_config_set_bool_analysis_recursive_noreturn) &&
+		rz_config_add_b_bind(cfg, "analysis.trap.after", "Continue analysis after trap instructions.", core_config_get_bool_analysis_trap_after, core_config_set_bool_analysis_trap_after) &&
+		rz_config_add_i_bind(cfg, "analysis.depth", "Max depth at code analysis", core_config_get_integer_analysis_depth, core_config_set_integer_analysis_depth) &&
+		rz_config_add_i_bind(cfg, "analysis.gp", "Set the value of the GP register (MIPS)", core_config_get_integer_analysis_gp, core_config_set_integer_analysis_gp) &&
+		rz_config_add_i_bind(cfg, "analysis.graph_depth", "Max depth for path search", core_config_get_integer_analysis_graph_depth, core_config_set_integer_analysis_graph_depth) &&
+		rz_config_add_i_bind(cfg, "analysis.limits.from", "Sets the lower limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_from, core_config_set_integer_analysis_limits_from) &&
+		rz_config_add_i_bind(cfg, "analysis.limits.to", "Sets the upper limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_to, core_config_set_integer_analysis_limits_to) &&
+		rz_config_add_i_bind(cfg, "analysis.nonull", "Do not analyze regions of N null bytes (0 is disabled)", core_config_get_integer_analysis_nonull, core_config_set_integer_analysis_nonull) &&
+		rz_config_add_l_bind(cfg, "analysis.roregs", "Comma separated list of register names to be readonly", core_config_get_list_analysis_roregs, core_config_set_list_analysis_roregs) &&
+		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&
+		rz_config_add_s_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in) &&
+		rz_config_add_s_bind(cfg, "analysis.syscc", "Specify default syscall calling convention", core_config_get_string_analysis_syscc, core_config_set_string_analysis_syscc) &&
+		rz_config_add_b_bind(cfg, "analysis.strings", "Identify and register strings during analysis (aar only)", core_config_get_bool_analysis_strings, core_config_set_bool_analysis_strings) &&
+		rz_config_add_b_bind(cfg, "analysis.vars", "Analyze local variables and arguments", core_config_get_bool_analysis_vars, core_config_set_bool_analysis_vars) &&
+
 		/* analysis variables */
 		rz_config_add_b(cfg, "analysis.apply.signature", "enables/disables auto-applying signatures to the loaded binary (see also flirt.sigdb.path)", true) &&
 		rz_config_add_b(cfg, "analysis.autoname", "Speculatively set a name for the functions, may result in some false positives", false) &&
@@ -532,27 +573,6 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_s(cfg, "asm.cmt.off", "Show offset comment in disasm (true, false, nodup)", "nodup") &&
 		rz_config_add_s(cfg, "asm.highlight", "Highlight current line", "") &&
 		rz_config_add_s(cfg, "asm.strip", "strip all instructions given comma separated types", "") &&
-
-		/* analysis binds */
-		rz_config_add_b_bind(cfg, "analysis.armthumb", "aae computes arm/thumb changes (lot of false positives ahead)", core_config_get_bool_analysis_armthumb, core_config_set_bool_analysis_armthumb) &&
-		rz_config_add_b_bind(cfg, "analysis.delay", "Enable delay slot analysis if supported by the architecture", core_config_get_bool_analysis_delay, core_config_set_bool_analysis_delay) &&
-		rz_config_add_b_bind(cfg, "analysis.ignbithints", "Ignore the ahb hints (only obey asm.bits)", core_config_get_bool_analysis_ignbithints, core_config_set_bool_analysis_ignbithints) &&
-		rz_config_add_b_bind(cfg, "analysis.jmp.after", "Continue analysis after jmp/ujmp", core_config_get_bool_analysis_jmp_after, core_config_set_bool_analysis_jmp_after) &&
-		rz_config_add_b_bind(cfg, "analysis.jmp.retpoline", "Analyze retpolines, may be slower if not needed", core_config_get_bool_analysis_jmp_retpoline, core_config_set_bool_analysis_jmp_retpoline) &&
-		rz_config_add_b_bind(cfg, "analysis.limits", "When enabled, restricts the analysis to the range [analysis.limits.from : analysis.limits.to]", core_config_get_bool_analysis_limits, core_config_set_bool_analysis_limits) &&
-		rz_config_add_b_bind(cfg, "analysis.recursive.noreturn", "When enabled, performs recursive no return check analysis (experimental)", core_config_get_bool_analysis_recursive_noreturn, core_config_set_bool_analysis_recursive_noreturn) &&
-		rz_config_add_b_bind(cfg, "analysis.trap.after", "Continue analysis after trap instructions.", core_config_get_bool_analysis_trap_after, core_config_set_bool_analysis_trap_after) &&
-		rz_config_add_i_bind(cfg, "analysis.depth", "Max depth at code analysis", core_config_get_integer_analysis_depth, core_config_set_integer_analysis_depth) &&
-		rz_config_add_i_bind(cfg, "analysis.gp", "Set the value of the GP register (MIPS)", core_config_get_integer_analysis_gp, core_config_set_integer_analysis_gp) &&
-		rz_config_add_i_bind(cfg, "analysis.graph_depth", "Max depth for path search", core_config_get_integer_analysis_graph_depth, core_config_set_integer_analysis_graph_depth) &&
-		rz_config_add_i_bind(cfg, "analysis.limits.from", "Sets the lower limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_from, core_config_set_integer_analysis_limits_from) &&
-		rz_config_add_i_bind(cfg, "analysis.limits.to", "Sets the upper limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_to, core_config_set_integer_analysis_limits_to) &&
-		rz_config_add_i_bind(cfg, "analysis.nonull", "Do not analyze regions of N null bytes (0 is disabled)", core_config_get_integer_analysis_nonull, core_config_set_integer_analysis_nonull) &&
-		rz_config_add_l_bind(cfg, "analysis.roregs", "Comma separated list of register names to be readonly", core_config_get_list_analysis_roregs, core_config_set_list_analysis_roregs) &&
-		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&
-		rz_config_add_s_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in) &&
-		rz_config_add_s_bind(cfg, "analysis.syscc", "Specify default syscall calling convention", core_config_get_string_analysis_syscc, core_config_set_string_analysis_syscc) &&
-		rz_config_add_b_bind(cfg, "analysis.strings", "Identify and register strings during analysis (aar only)", core_config_get_bool_analysis_strings, core_config_set_bool_analysis_strings) &&
 
 		/* set special options */
 		rz_config_set_options(cfg, "analysis.in", rz_core_get_supported_search_maps()) &&

@@ -388,22 +388,129 @@ static bool core_config_add_arch_variables(RzCore *core) {
 
 	return
 		/* analysis variables */
-		rz_config_add_b(cfg, "analysis.detectwrites", "Automatically reanalyze function after a write", false) &&
-		rz_config_add_s(cfg, "analysis.fcnprefix", "Prefix new function names with this", "fcn") &&
-		rz_config_add_b(cfg, "analysis.gpfixed", "Set gp register to analysis.gp before emulating each instruction in aae", true) &&
-		rz_config_add_i(cfg, "analysis.timeout", "Stop analyzing after a couple of seconds", 0) &&
-		rz_config_add_b(cfg, "analysis.calls", "Make basic af analysis walk into calls", false) &&
 		rz_config_add_b(cfg, "analysis.autoname", "Speculatively set a name for the functions, may result in some false positives", false) &&
-		rz_config_add_b(cfg, "analysis.hasnext", "Continue analysis after each function", false) &&
+		rz_config_add_b(cfg, "analysis.calls", "Make basic af analysis walk into calls", false) &&
+		rz_config_add_b(cfg, "analysis.detectwrites", "Automatically reanalyze function after a write", false) &&
 		rz_config_add_b(cfg, "analysis.esil", "Use the new ESIL code analysis", false) &&
-		rz_config_add_b(cfg, "analysis.types.verbose", "Verbose output from type analysis", false) &&
+		rz_config_add_b(cfg, "analysis.gpfixed", "Set gp register to analysis.gp before emulating each instruction in aae", true) &&
+		rz_config_add_b(cfg, "analysis.hasnext", "Continue analysis after each function", false) &&
 		rz_config_add_b(cfg, "analysis.types.constraint", "Enable constraint types analysis for variables", false) &&
+		rz_config_add_b(cfg, "analysis.types.verbose", "Verbose output from type analysis", false) &&
 		rz_config_add_b(cfg, "analysis.vinfun", "Search values in functions (aav) (false by default to only find on non-code)", true) &&
 		rz_config_add_b(cfg, "analysis.vinfunrange", "Search values outside function ranges (requires analysis.vinfun=false)", false) &&
-		rz_config_add_s(cfg, "analysis.types.spec", "Set profile for specifying format chars used in type analysis", "gcc") &&
-		rz_config_add_s(cfg, "analysis.prelude", "Specify an hexpair to find preludes in code", "") &&
 		rz_config_add_i(cfg, "analysis.prelude.limit", "Maximum size of the range to scan for preludes", 1024 * 1024 * 20) &&
 		rz_config_add_i(cfg, "analysis.ptrdepth", "Maximum number of nested pointers to follow in analysis", 3) &&
+		rz_config_add_i(cfg, "analysis.timeout", "Stop analyzing after a couple of seconds", 0) &&
+		rz_config_add_s(cfg, "analysis.fcnprefix", "Prefix new function names with this", "fcn") &&
+		rz_config_add_s(cfg, "analysis.prelude", "Specify an hexpair to find preludes in code", "") &&
+		rz_config_add_s(cfg, "analysis.types.spec", "Set profile for specifying format chars used in type analysis", "gcc") &&
+
+		/* asm variables */
+		rz_config_add_i(cfg, "asm.cmt.col", "Column to align comments", 71) &&
+		rz_config_add_i(cfg, "asm.flags.limit", "Maximum number of flags to show in a single offset", 0) &&
+		rz_config_add_i(cfg, "asm.hint.pos", "Shortcut hint position (-1, 0, 1)", 1) &&
+		rz_config_add_i(cfg, "asm.indentspace", "How many spaces to indent the code", 2) &&
+		rz_config_add_i(cfg, "asm.nbytes", "Number of bytes for each opcode at disassembly", 6) &&
+		rz_config_add_i(cfg, "asm.section.col", "Columns width to show asm.section", 30) &&
+		rz_config_add_i(cfg, "asm.symbol.col", "Columns width to show asm.section", 40) &&
+		rz_config_add_i(cfg, "asm.tabs", "Use tabs in disassembly", 6) &&
+		rz_config_add_i(cfg, "asm.tabs.off", "tabulate spaces after the offset", 0) &&
+		rz_config_add_i(cfg, "asm.types", "Display the fcn types in calls (0=no,1=quiet,2=verbose)", 1) &&
+		rz_config_add_i(cfg, "asm.var.summary", "Show variables summary instead of full list in disasm (0, 1, 2)", 0) &&
+		rz_config_add_i(cfg, "asm.xrefs.fold", "Maximum number of xrefs to be displayed as list (use columns above)", 5) &&
+		rz_config_add_i(cfg, "asm.xrefs.max", "Maximum number of xrefs to be displayed without folding", 20) &&
+		rz_config_add_b(cfg, "asm.analysis", "Analyze code and refs while disassembling (see analysis.strings)", false) &&
+		rz_config_add_b(cfg, "asm.bb.line", "Show empty line after every basic block", false) &&
+		rz_config_add_b(cfg, "asm.bb.middle", "Realign disassembly if a basic block starts in the middle of an instruction", true) &&
+		rz_config_add_b(cfg, "asm.bytes", "Display the bytes of each instruction", false) &&
+		rz_config_add_b(cfg, "asm.bytes.right", "Display the bytes at the right of the disassembly", false) &&
+		rz_config_add_b(cfg, "asm.bytes.space", "Separate hexadecimal bytes with a whitespace", false) &&
+		rz_config_add_b(cfg, "asm.calls", "Show callee function related info as comments in disasm", true) &&
+		rz_config_add_b(cfg, "asm.capitalize", "Use camelcase at disassembly", false) &&
+		rz_config_add_b(cfg, "asm.cmt.esil", "Show ESIL expressions as comments", false) &&
+		rz_config_add_b(cfg, "asm.cmt.flgrefs", "Show comment flags associated to branch reference", true) &&
+		rz_config_add_b(cfg, "asm.cmt.il", "Show RzIL expressions as comments", false) &&
+		rz_config_add_b(cfg, "asm.cmt.patch", "Show patch comments in disasm", false) &&
+		rz_config_add_b(cfg, "asm.cmt.refs", "Show flag and comments from refs in disasm", false) &&
+		rz_config_add_b(cfg, "asm.cmt.right", "Show comments at right of disassembly if they fit in screen", true) &&
+		rz_config_add_b(cfg, "asm.comments", "Show comments in disassembly view", true) &&
+		rz_config_add_b(cfg, "asm.cycles", "Show CPU-cycles taken by instruction at disassembly", false) &&
+		rz_config_add_b(cfg, "asm.cyclespace", "Indent instructions depending on CPU-cycles", false) &&
+		rz_config_add_b(cfg, "asm.debuginfo", "Show debug information in disassembly", false) &&
+		rz_config_add_b(cfg, "asm.debuginfo.abspath", "Show absolute path from the debug information", false) &&
+		rz_config_add_b(cfg, "asm.debuginfo.file", "Show file name from the debug information in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.debuginfo.lines", "Show source line information from debug metadata in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.decode", "Use code analysis as a disassembler", false) &&
+		rz_config_add_b(cfg, "asm.demangle", "Show demangled symbols in disasm", true) &&
+		rz_config_add_b(cfg, "asm.describe", "Show opcode description", false) &&
+		rz_config_add_b(cfg, "asm.emu", "Run ESIL emulation analysis on disasm", false) &&
+		rz_config_add_b(cfg, "asm.esil", "Show ESIL instead of mnemonic", false) &&
+		rz_config_add_b(cfg, "asm.family", "Show family name in disasm", false) &&
+		rz_config_add_b(cfg, "asm.fcn.signature", "Show function signature in disasm", true) &&
+		rz_config_add_b(cfg, "asm.fcn.size", "Show function size in disasm", false) &&
+		rz_config_add_b(cfg, "asm.flags", "Show flags", true) &&
+		rz_config_add_b(cfg, "asm.flags.inbytes", "Display flags inside the bytes space", false) &&
+		rz_config_add_b(cfg, "asm.flags.inline", "Display flags in line separated by commas instead of newlines", false) &&
+		rz_config_add_b(cfg, "asm.flags.offset", "Show offset in flags", false) &&
+		rz_config_add_b(cfg, "asm.functions", "Show functions in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.hint.call", "Show call hints [numbers] in disasm", true) &&
+		rz_config_add_b(cfg, "asm.hint.call.indirect", "Hints for indirect call intructions go to the call destination", true) &&
+		rz_config_add_b(cfg, "asm.hint.cdiv", "Show CDIV hints optimization hint", false) &&
+		rz_config_add_b(cfg, "asm.hint.emu", "Show asm.emu hints [numbers] in disasm", false) &&
+		rz_config_add_b(cfg, "asm.hint.jmp", "Show jump hints [numbers] in disasm", false) &&
+		rz_config_add_b(cfg, "asm.hint.lea", "Show LEA hints [numbers] in disasm", false) &&
+		rz_config_add_b(cfg, "asm.hints", "Disable all asm.hint* if false", true) &&
+		rz_config_add_b(cfg, "asm.imm.str", "Show immediates values as strings", true) &&
+		rz_config_add_b(cfg, "asm.imm.trim", "Remove all offsets and constants from disassembly", false) &&
+		rz_config_add_b(cfg, "asm.indent", "Indent disassembly based on reflines depth", false) &&
+		rz_config_add_b(cfg, "asm.instr", "Display the disassembled instruction", true) &&
+		rz_config_add_b(cfg, "asm.lbytes", "Align disasm bytes to left", true) &&
+		rz_config_add_b(cfg, "asm.lines", "Show ASCII-art lines at disassembly", true) &&
+		rz_config_add_b(cfg, "asm.lines.bb", "Show flow lines at jumps", true) &&
+		rz_config_add_b(cfg, "asm.lines.call", "Enable call lines", false) &&
+		rz_config_add_b(cfg, "asm.lines.fcn", "Show function boundary lines", true) &&
+		rz_config_add_b(cfg, "asm.lines.out", "Show out of block lines", true) &&
+		rz_config_add_b(cfg, "asm.lines.ret", "Show separator lines after ret", false) &&
+		rz_config_add_b(cfg, "asm.lines.right", "Show lines before opcode instead of offset", false) &&
+		rz_config_add_b(cfg, "asm.lines.wide", "Put a space between lines", false) &&
+		rz_config_add_b(cfg, "asm.marks", "Show marks before the disassembly", true) &&
+		rz_config_add_b(cfg, "asm.meta", "Display the code/data/format conversions in disasm", true) &&
+		rz_config_add_b(cfg, "asm.midcursor", "Cursor in visual disasm mode breaks the instruction", false) &&
+		rz_config_add_b(cfg, "asm.middle", "Allow disassembling jumps in the middle of an instruction", false) &&
+		rz_config_add_b(cfg, "asm.minicols", "Only show the instruction in the column disasm", false) &&
+		rz_config_add_b(cfg, "asm.nodup", "Do not show dupped instructions (collapse disasm)", false) &&
+		rz_config_add_b(cfg, "asm.noisy", "Show comments considered noisy but possibly useful", true) &&
+		rz_config_add_b(cfg, "asm.offset", "Show offsets in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.optype", "show opcode type next to the instruction bytes", false) &&
+		rz_config_add_b(cfg, "asm.payloads", "Show payload bytes in disasm", false) &&
+		rz_config_add_b(cfg, "asm.refptr", "Show refpointer information in disasm", true) &&
+		rz_config_add_b(cfg, "asm.reloff", "Show relative offsets instead of absolute address in disasm", false) &&
+		rz_config_add_b(cfg, "asm.reloff.flags", "Show relative offsets to flags (not only functions)", false) &&
+		rz_config_add_b(cfg, "asm.section", "Show section name before offset", false) &&
+		rz_config_add_b(cfg, "asm.section.name", "Show section name in the disasm", true) &&
+		rz_config_add_b(cfg, "asm.section.perm", "Show section permissions in the disasm", false) &&
+		rz_config_add_b(cfg, "asm.size", "Show size of opcodes in disassembly (pd)", false) &&
+		rz_config_add_b(cfg, "asm.slow", "Perform slow analysis operations in disasm", true) &&
+		rz_config_add_b(cfg, "asm.stackptr", "Show stack pointer at disassembly", false) &&
+		rz_config_add_b(cfg, "asm.sub.jmp", "Always substitute jump, call and branch targets in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.sub.names", "Replace numeric values by flags (e.g. 0x4003e0 -> sym.imp.printf)", true) &&
+		rz_config_add_b(cfg, "asm.sub.reg", "Substitute register names with their associated role name (drp~=)", false) &&
+		rz_config_add_b(cfg, "asm.sub.rel", "Substitute pc relative expressions in disasm", true) &&
+		rz_config_add_b(cfg, "asm.sub.var", "Substitute variables in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.sub.varonly", "Substitute the entire variable expression with the local variable name (e.g. [local10h] instead of [ebp+local10h])", true) &&
+		rz_config_add_b(cfg, "asm.symbol", "Show symbol+delta instead of absolute offset", false) &&
+		rz_config_add_b(cfg, "asm.tabs.once", "Only tabulate the opcode, not the arguments", true) &&
+		rz_config_add_b(cfg, "asm.trace", "Show execution traces for each opcode", false) &&
+		rz_config_add_b(cfg, "asm.tracespace", "Indent disassembly with trace.count information", false) &&
+		rz_config_add_b(cfg, "asm.ucase", "Use uppercase syntax at disassembly", false) &&
+		rz_config_add_b(cfg, "asm.usercomments", "Show user comments even if asm.comments is false", false) &&
+		rz_config_add_b(cfg, "asm.var", "Show local function variables in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.var.access", "Show accesses of local variables", false) &&
+		rz_config_add_b(cfg, "asm.xrefs", "Show xrefs in disassembly", true) &&
+		rz_config_add_b(cfg, "asm.xrefs.code", "Show the code xrefs (generated by jumps instead of calls)", true) &&
+		rz_config_add_s(cfg, "asm.cmt.off", "Show offset comment in disasm (true, false, nodup)", "nodup") &&
+		rz_config_add_s(cfg, "asm.strip", "strip all instructions given comma separated types", "") &&
+		rz_config_add_s(cfg, "asm.highlight", "Highlight current line", "") &&
 
 		/* analysis binds */
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&

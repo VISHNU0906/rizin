@@ -263,6 +263,26 @@ static bool core_config_set_bool_analysis_jmp_after(void *user, const void *data
 	return true;
 }
 
+/* analysis.trap.after GET */
+static bool core_config_get_bool_analysis_trap_after(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.aftertrap;
+	return true;
+}
+
+/* analysis.trap.after SET */
+static bool core_config_set_bool_analysis_trap_after(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.aftertrap = *value;
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -287,6 +307,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_b_bind(cfg, "analysis.jmp.retpoline", "Analyze retpolines, may be slower if not needed", core_config_get_bool_analysis_jmp_retpoline, core_config_set_bool_analysis_jmp_retpoline) &&
 		rz_config_add_b_bind(cfg, "analysis.armthumb", "aae computes arm/thumb changes (lot of false positives ahead)", core_config_get_bool_analysis_armthumb, core_config_set_bool_analysis_armthumb) &&
 		rz_config_add_b_bind(cfg, "analysis.jmp.after", "Continue analysis after jmp/ujmp", core_config_get_bool_analysis_jmp_after, core_config_set_bool_analysis_jmp_after) &&
+		rz_config_add_b_bind(cfg, "analysis.trap.after", "Continue analysis after trap instructions.", core_config_get_bool_analysis_trap_after, core_config_set_bool_analysis_trap_after) &&
 
 		/* end */
 		true;

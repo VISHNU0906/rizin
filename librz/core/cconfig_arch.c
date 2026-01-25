@@ -363,6 +363,26 @@ static bool core_config_set_bool_analysis_ignbithints(void *user, const void *da
 	return true;
 }
 
+/* analysis.nonull GET */
+static bool core_config_get_integer_analysis_nonull(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.nonull;
+	return true;
+}
+
+/* analysis.nonull SET */
+static bool core_config_set_integer_analysis_nonull(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.nonull = *value;
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -400,6 +420,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_i_bind(cfg, "analysis.depth", "Max depth at code analysis", core_config_get_integer_analysis_depth, core_config_set_integer_analysis_depth) &&
 		rz_config_add_i_bind(cfg, "analysis.graph_depth", "Max depth for path search", core_config_get_integer_analysis_graph_depth, core_config_set_integer_analysis_graph_depth) &&
 		rz_config_add_b_bind(cfg, "analysis.ignbithints", "Ignore the ahb hints (only obey asm.bits)", core_config_get_bool_analysis_ignbithints, core_config_set_bool_analysis_ignbithints) &&
+		rz_config_add_i_bind(cfg, "analysis.nonull", "Do not analyze regions of N null bytes (0 is disabled)", core_config_get_integer_analysis_nonull, core_config_set_integer_analysis_nonull) &&
 
 		/* end */
 		true;

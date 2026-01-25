@@ -146,6 +146,7 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->opt.armthumb = false; // computes arm/thumb changes
 	analysis->opt.afterjmp = true; // continue analysis after jmp/ujmp
 	analysis->opt.aftertrap = false; // continue analysis after trap instructions
+	analysis->opt.delay = true; // delay slot analysis when supported by the arch
 	analysis->opt.bb_max_size = RZ_ANALYSIS_BLOCK_MAX_SIZE;
 	analysis->opt.fcn_max_size = 256 * 1024;
 	rz_spaces_init(&analysis->meta_spaces, "CS");

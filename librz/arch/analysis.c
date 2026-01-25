@@ -140,7 +140,8 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->gp = 0LL;
 	analysis->sdb = sdb_new0();
 	analysis->cpp_abi = RZ_ANALYSIS_CPP_ABI_ITANIUM;
-	analysis->opt.depth = 32;
+	analysis->opt.depth = 64; // max depth at code analysis
+	analysis->opt.graph_depth = 256; // max depth for path search
 	analysis->opt.noncode = false; // do not analyze data by default
 	analysis->opt.retpoline = true; // analyze retpoline
 	analysis->opt.armthumb = false; // computes arm/thumb changes

@@ -303,6 +303,46 @@ static bool core_config_set_bool_analysis_delay(void *user, const void *data) {
 	return true;
 }
 
+/* analysis.depth GET */
+static bool core_config_get_integer_analysis_depth(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.depth;
+	return true;
+}
+
+/* analysis.depth SET */
+static bool core_config_set_integer_analysis_depth(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.depth = *value;
+	return true;
+}
+
+/* analysis.graph_depth GET */
+static bool core_config_get_integer_analysis_graph_depth(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.graph_depth;
+	return true;
+}
+
+/* analysis.graph_depth SET */
+static bool core_config_set_integer_analysis_graph_depth(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.graph_depth = *value;
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -329,6 +369,8 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_b_bind(cfg, "analysis.jmp.after", "Continue analysis after jmp/ujmp", core_config_get_bool_analysis_jmp_after, core_config_set_bool_analysis_jmp_after) &&
 		rz_config_add_b_bind(cfg, "analysis.trap.after", "Continue analysis after trap instructions.", core_config_get_bool_analysis_trap_after, core_config_set_bool_analysis_trap_after) &&
 		rz_config_add_b_bind(cfg, "analysis.delay", "Enable delay slot analysis if supported by the architecture", core_config_get_bool_analysis_delay, core_config_set_bool_analysis_delay) &&
+		rz_config_add_i_bind(cfg, "analysis.depth", "Max depth at code analysis", core_config_get_integer_analysis_depth, core_config_set_integer_analysis_depth) &&
+		rz_config_add_i_bind(cfg, "analysis.graph_depth", "Max depth for path search", core_config_get_integer_analysis_graph_depth, core_config_set_integer_analysis_graph_depth) &&
 
 		/* end */
 		true;

@@ -400,6 +400,10 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_b(cfg, "analysis.types.constraint", "Enable constraint types analysis for variables", false) &&
 		rz_config_add_b(cfg, "analysis.vinfun", "Search values in functions (aav) (false by default to only find on non-code)", true) &&
 		rz_config_add_b(cfg, "analysis.vinfunrange", "Search values outside function ranges (requires analysis.vinfun=false)", false) &&
+		rz_config_add_s(cfg, "analysis.types.spec", "Set profile for specifying format chars used in type analysis", "gcc") &&
+		rz_config_add_s(cfg, "analysis.prelude", "Specify an hexpair to find preludes in code", "") &&
+		rz_config_add_i(cfg, "analysis.prelude.limit", "Maximum size of the range to scan for preludes", 1024 * 1024 * 20) &&
+		rz_config_add_i(cfg, "analysis.ptrdepth", "Maximum number of nested pointers to follow in analysis", 3) &&
 
 		/* analysis binds */
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&

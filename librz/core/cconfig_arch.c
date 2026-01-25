@@ -373,6 +373,8 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_b(cfg, "analysis.gpfixed", "Set gp register to analysis.gp before emulating each instruction in aae", true) &&
 		rz_config_add_i(cfg, "analysis.timeout", "Stop analyzing after a couple of seconds", 0) &&
 		rz_config_add_b(cfg, "analysis.calls", "Make basic af analysis walk into calls", false) &&
+		rz_config_add_b(cfg, "analysis.autoname", "Speculatively set a name for the functions, may result in some false positives", false) &&
+		rz_config_add_b(cfg, "analysis.hasnext", "Continue analysis after each function", false) &&
 
 		/* analysis binds */
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&

@@ -19,10 +19,7 @@ static bool core_config_get_string_analysis_cc(void *user, void *data) {
 static bool core_config_set_string_analysis_cc(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
-	if (CONFIG_IS_HELP(*value)) {
-		rz_core_types_calling_conventions_print(core, RZ_OUTPUT_MODE_STANDARD);
-		return true;
-	} else if (*value && !rz_analysis_cc_exist(core->analysis, *value)) {
+	if (*value && !rz_analysis_cc_exist(core->analysis, *value)) {
 		RZ_LOG_ERROR("config: invalid analysis.cc value: %s\n", *value);
 		return false;
 	}
@@ -44,10 +41,7 @@ static bool core_config_get_string_analysis_syscc(void *user, void *data) {
 static bool core_config_set_string_analysis_syscc(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
-	if (CONFIG_IS_HELP(*value)) {
-		rz_core_types_calling_conventions_print(core, RZ_OUTPUT_MODE_STANDARD);
-		return true;
-	} else if (*value && !rz_analysis_cc_exist(core->analysis, *value)) {
+	if (*value && !rz_analysis_cc_exist(core->analysis, *value)) {
 		RZ_LOG_ERROR("config: invalid analysis.syscc value: %s\n", *value);
 		return false;
 	}
@@ -192,10 +186,7 @@ static bool core_config_set_string_analysis_in(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
-	if (CONFIG_IS_HELP(*value)) {
-		rz_core_print_supported_search_maps();
-		return true;
-	} else if (!rz_core_set_current_search_map(core, *value)) {
+	if (!rz_core_set_current_search_map(core, *value)) {
 		RZ_LOG_ERROR("config: invalid analysis.in value: %s\n", *value);
 		return false;
 	}
@@ -482,6 +473,33 @@ static bool core_config_set_bool_analysis_hpskip(void *user, const void *data) {
 	return true;
 }
 
+/* analysis.arch GET */
+static bool core_config_get_string_analysis_arch(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	if (!core->analysis->cur) {
+		rz_warn_if_reached();
+		return false;
+	}
+
+	*value = core->analysis->cur->name;
+	return true;
+}
+
+/* analysis.arch SET */
+static bool core_config_set_string_analysis_arch(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	if (RZ_STR_ISEMPTY(*value)) {
+		RZ_LOG_ERROR("config: invalid analysis.arch value: %s\n", *value);
+		return false;
+	}
+
+	return rz_analysis_use(core->analysis, *value);
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -489,12 +507,17 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		/* analysis binds */
 		rz_config_add_b_bind(cfg, "analysis.armthumb", "aae computes arm/thumb changes (lot of false positives ahead)", core_config_get_bool_analysis_armthumb, core_config_set_bool_analysis_armthumb) &&
 		rz_config_add_b_bind(cfg, "analysis.delay", "Enable delay slot analysis if supported by the architecture", core_config_get_bool_analysis_delay, core_config_set_bool_analysis_delay) &&
+		rz_config_add_b_bind(cfg, "analysis.hpskip", "Skip `mov reg, reg` and `lea reg, [reg] at the beginning of functions", core_config_get_bool_analysis_hpskip, core_config_set_bool_analysis_hpskip) &&
 		rz_config_add_b_bind(cfg, "analysis.ignbithints", "Ignore the ahb hints (only obey asm.bits)", core_config_get_bool_analysis_ignbithints, core_config_set_bool_analysis_ignbithints) &&
 		rz_config_add_b_bind(cfg, "analysis.jmp.after", "Continue analysis after jmp/ujmp", core_config_get_bool_analysis_jmp_after, core_config_set_bool_analysis_jmp_after) &&
 		rz_config_add_b_bind(cfg, "analysis.jmp.retpoline", "Analyze retpolines, may be slower if not needed", core_config_get_bool_analysis_jmp_retpoline, core_config_set_bool_analysis_jmp_retpoline) &&
 		rz_config_add_b_bind(cfg, "analysis.limits", "When enabled, restricts the analysis to the range [analysis.limits.from : analysis.limits.to]", core_config_get_bool_analysis_limits, core_config_set_bool_analysis_limits) &&
+		rz_config_add_b_bind(cfg, "analysis.nopskip", "Skip nops at the beginning of functions", core_config_get_bool_analysis_nopskip, core_config_set_bool_analysis_nopskip) &&
+		rz_config_add_b_bind(cfg, "analysis.norevisit", "Do not visit function analysis twice (experimental)", core_config_get_bool_analysis_norevisit, core_config_set_bool_analysis_norevisit) &&
 		rz_config_add_b_bind(cfg, "analysis.recursive.noreturn", "When enabled, performs recursive no return check analysis (experimental)", core_config_get_bool_analysis_recursive_noreturn, core_config_set_bool_analysis_recursive_noreturn) &&
+		rz_config_add_b_bind(cfg, "analysis.strings", "Identify and register strings during analysis (aar only)", core_config_get_bool_analysis_strings, core_config_set_bool_analysis_strings) &&
 		rz_config_add_b_bind(cfg, "analysis.trap.after", "Continue analysis after trap instructions.", core_config_get_bool_analysis_trap_after, core_config_set_bool_analysis_trap_after) &&
+		rz_config_add_b_bind(cfg, "analysis.vars", "Analyze local variables and arguments", core_config_get_bool_analysis_vars, core_config_set_bool_analysis_vars) &&
 		rz_config_add_i_bind(cfg, "analysis.depth", "Max depth at code analysis", core_config_get_integer_analysis_depth, core_config_set_integer_analysis_depth) &&
 		rz_config_add_i_bind(cfg, "analysis.gp", "Set the value of the GP register (MIPS)", core_config_get_integer_analysis_gp, core_config_set_integer_analysis_gp) &&
 		rz_config_add_i_bind(cfg, "analysis.graph_depth", "Max depth for path search", core_config_get_integer_analysis_graph_depth, core_config_set_integer_analysis_graph_depth) &&
@@ -502,14 +525,10 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_i_bind(cfg, "analysis.limits.to", "Sets the upper limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_to, core_config_set_integer_analysis_limits_to) &&
 		rz_config_add_i_bind(cfg, "analysis.nonull", "Do not analyze regions of N null bytes (0 is disabled)", core_config_get_integer_analysis_nonull, core_config_set_integer_analysis_nonull) &&
 		rz_config_add_l_bind(cfg, "analysis.roregs", "Comma separated list of register names to be readonly", core_config_get_list_analysis_roregs, core_config_set_list_analysis_roregs) &&
+		rz_config_add_s_bind(cfg, "analysis.arch", "Select the architecture to use", core_config_get_string_analysis_arch, core_config_set_string_analysis_arch) &&
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&
 		rz_config_add_s_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in) &&
 		rz_config_add_s_bind(cfg, "analysis.syscc", "Specify default syscall calling convention", core_config_get_string_analysis_syscc, core_config_set_string_analysis_syscc) &&
-		rz_config_add_b_bind(cfg, "analysis.strings", "Identify and register strings during analysis (aar only)", core_config_get_bool_analysis_strings, core_config_set_bool_analysis_strings) &&
-		rz_config_add_b_bind(cfg, "analysis.vars", "Analyze local variables and arguments", core_config_get_bool_analysis_vars, core_config_set_bool_analysis_vars) &&
-		rz_config_add_b_bind(cfg, "analysis.norevisit", "Do not visit function analysis twice (experimental)", core_config_get_bool_analysis_norevisit, core_config_set_bool_analysis_norevisit) &&
-		rz_config_add_b_bind(cfg, "analysis.nopskip", "Skip nops at the beginning of functions", core_config_get_bool_analysis_nopskip, core_config_set_bool_analysis_nopskip) &&
-		rz_config_add_b_bind(cfg, "analysis.hpskip", "Skip `mov reg, reg` and `lea reg, [reg] at the beginning of functions", core_config_get_bool_analysis_hpskip, core_config_set_bool_analysis_hpskip) &&
 
 		/* analysis variables */
 		rz_config_add_b(cfg, "analysis.apply.signature", "enables/disables auto-applying signatures to the loaded binary (see also flirt.sigdb.path)", true) &&
@@ -639,6 +658,9 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_s(cfg, "asm.strip", "strip all instructions given comma separated types", "") &&
 
 		/* set special options */
+		rz_config_set_options(cfg, "analysis.cc", rz_analysis_calling_conventions(core->analysis)) &&
+		rz_config_set_options(cfg, "analysis.syscc", rz_analysis_calling_conventions(core->analysis)) &&
+		rz_config_set_options(cfg, "analysis.arch", rz_core_analysis_get_supported_archs(core)) &&
 		rz_config_set_options(cfg, "analysis.in", rz_core_get_supported_search_maps()) &&
 		/* end */
 		true;

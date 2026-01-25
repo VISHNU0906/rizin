@@ -38,6 +38,8 @@ RZ_IPI void rz_core_analysis_esil_emulate_bb(RzCore *core);
 RZ_IPI void rz_core_analysis_esil_default(RzCore *core);
 RZ_IPI void rz_core_debug_esil_watch_print(RzDebug *dbg, RzCmdStateOutput *state);
 
+RZ_IPI RZ_OWN RzList /*<const char *>*/ *rz_core_analysis_get_supported_archs(RZ_NONNULL RzCore *core);
+
 RZ_IPI bool rz_core_analysis_il_vm_set(RzCore *core, const char *var_name, ut64 value);
 RZ_IPI void rz_core_analysis_il_vm_status(RzCore *core, const char *varname, RzOutputMode mode);
 RZ_IPI bool rz_core_analysis_il_step_with_events(RzCore *core, PJ *pj);

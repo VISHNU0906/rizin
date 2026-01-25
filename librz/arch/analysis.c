@@ -138,7 +138,8 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->gp = 0LL;
 	analysis->sdb = sdb_new0();
 	analysis->cpp_abi = RZ_ANALYSIS_CPP_ABI_ITANIUM;
-
+	analysis->recursive_noreturn = false;
+	// RzAnalysisOptions
 	analysis->opt.afterjmp = true; // continue analysis after jmp/ujmp
 	analysis->opt.aftertrap = false; // continue analysis after trap instructions
 	analysis->opt.armthumb = false; // computes arm/thumb changes
@@ -220,10 +221,9 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->ht_virtual_xrefs = ht_sp_new(HT_STR_DUP, NULL, (HtSPFreeValue)rz_set_u_free);
 
 	// default settings.
-	analysis->gp = 0;
 	rz_analysis_enable_limits(analysis, false);
 	rz_analysis_set_limits(analysis, UT64_MAX, UT64_MAX);
-	analysis->recursive_noreturn = false;
+	rz_analysis_use(analysis, RZ_SYS_ARCH);
 	return analysis;
 }
 

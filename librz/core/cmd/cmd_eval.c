@@ -472,6 +472,18 @@ static RZ_BORROW RzConfig *eval_get_config_obj_by_key(const RzCore *core, const 
 	return cfg;
 }
 
+static void eval_config_print_options(RzConfig *cfg, const char *key) {
+	const RzList *options = rz_config_get_options(cfg, key);
+	const RzListIter *it;
+	const char *entry;
+	rz_list_foreach (options, it, entry) {
+		if (RZ_STR_ISEMPTY(entry)) {
+			continue;
+		}
+		rz_cons_println(entry);
+	}
+}
+
 RZ_IPI RzCmdStatus rz_eval_getset_handler(RzCore *core, int argc, const char **argv) {
 	int i;
 	for (i = 1; i < argc; i++) {
@@ -514,7 +526,11 @@ RZ_IPI RzCmdStatus rz_eval_getset_handler(RzCore *core, int argc, const char **a
 			free(v);
 		} else if (llen == 2) {
 			char *value = rz_list_get_n(l, 1);
-			rz_config_set_any(cfg, key, value);
+			if (RZ_STR_EQ(value, "?")) {
+				eval_config_print_options(cfg, key);
+			} else {
+				rz_config_set_any(cfg, key, value);
+			}
 		}
 		rz_list_free(l);
 	}

@@ -2330,3 +2330,24 @@ RZ_API RzCmdStatus rz_core_core_plugins_print(RzCore *core, RzCmdStateOutput *st
 	rz_cmd_state_output_array_end(state);
 	return RZ_CMD_STATUS_OK;
 }
+
+RZ_IPI RZ_OWN RzList /*<const char *>*/ *rz_core_analysis_get_supported_archs(RZ_NONNULL RzCore *core) {
+	rz_return_val_if_fail(core && core->analysis, NULL);
+
+	RzAnalysisPlugin **val;
+	RzList *list = rz_list_new();
+	RzIterator *it = ht_sp_as_iter(core->analysis->plugins);
+	if (!list || !it) {
+		rz_list_free(list);
+		rz_iterator_free(it);
+		return NULL;
+	}
+
+	rz_iterator_foreach(it, val) {
+		RzAnalysisPlugin *h = *val;
+		rz_list_append(list, (void *)h->name);
+	}
+
+	rz_iterator_free(it);
+	return list;
+}

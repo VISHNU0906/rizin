@@ -343,6 +343,26 @@ static bool core_config_set_integer_analysis_graph_depth(void *user, const void 
 	return true;
 }
 
+/* analysis.ignbithints GET */
+static bool core_config_get_bool_analysis_ignbithints(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.ignbithints;
+	return true;
+}
+
+/* analysis.ignbithints SET */
+static bool core_config_set_bool_analysis_ignbithints(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.ignbithints = *value;
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -371,6 +391,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_b_bind(cfg, "analysis.delay", "Enable delay slot analysis if supported by the architecture", core_config_get_bool_analysis_delay, core_config_set_bool_analysis_delay) &&
 		rz_config_add_i_bind(cfg, "analysis.depth", "Max depth at code analysis", core_config_get_integer_analysis_depth, core_config_set_integer_analysis_depth) &&
 		rz_config_add_i_bind(cfg, "analysis.graph_depth", "Max depth for path search", core_config_get_integer_analysis_graph_depth, core_config_set_integer_analysis_graph_depth) &&
+		rz_config_add_b_bind(cfg, "analysis.ignbithints", "Ignore the ahb hints (only obey asm.bits)", core_config_get_bool_analysis_ignbithints, core_config_set_bool_analysis_ignbithints) &&
 
 		/* end */
 		true;

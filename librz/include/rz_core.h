@@ -386,6 +386,8 @@ struct rz_core_t {
 	RzHash *hash;
 	RzList /*<char *>*/ *warnings_after;
 	RzPath *sys_path; ///< pointer to RzPath, contains path prefix of the system
+	bool show_fortunes; ///< when true shows the fortunes
+	char *fortunes_file; ///< file to use for loading the fortunes.
 
 	bool vmarks_init;
 	ut64 vmarks[UT8_MAX + 1];

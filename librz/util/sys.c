@@ -1333,18 +1333,7 @@ RZ_API void rz_sys_set_environ(char **e) {
 #endif
 }
 
-RZ_API char *rz_sys_whoami(char *buf) {
-	char _buf[32];
-	int pid = getpid();
-	int hasbuf = (buf) ? 1 : 0;
-	if (!hasbuf) {
-		buf = _buf;
-	}
-	sprintf(buf, "pid%d", pid);
-	return hasbuf ? buf : rz_str_dup(buf);
-}
-
-RZ_API int rz_sys_getpid(void) {
+RZ_API st64 rz_sys_getpid(void) {
 #if __UNIX__
 	return getpid();
 #elif __WINDOWS__
@@ -1353,6 +1342,11 @@ RZ_API int rz_sys_getpid(void) {
 #warning rz_sys_getpid not implemented for this platform
 	return -1;
 #endif
+}
+
+RZ_API RZ_OWN char *rz_sys_whoami(void) {
+	st64 pid = rz_sys_getpid();
+	return rz_str_newf("pid%" PFMT64d, pid);
 }
 
 RZ_API RSysInfo *rz_sys_info(void) {

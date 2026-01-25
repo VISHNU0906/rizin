@@ -1621,6 +1621,8 @@ RZ_API bool rz_core_init(RzCore *core) {
 	core->print->get_comments = get_comments_cb;
 	core->print->get_section_name = get_section_name;
 	core->print->use_comments = false;
+	rz_str_ncpy(core->print->datefmt, "%Y-%m-%d %H:%M:%S %z", sizeof(core->print->datefmt));
+	core->print->datezone = 0;
 	rz_core_rtr_init(core);
 	core->rtr_n = 0;
 	core->blocksize_max = RZ_CORE_BLOCKSIZE_MAX;
@@ -1804,6 +1806,9 @@ RZ_API bool rz_core_init(RzCore *core) {
 	}
 	rz_core_analysis_type_init(core);
 	rz_core_set_current_search_map(core, NULL);
+
+	core->show_fortunes = true; ///< when true shows the fortunes
+	core->fortunes_file = rz_str_dup("tips"); ///< file to use for loading the fortunes.
 	return 0;
 }
 

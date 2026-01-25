@@ -53,7 +53,7 @@ RZ_API bool rz_sys_stop(void);
 RZ_API char *rz_sys_pid_to_path(int pid);
 RZ_API int rz_sys_run(const ut8 *buf, int len);
 RZ_API int rz_sys_run_rop(const ut8 *buf, int len);
-RZ_API int rz_sys_getpid(void);
+RZ_API st64 rz_sys_getpid(void);
 #if !HAVE_PIPE || (__UNIX__ && HAVE_PIPE)
 RZ_API int rz_sys_pipe(int pipefd[2], bool close_on_exec);
 RZ_API int rz_sys_pipe_close(int fd);
@@ -102,7 +102,7 @@ RZ_API char *rz_sys_getenv(const char *key);
 RZ_API bool rz_sys_getenv_asbool(const char *key);
 RZ_API int rz_sys_setenv(const char *key, const char *value);
 RZ_API int rz_sys_clearenv(void);
-RZ_API char *rz_sys_whoami(char *buf);
+RZ_API RZ_OWN char *rz_sys_whoami(void);
 RZ_API char *rz_sys_getdir(void);
 RZ_API bool rz_sys_chdir(RZ_NONNULL const char *s);
 RZ_API bool rz_sys_aslr(bool enable);

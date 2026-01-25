@@ -45,7 +45,7 @@ static bool core_config_set_bool_cfg_bigendian(void *user, const void *data) {
 }
 
 /* cfg.debug GET */
-static bool core_config_get_string_cfg_debug(void *user, void *data) {
+static bool core_config_get_bool_cfg_debug(void *user, void *data) {
 	RzCore *core = (RzCore *)user;
 	bool *value = (bool *)data;
 
@@ -54,7 +54,7 @@ static bool core_config_get_string_cfg_debug(void *user, void *data) {
 }
 
 /* cfg.debug SET */
-static bool core_config_set_string_cfg_debug(void *user, const void *data) {
+static bool core_config_set_bool_cfg_debug(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const bool *value = (const bool *)data;
 
@@ -152,7 +152,7 @@ static bool core_config_add_cfg_variables(RzCore *core) {
 
 		/* cfg binds */
 		rz_config_add_b_bind(cfg, "cfg.bigendian", "Use little (false) or big (true) endianness.", core_config_get_bool_cfg_bigendian, core_config_set_bool_cfg_bigendian) &&
-		rz_config_add_b_bind(cfg, "cfg.debug", "Debugger mode", core_config_get_string_cfg_debug, core_config_set_string_cfg_debug) &&
+		rz_config_add_b_bind(cfg, "cfg.debug", "Debugger mode", core_config_get_bool_cfg_debug, core_config_set_bool_cfg_debug) &&
 		rz_config_add_b_bind(cfg, "cfg.fortunes", "If enabled show tips at start", core_config_get_string_cfg_fortunes, core_config_set_string_cfg_fortunes) &&
 		rz_config_add_s_bind(cfg, "cfg.fortunes.file", "Type of fortunes to show (tips, fun)", core_config_get_string_cfg_fortunes_file, core_config_set_string_cfg_fortunes_file);
 

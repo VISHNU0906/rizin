@@ -383,6 +383,25 @@ static bool core_config_set_integer_analysis_nonull(void *user, const void *data
 	return true;
 }
 
+/* analysis.strings GET */
+static bool core_config_get_bool_analysis_strings(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: This is a core options and a terrible idea.
+	*value = !rz_config_get_b(core->config, "bin.strings");
+	return true;
+}
+
+/* analysis.strings SET */
+static bool core_config_set_bool_analysis_strings(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: This is a core options and a terrible idea.
+	return rz_config_set_b(core->config, "bin.strings", !*value);
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -533,6 +552,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&
 		rz_config_add_s_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in) &&
 		rz_config_add_s_bind(cfg, "analysis.syscc", "Specify default syscall calling convention", core_config_get_string_analysis_syscc, core_config_set_string_analysis_syscc) &&
+		rz_config_add_b_bind(cfg, "analysis.strings", "Identify and register strings during analysis (aar only)", core_config_get_bool_analysis_strings, core_config_set_bool_analysis_strings) &&
 
 		/* set special options */
 		rz_config_set_options(cfg, "analysis.in", rz_core_get_supported_search_maps()) &&

@@ -421,6 +421,27 @@ static bool core_config_set_bool_analysis_vars(void *user, const void *data) {
 	core->analysis->opt.vars = *value;
 	return true;
 }
+
+/* analysis.norevisit GET */
+static bool core_config_get_bool_analysis_norevisit(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.norevisit;
+	return true;
+}
+
+/* analysis.norevisit SET */
+static bool core_config_set_bool_analysis_norevisit(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.norevisit = *value;
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -446,6 +467,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_s_bind(cfg, "analysis.syscc", "Specify default syscall calling convention", core_config_get_string_analysis_syscc, core_config_set_string_analysis_syscc) &&
 		rz_config_add_b_bind(cfg, "analysis.strings", "Identify and register strings during analysis (aar only)", core_config_get_bool_analysis_strings, core_config_set_bool_analysis_strings) &&
 		rz_config_add_b_bind(cfg, "analysis.vars", "Analyze local variables and arguments", core_config_get_bool_analysis_vars, core_config_set_bool_analysis_vars) &&
+		rz_config_add_b_bind(cfg, "analysis.norevisit", "Do not visit function analysis twice (experimental)", core_config_get_bool_analysis_norevisit, core_config_set_bool_analysis_norevisit) &&
 
 		/* analysis variables */
 		rz_config_add_b(cfg, "analysis.apply.signature", "enables/disables auto-applying signatures to the loaded binary (see also flirt.sigdb.path)", true) &&

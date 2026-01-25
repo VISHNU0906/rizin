@@ -482,7 +482,6 @@ typedef struct rz_analysis_t {
 	int bits; // asm.bits
 	int lineswidth; // asm.lines.width
 	int big_endian; // cfg.bigendian
-	int sleep; // analysis.sleep, sleep some usecs before analyzing more (avoid 100% cpu usages)
 	RzAnalysisCPPABI cpp_abi; // analysis.cpp.abi
 	void *plugin_data;
 	ut64 gp; // analysis.gp, global pointer. used for mips. but can be used by other arches too in the future

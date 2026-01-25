@@ -618,9 +618,6 @@ static RzAnalysisBBEndCause run_basic_block_analysis(RzAnalysisTaskItem *item, R
 		rz_analysis_task_item_new(analysis, tasks, fcn, bb, addr, sp);
 		return RZ_ANALYSIS_RET_END;
 	}
-	if (analysis->sleep) {
-		rz_sys_usleep(analysis->sleep);
-	}
 
 	// check if address is readable
 	if (!analysis->iob.is_valid_offset(analysis->iob.io, addr, 0)) {

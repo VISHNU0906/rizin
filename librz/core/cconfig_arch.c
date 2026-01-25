@@ -375,6 +375,11 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_b(cfg, "analysis.calls", "Make basic af analysis walk into calls", false) &&
 		rz_config_add_b(cfg, "analysis.autoname", "Speculatively set a name for the functions, may result in some false positives", false) &&
 		rz_config_add_b(cfg, "analysis.hasnext", "Continue analysis after each function", false) &&
+		rz_config_add_b(cfg, "analysis.esil", "Use the new ESIL code analysis", false) &&
+		rz_config_add_b(cfg, "analysis.types.verbose", "Verbose output from type analysis", false) &&
+		rz_config_add_b(cfg, "analysis.types.constraint", "Enable constraint types analysis for variables", false) &&
+		rz_config_add_b(cfg, "analysis.vinfun", "Search values in functions (aav) (false by default to only find on non-code)", true) &&
+		rz_config_add_b(cfg, "analysis.vinfunrange", "Search values outside function ranges (requires analysis.vinfun=false)", false) &&
 
 		/* analysis binds */
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&

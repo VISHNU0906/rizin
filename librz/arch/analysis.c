@@ -139,37 +139,38 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->sdb = sdb_new0();
 	analysis->cpp_abi = RZ_ANALYSIS_CPP_ABI_ITANIUM;
 	analysis->recursive_noreturn = false;
+	analysis->maxreflines = 0; // maximum number of reflines to be analyzed
 	// RzAnalysisOptions
 	analysis->opt.afterjmp = true; // continue analysis after jmp/ujmp
 	analysis->opt.aftertrap = false; // continue analysis after trap instructions
 	analysis->opt.armthumb = false; // computes arm/thumb changes
-	analysis->opt.bb_max_size = RZ_ANALYSIS_BLOCK_MAX_SIZE;
-	analysis->opt.cjmpref = false;
+	analysis->opt.bb_max_size = RZ_ANALYSIS_BLOCK_MAX_SIZE; // maximum basic block size
+	analysis->opt.cjmpref = false; // create references for conditional jumps
 	analysis->opt.delay = true; // delay slot analysis when supported by the arch
 	analysis->opt.depth = 64; // max depth at code analysis
-	analysis->opt.fcn_max_size = 256 * 1024;
-	analysis->opt.followbrokenfcnsrefs = false;
-	analysis->opt.followdatarefs = false;
+	analysis->opt.fcn_max_size = 256 * 1024; // maximum function size
+	analysis->opt.followbrokenfcnsrefs = false; // follow function references even if function analysis has failed
+	analysis->opt.followdatarefs = false; // follow data references for code coverage
 	analysis->opt.graph_depth = 256; // max depth for path search
 	analysis->opt.hpskip = false; // skip `mov reg,reg` and `lea reg,[reg]`
 	analysis->opt.ignbithints = false; // ignore the ahb hints (only obey asm.bits)
-	analysis->opt.ijmp = false;
-	analysis->opt.jmpabove = false;
-	analysis->opt.jmpmid = false;
-	analysis->opt.jmpref = false;
-	analysis->opt.jmptbl = false;
-	analysis->opt.jmptbl_maxcount = false;
-	analysis->opt.jmptbl_maxoffset = false;
-	analysis->opt.loads = false;
+	analysis->opt.ijmp = false; // follow the indirect jumps in function analysis
+	analysis->opt.jmpabove = true; // jump above function pointer
+	analysis->opt.jmpmid = true; // continue analysis after jump to middle of instruction (x86 only)
+	analysis->opt.jmpref = true; // create references for unconditional jumps
+	analysis->opt.jmptbl = true; // analyze jump tables in switch statements
+	analysis->opt.jmptbl_maxcount = 512; // maximum amount of entries to analyze in jump tables
+	analysis->opt.jmptbl_maxoffset = 4096; // maximum offset from the jump table jump instruction to consider it valid
+	analysis->opt.loads = false; // define as dword/string/qword when analyzing load instructions
 	analysis->opt.noncode = false; // do not analyze data by default
 	analysis->opt.nonull = 0; // do not analyze regions of N null bytes (0 is disabled)
 	analysis->opt.nopskip = true; // skip nops in code analysis
 	analysis->opt.norevisit = false; // do not visit function analysis twice
-	analysis->opt.pushret = false;
-	analysis->opt.recont = false;
+	analysis->opt.pushret = false; // analyze push+ret as jmp
+	analysis->opt.recont = false; // end block after splitting a basic block instead of error
 	analysis->opt.retpoline = true; // analyze retpoline
-	analysis->opt.searchstringrefs = false;
-	analysis->opt.trycatch = false;
+	analysis->opt.searchstringrefs = false; // search string references in data references
+	analysis->opt.trycatch = false; // honor `try.X.Y.{from,to,catch}` flags
 	analysis->opt.vars = true; // analyze local variables and arguments
 	rz_spaces_init(&analysis->meta_spaces, "CS");
 	rz_event_hook(analysis->meta_spaces.event, RZ_SPACE_EVENT_UNSET, meta_unset_for, NULL);
@@ -223,7 +224,8 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	// default settings.
 	rz_analysis_enable_limits(analysis, false);
 	rz_analysis_set_limits(analysis, UT64_MAX, UT64_MAX);
-	rz_analysis_use(analysis, RZ_SYS_ARCH);
+	rz_analysis_set_triplet(analysis, RZ_SYS_OS, RZ_SYS_ARCH, (RZ_SYS_BITS << 3));
+	rz_analysis_set_cpu(analysis, RZ_SYS_ARCH);
 	return analysis;
 }
 
@@ -460,9 +462,11 @@ RZ_API int rz_analysis_get_address_bits(RzAnalysis *analysis) {
 }
 
 RZ_API void rz_analysis_set_cpu(RzAnalysis *analysis, const char *cpu) {
-	if (RZ_STR_EQ(cpu, analysis->cpu)) {
+	rz_return_if_fail(analysis);
+	if (cpu && analysis->cpu && RZ_STR_EQ(cpu, analysis->cpu)) {
 		return;
 	}
+
 	free(analysis->cpu);
 	analysis->cpu = rz_str_dup(cpu);
 	int v = rz_analysis_archinfo(analysis, RZ_ANALYSIS_ARCHINFO_TEXT_ALIGN);

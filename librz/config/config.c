@@ -1122,8 +1122,9 @@ RZ_API const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfi
 /**
  * \brief      Sets the options of a given variable of the config
  *
- * \param      cfg    The RzConfig to modify
- * \param[in]  name   The name of the variable
+ * \param      cfg      The RzConfig to modify
+ * \param[in]  name     The name of the variable
+ * \param[in]  options  The options of the variable to set
  *
  * \return     On success returns true, otherwise false
  */
@@ -1141,6 +1142,33 @@ RZ_API bool rz_config_set_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL con
 
 	rz_list_free(node->options);
 	node->options = options;
+	return true;
+}
+
+/**
+ * \brief      Sets the options of a given variable of the config
+ *
+ * \param      cfg    The RzConfig to modify
+ * \param[in]  name   The name of the variable
+ * \param[in]  ...    The options of the variable to set
+ *
+ * \return     On success returns true, otherwise false
+ */
+RZ_API bool rz_config_set_options2(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name, ...) {
+	va_list argp;
+	RzList *options = rz_list_newf(free);
+	if (!options) {
+		return false;
+	}
+
+	va_start(argp, name);
+	bool ok = config_append_var_args_to_list(argp, options);
+	va_end(argp);
+
+	if (!ok || !rz_config_set_options(cfg, name, options)) {
+		rz_list_free(options);
+		return false;
+	}
 	return true;
 }
 

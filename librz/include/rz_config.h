@@ -97,6 +97,7 @@ RZ_API const RzList /*<char *>*/ *rz_config_get_list(RZ_NONNULL const RzConfig *
 RZ_API RZ_OWN char *rz_config_get_as_string(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API const RzList /*<char *>*/ *rz_config_get_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API bool rz_config_set_options(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name, RZ_NULLABLE RZ_OWN RzList /*<char *>*/ *options);
+RZ_API bool rz_config_set_options2(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name, ...);
 RZ_API const ut32 rz_config_get_flags(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 RZ_API const char *rz_config_get_type(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name);
 

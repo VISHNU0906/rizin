@@ -500,33 +500,445 @@ static bool core_config_set_string_analysis_arch(void *user, const void *data) {
 	return rz_analysis_use(core->analysis, *value);
 }
 
+/* analysis.cpu GET */
+static bool core_config_get_string_analysis_cpu(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	*value = core->analysis->cpu;
+	return true;
+}
+
+/* analysis.cpu SET */
+static bool core_config_set_string_analysis_cpu(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	rz_analysis_set_cpu(core->analysis, *value);
+	return true;
+}
+
+/* analysis.recont GET */
+static bool core_config_get_bool_analysis_recont(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.recont;
+	return true;
+}
+
+/* analysis.recont SET */
+static bool core_config_set_bool_analysis_recont(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.recont = *value;
+	return true;
+}
+
+/* analysis.jmp.indir GET */
+static bool core_config_get_bool_analysis_jmp_indir(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.ijmp;
+	return true;
+}
+
+/* analysis.jmp.indir SET */
+static bool core_config_set_bool_analysis_jmp_indir(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.ijmp = *value;
+	return true;
+}
+
+/* analysis.jmp.tbl GET */
+static bool core_config_get_bool_analysis_jmp_tbl(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.jmptbl;
+	return true;
+}
+
+/* analysis.jmp.tbl SET */
+static bool core_config_set_bool_analysis_jmp_tbl(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.jmptbl = *value;
+	return true;
+}
+
+/* analysis.jmp.tblmax GET */
+static bool core_config_get_integer_analysis_jmp_tblmax(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.jmptbl_maxcount;
+	return true;
+}
+
+/* analysis.jmp.tblmax SET */
+static bool core_config_set_integer_analysis_jmp_tblmax(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.jmptbl_maxcount = *value;
+	return true;
+}
+
+/* analysis.jmp.tblmaxoffset GET */
+static bool core_config_get_integer_analysis_jmp_tblmaxoffset(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.jmptbl_maxoffset;
+	return true;
+}
+
+/* analysis.jmp.tblmaxoffset SET */
+static bool core_config_set_integer_analysis_jmp_tblmaxoffset(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.jmptbl_maxoffset = *value;
+	return true;
+}
+
+/* analysis.jmp.cref GET */
+static bool core_config_get_bool_analysis_jmp_cref(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.cjmpref;
+	return true;
+}
+
+/* analysis.jmp.cref SET */
+static bool core_config_set_bool_analysis_jmp_cref(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.cjmpref = *value;
+	return true;
+}
+
+/* analysis.jmp.ref GET */
+static bool core_config_get_bool_analysis_jmp_ref(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.jmpref;
+	return true;
+}
+
+/* analysis.jmp.ref SET */
+static bool core_config_set_bool_analysis_jmp_ref(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.jmpref = *value;
+	return true;
+}
+
+/* analysis.jmp.above GET */
+static bool core_config_get_bool_analysis_jmp_above(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.jmpabove;
+	return true;
+}
+
+/* analysis.jmp.above SET */
+static bool core_config_set_bool_analysis_jmp_above(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.jmpabove = *value;
+	return true;
+}
+
+/* analysis.loads GET */
+static bool core_config_get_bool_analysis_loads(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.loads;
+	return true;
+}
+
+/* analysis.loads SET */
+static bool core_config_set_bool_analysis_loads(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.loads = *value;
+	return true;
+}
+
+/* analysis.datarefs GET */
+static bool core_config_get_bool_analysis_datarefs(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.followdatarefs;
+	return true;
+}
+
+/* analysis.datarefs SET */
+static bool core_config_set_bool_analysis_datarefs(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.followdatarefs = *value;
+	return true;
+}
+
+/* analysis.brokenrefs GET */
+static bool core_config_get_bool_analysis_brokenrefs(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.followbrokenfcnsrefs;
+	return true;
+}
+
+/* analysis.brokenrefs SET */
+static bool core_config_set_bool_analysis_brokenrefs(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.followbrokenfcnsrefs = *value;
+	return true;
+}
+
+/* analysis.jmp.mid GET */
+static bool core_config_get_bool_analysis_jmp_mid(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.jmpmid;
+	return true;
+}
+
+/* analysis.jmp.mid SET */
+static bool core_config_set_bool_analysis_jmp_mid(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.jmpmid = *value;
+	return true;
+}
+
+/* analysis.refstr GET */
+static bool core_config_get_bool_analysis_refstr(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.searchstringrefs;
+	return true;
+}
+
+/* analysis.refstr SET */
+static bool core_config_set_bool_analysis_refstr(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.searchstringrefs = *value;
+	return true;
+}
+
+/* analysis.trycatch GET */
+static bool core_config_get_bool_analysis_trycatch(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.trycatch;
+	return true;
+}
+
+/* analysis.trycatch SET */
+static bool core_config_set_bool_analysis_trycatch(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.trycatch = *value;
+	return true;
+}
+
+/* analysis.bb.maxsize GET */
+static bool core_config_get_integer_analysis_bb_maxsize(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.bb_max_size;
+	return true;
+}
+
+/* analysis.bb.maxsize SET */
+static bool core_config_set_integer_analysis_bb_maxsize(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.bb_max_size = *value;
+	return true;
+}
+
+/* analysis.fcn_max_size GET */
+static bool core_config_get_integer_analysis_fcn_max_size(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.fcn_max_size;
+	return true;
+}
+
+/* analysis.fcn_max_size SET */
+static bool core_config_set_integer_analysis_fcn_max_size(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.fcn_max_size = *value;
+	return true;
+}
+
+/* analysis.pushret GET */
+static bool core_config_get_bool_analysis_pushret(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->opt.pushret;
+	return true;
+}
+
+/* analysis.pushret SET */
+static bool core_config_set_bool_analysis_pushret(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->opt.pushret = *value;
+	return true;
+}
+
+/* analysis.cpp.abi GET */
+static bool core_config_get_string_analysis_cpp_abi(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	switch (core->analysis->cpp_abi) {
+	case RZ_ANALYSIS_CPP_ABI_ITANIUM:
+		*value = "itanium";
+		return true;
+	case RZ_ANALYSIS_CPP_ABI_MSVC:
+		*value = "msvc";
+		return true;
+	default:
+		rz_warn_if_reached();
+		*value = "";
+		return false;
+	}
+}
+
+/* analysis.cpp.abi SET */
+static bool core_config_set_string_analysis_cpp_abi(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	if (RZ_STR_EQ(*value, "itanium")) {
+		core->analysis->cpp_abi = RZ_ANALYSIS_CPP_ABI_ITANIUM;
+	} else if (RZ_STR_EQ(*value, "msvc")) {
+		core->analysis->cpp_abi = RZ_ANALYSIS_CPP_ABI_MSVC;
+	} else {
+		RZ_LOG_ERROR("config: invalid analysis.cpp.abi value: %s\n", *value);
+		return false;
+	}
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
 	return
 		/* analysis binds */
 		rz_config_add_b_bind(cfg, "analysis.armthumb", "aae computes arm/thumb changes (lot of false positives ahead)", core_config_get_bool_analysis_armthumb, core_config_set_bool_analysis_armthumb) &&
+		rz_config_add_b_bind(cfg, "analysis.brokenrefs", "Follow function references even if function analysis has failed", core_config_get_bool_analysis_brokenrefs, core_config_set_bool_analysis_brokenrefs) &&
+		rz_config_add_b_bind(cfg, "analysis.datarefs", "Follow data references for code coverage", core_config_get_bool_analysis_datarefs, core_config_set_bool_analysis_datarefs) &&
 		rz_config_add_b_bind(cfg, "analysis.delay", "Enable delay slot analysis if supported by the architecture", core_config_get_bool_analysis_delay, core_config_set_bool_analysis_delay) &&
 		rz_config_add_b_bind(cfg, "analysis.hpskip", "Skip `mov reg, reg` and `lea reg, [reg] at the beginning of functions", core_config_get_bool_analysis_hpskip, core_config_set_bool_analysis_hpskip) &&
 		rz_config_add_b_bind(cfg, "analysis.ignbithints", "Ignore the ahb hints (only obey asm.bits)", core_config_get_bool_analysis_ignbithints, core_config_set_bool_analysis_ignbithints) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.above", "Jump above function pointer", core_config_get_bool_analysis_jmp_above, core_config_set_bool_analysis_jmp_above) &&
 		rz_config_add_b_bind(cfg, "analysis.jmp.after", "Continue analysis after jmp/ujmp", core_config_get_bool_analysis_jmp_after, core_config_set_bool_analysis_jmp_after) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.cref", "Create references for conditional jumps", core_config_get_bool_analysis_jmp_cref, core_config_set_bool_analysis_jmp_cref) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.indir", "Follow the indirect jumps in function analysis", core_config_get_bool_analysis_jmp_indir, core_config_set_bool_analysis_jmp_indir) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.mid", "Continue analysis after jump to middle of instruction (x86 only)", core_config_get_bool_analysis_jmp_mid, core_config_set_bool_analysis_jmp_mid) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.ref", "Create references for unconditional jumps", core_config_get_bool_analysis_jmp_ref, core_config_set_bool_analysis_jmp_ref) &&
 		rz_config_add_b_bind(cfg, "analysis.jmp.retpoline", "Analyze retpolines, may be slower if not needed", core_config_get_bool_analysis_jmp_retpoline, core_config_set_bool_analysis_jmp_retpoline) &&
+		rz_config_add_b_bind(cfg, "analysis.jmp.tbl", "Analyze jump tables in switch statements", core_config_get_bool_analysis_jmp_tbl, core_config_set_bool_analysis_jmp_tbl) &&
 		rz_config_add_b_bind(cfg, "analysis.limits", "When enabled, restricts the analysis to the range [analysis.limits.from : analysis.limits.to]", core_config_get_bool_analysis_limits, core_config_set_bool_analysis_limits) &&
+		rz_config_add_b_bind(cfg, "analysis.loads", "Define as dword/string/qword when analyzing load instructions", core_config_get_bool_analysis_loads, core_config_set_bool_analysis_loads) &&
 		rz_config_add_b_bind(cfg, "analysis.nopskip", "Skip nops at the beginning of functions", core_config_get_bool_analysis_nopskip, core_config_set_bool_analysis_nopskip) &&
 		rz_config_add_b_bind(cfg, "analysis.norevisit", "Do not visit function analysis twice (experimental)", core_config_get_bool_analysis_norevisit, core_config_set_bool_analysis_norevisit) &&
+		rz_config_add_b_bind(cfg, "analysis.pushret", "Analyze push+ret as jmp", core_config_get_bool_analysis_pushret, core_config_set_bool_analysis_pushret) &&
+		rz_config_add_b_bind(cfg, "analysis.recont", "End block after splitting a basic block instead of error", core_config_get_bool_analysis_recont, core_config_set_bool_analysis_recont) &&
 		rz_config_add_b_bind(cfg, "analysis.recursive.noreturn", "When enabled, performs recursive no return check analysis (experimental)", core_config_get_bool_analysis_recursive_noreturn, core_config_set_bool_analysis_recursive_noreturn) &&
+		rz_config_add_b_bind(cfg, "analysis.refstr", "Search string references in data references", core_config_get_bool_analysis_refstr, core_config_set_bool_analysis_refstr) &&
 		rz_config_add_b_bind(cfg, "analysis.strings", "Identify and register strings during analysis (aar only)", core_config_get_bool_analysis_strings, core_config_set_bool_analysis_strings) &&
 		rz_config_add_b_bind(cfg, "analysis.trap.after", "Continue analysis after trap instructions.", core_config_get_bool_analysis_trap_after, core_config_set_bool_analysis_trap_after) &&
+		rz_config_add_b_bind(cfg, "analysis.trycatch", "Honor try.X.Y.{from,to,catch} flags", core_config_get_bool_analysis_trycatch, core_config_set_bool_analysis_trycatch) &&
 		rz_config_add_b_bind(cfg, "analysis.vars", "Analyze local variables and arguments", core_config_get_bool_analysis_vars, core_config_set_bool_analysis_vars) &&
+		rz_config_add_i_bind(cfg, "analysis.bb.maxsize", "Maximum basic block size", core_config_get_integer_analysis_bb_maxsize, core_config_set_integer_analysis_bb_maxsize) &&
 		rz_config_add_i_bind(cfg, "analysis.depth", "Max depth at code analysis", core_config_get_integer_analysis_depth, core_config_set_integer_analysis_depth) &&
+		rz_config_add_i_bind(cfg, "analysis.fcn_max_size", "Maximum function size (unspecified units)", core_config_get_integer_analysis_fcn_max_size, core_config_set_integer_analysis_fcn_max_size) &&
 		rz_config_add_i_bind(cfg, "analysis.gp", "Set the value of the GP register (MIPS)", core_config_get_integer_analysis_gp, core_config_set_integer_analysis_gp) &&
 		rz_config_add_i_bind(cfg, "analysis.graph_depth", "Max depth for path search", core_config_get_integer_analysis_graph_depth, core_config_set_integer_analysis_graph_depth) &&
+		rz_config_add_i_bind(cfg, "analysis.jmp.tblmax", "Maximum amount of entries to analyze in jump tables", core_config_get_integer_analysis_jmp_tblmax, core_config_set_integer_analysis_jmp_tblmax) &&
+		rz_config_add_i_bind(cfg, "analysis.jmp.tblmaxoffset", "Maximum offset from the jump table jump instruction to consider it valid", core_config_get_integer_analysis_jmp_tblmaxoffset, core_config_set_integer_analysis_jmp_tblmaxoffset) &&
 		rz_config_add_i_bind(cfg, "analysis.limits.from", "Sets the lower limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_from, core_config_set_integer_analysis_limits_from) &&
 		rz_config_add_i_bind(cfg, "analysis.limits.to", "Sets the upper limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_to, core_config_set_integer_analysis_limits_to) &&
 		rz_config_add_i_bind(cfg, "analysis.nonull", "Do not analyze regions of N null bytes (0 is disabled)", core_config_get_integer_analysis_nonull, core_config_set_integer_analysis_nonull) &&
 		rz_config_add_l_bind(cfg, "analysis.roregs", "Comma separated list of register names to be readonly", core_config_get_list_analysis_roregs, core_config_set_list_analysis_roregs) &&
 		rz_config_add_s_bind(cfg, "analysis.arch", "Select the architecture to use", core_config_get_string_analysis_arch, core_config_set_string_analysis_arch) &&
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&
+		rz_config_add_s_bind(cfg, "analysis.cpp.abi", "Select C++ ABI (Compiler)", core_config_get_string_analysis_cpp_abi, core_config_set_string_analysis_cpp_abi) &&
+		rz_config_add_s_bind(cfg, "analysis.cpu", "Specify the analysis.cpu to use", core_config_get_string_analysis_cpu, core_config_set_string_analysis_cpu) &&
 		rz_config_add_s_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in) &&
 		rz_config_add_s_bind(cfg, "analysis.syscc", "Specify default syscall calling convention", core_config_get_string_analysis_syscc, core_config_set_string_analysis_syscc) &&
 
@@ -660,8 +1072,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		/* set special options */
 		rz_config_set_options(cfg, "analysis.cc", rz_analysis_calling_conventions(core->analysis)) &&
 		rz_config_set_options(cfg, "analysis.syscc", rz_analysis_calling_conventions(core->analysis)) &&
-		rz_config_set_options(cfg, "analysis.arch", rz_core_analysis_get_supported_archs(core)) &&
 		rz_config_set_options(cfg, "analysis.in", rz_core_get_supported_search_maps()) &&
-		/* end */
-		true;
+		rz_config_set_options(cfg, "analysis.arch", rz_core_analysis_get_supported_archs(core)) &&
+		rz_config_set_options2(cfg, "analysis.cpp.abi", "itanium", "msvc", NULL);
 }

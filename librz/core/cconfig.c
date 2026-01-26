@@ -237,6 +237,7 @@ RZ_API int rz_core_config_init(RzCore *core) {
 	if (!cfg) {
 		return 0;
 	}
+
 	return core_config_add_dir_variables(core) &&
 		core_config_add_cfg_variables(core) &&
 		core_config_add_scr_variables(core) &&

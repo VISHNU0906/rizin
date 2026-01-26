@@ -552,11 +552,9 @@ typedef struct autocmplt_context_s {
 
 static bool autocmplt_cmd_arg_eval_key_iterator(const RzConfig *conf, const char *name, const char *description, ut32 flags, void *user) {
 	autocmplt_ctx_t *ctx = user;
-	if (!strncmp(name, ctx->s, ctx->len)) {
+	if (!strncmp(ctx->s, name, ctx->len)) {
 		rz_line_ns_completion_result_add(ctx->res, name);
-		return false;
 	}
-
 	return true;
 }
 

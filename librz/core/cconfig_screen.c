@@ -135,6 +135,80 @@ static bool core_config_set_bool_scr_prompt(void *user, const void *data) {
 	return true;
 }
 
+/* scr.interactive GET */
+static bool core_config_get_bool_scr_interactive(void *user, void *data) {
+	bool *value = (bool *)data;
+
+	*value = rz_cons_singleton()->context->is_interactive;
+	return true;
+}
+
+/* scr.interactive SET */
+static bool core_config_set_bool_scr_interactive(void *user, const void *data) {
+	const bool *value = (const bool *)data;
+
+	rz_cons_singleton()->context->is_interactive = *value;
+	return true;
+}
+
+/* scr.echo GET */
+static bool core_config_get_bool_scr_echo(void *user, void *data) {
+	bool *value = (bool *)data;
+
+	*value = rz_cons_singleton()->echo;
+	return true;
+}
+
+/* scr.echo SET */
+static bool core_config_set_bool_scr_echo(void *user, const void *data) {
+	const bool *value = (const bool *)data;
+
+	rz_cons_singleton()->echo = *value;
+	return true;
+}
+
+/* scr.prompt.popup GET */
+static bool core_config_get_bool_scr_prompt_popup(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	*value = core->cons->show_autocomplete_widget;
+	return true;
+}
+
+/* scr.prompt.popup SET */
+static bool core_config_set_bool_scr_prompt_popup(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	core->cons->show_autocomplete_widget = *value;
+	return true;
+}
+
+/* scr.maxtab GET */
+static bool core_config_get_integer_scr_maxtab(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	*value = core->cons->line->completion.args_limit;
+	return true;
+}
+
+/* scr.maxtab SET */
+static bool core_config_set_integer_scr_maxtab(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	if (*value > (1024 * 1024)) {
+		core->cons->line->completion.args_limit = (1024 * 1024);
+	} else if (*value < 1024) {
+		core->cons->line->completion.args_limit = 1024;
+	} else {
+		core->cons->line->completion.args_limit = *value;
+	}
+	return true;
+}
+
 static bool core_config_add_scr_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -143,8 +217,11 @@ static bool core_config_add_scr_variables(RzCore *core) {
 	core->cons->use_utf8_curvy = false;
 	core->cons->grep_color = false;
 	rz_cons_singleton()->context->color_mode = (core->print->flags & RZ_PRINT_FLAGS_COLOR) ? COLOR_MODE_16 : COLOR_MODE_DISABLED;
+	rz_cons_singleton()->context->is_interactive = true;
 	core->print->scr_prompt = true;
 	core->cons->line->echo = true;
+	rz_cons_singleton()->echo = false;
+	core->cons->line->completion.args_limit = 4096;
 
 	return
 		/* scr variables */
@@ -171,20 +248,22 @@ static bool core_config_add_scr_variables(RzCore *core) {
 
 		/* cfg binds */
 		rz_config_add_b_bind(cfg, "scr.color.grep", "Enable colors when using ~grep", core_config_get_bool_scr_color_grep, core_config_set_bool_scr_color_grep) &&
+		rz_config_add_b_bind(cfg, "scr.echo", "Show rcons output in realtime to stderr and buffer", core_config_get_bool_scr_echo, core_config_set_bool_scr_echo) &&
 		rz_config_add_b_bind(cfg, "scr.fgets", "Use fgets() instead of dietline for prompt input.", core_config_get_bool_scr_fgets, core_config_set_bool_scr_fgets) &&
+		rz_config_add_b_bind(cfg, "scr.interactive", "Start in interactive mode", core_config_get_bool_scr_interactive, core_config_set_bool_scr_interactive) &&
 		rz_config_add_b_bind(cfg, "scr.null", "Show no output.", core_config_get_bool_scr_null, core_config_set_bool_scr_null) &&
 		rz_config_add_b_bind(cfg, "scr.prompt", "Show user prompt (used by rizin -q)", core_config_get_bool_scr_prompt, core_config_set_bool_scr_prompt) &&
+		rz_config_add_b_bind(cfg, "scr.prompt.popup", "Show widget dropdown for autocomplete", core_config_get_bool_scr_prompt_popup, core_config_set_bool_scr_prompt_popup) &&
 		rz_config_add_b_bind(cfg, "scr.utf8", "Show UTF-8 characters instead of ANSI.", core_config_get_bool_scr_utf8, core_config_set_bool_scr_utf8) &&
 		rz_config_add_b_bind(cfg, "scr.utf8.curvy", "Show curved UTF-8 corners (requires scr.utf8).", core_config_get_bool_scr_utf8_curvy, core_config_set_bool_scr_utf8_curvy) &&
 		rz_config_add_i_bind(cfg, "scr.color", "Enable colors (0: none, 1: ansi, 2: 256 colors, 3: truecolor)", core_config_get_integer_scr_color, core_config_set_integer_scr_color) &&
+		rz_config_add_i_bind(cfg, "scr.maxtab", "Change max number of auto completion suggestions", core_config_get_integer_scr_maxtab, core_config_set_integer_scr_maxtab) &&
 
 #if 0
-	SETCB("scr.echo", "false", &cb_screcho, "Show rcons output in realtime to stderr and buffer");
 	SETICB("scr.linesleep", 0, &cb_scrlinesleep, "Flush sleeping some ms in every line");
 	SETICB("scr.maxtab", 4096, &cb_completion_maxtab, "Change max number of auto completion suggestions");
 	SETICB("scr.pagesize", 1, &cb_scrpagesize, "Flush in pages when scr.linesleep is != 0");
 	SETCB("scr.flush", "false", &cb_scrflush, "Force flush to console in realtime (breaks scripting)");
-	SETCB("scr.prompt.popup", "false", &cb_scr_prompt_popup, "Show widget dropdown for autocomplete");
 #if __WINDOWS__
 	SETICB("scr.vtmode", rz_cons_singleton()->vtmode,
 		&scr_vtmode, "Use VT sequences on Windows (0: Disable, 1: Output, 2: Input & Output)");
@@ -208,7 +287,6 @@ static bool core_config_add_scr_variables(RzCore *core) {
 	SETICB("scr.fix.rows", 0, &cb_fixrows, "Workaround for Linux TTY");
 	SETICB("scr.fix.columns", 0, &cb_fixcolumns, "Workaround for Prompt iOS SSH client");
 	SETCB("scr.highlight", "", &cb_scrhighlight, "Highlight that word at RzCons level");
-	SETCB("scr.interactive", "true", &cb_scrint, "Start in interactive mode");
 	SETCB("scr.bgfill", "false", &cb_scr_bgfill, "Fill background for ascii art when possible");
 	SETCB("scr.html", "false", &cb_scrhtml, "Disassembly uses HTML syntax");
 	n = NODECB("scr.nkey", "flag", &cb_scrnkey);

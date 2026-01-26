@@ -23,8 +23,8 @@ RZ_API RzParse *rz_parse_new(void) {
 	p->flagspace = NULL;
 	p->pseudo = false;
 	p->subrel = false;
-	p->subtail = false;
-	p->minval = 0x100;
+	p->subtail = false; // Replace addresses with prefix .. syntax
+	p->minval = 0x100; // minimum value to substitute in instructions
 	p->localvar_only = false;
 
 	const size_t n_plugins = rz_arch_get_n_plugins();

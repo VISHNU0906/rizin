@@ -140,6 +140,8 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->cpp_abi = RZ_ANALYSIS_CPP_ABI_ITANIUM;
 	analysis->recursive_noreturn = false;
 	analysis->maxreflines = 0; // maximum number of reflines to be analyzed
+	analysis->pcalign = 1; // instruction alignment (must be a power of 2).
+	analysis->lineswidth = 7; // number of columns for program flow arrows
 	// RzAnalysisOptions
 	analysis->opt.afterjmp = true; // continue analysis after jmp/ujmp
 	analysis->opt.aftertrap = false; // continue analysis after trap instructions

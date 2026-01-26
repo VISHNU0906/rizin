@@ -223,6 +223,7 @@ RZ_API RzFlag *rz_flag_new(void) {
 		rz_flag_free(f);
 		return NULL;
 	}
+	f->realnames = false; // show flags unfiltered realnames instead of names
 	f->zones = NULL;
 	f->tags = sdb_new0();
 	f->ht_name = ht_sp_new(HT_STR_DUP, NULL, (HtSPFreeValue)rz_flag_item_free);

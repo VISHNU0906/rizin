@@ -913,10 +913,233 @@ static bool core_config_set_integer_analysis_lines_maxref(void *user, const void
 	return true;
 }
 
+/* asm.os GET */
+static bool core_config_get_string_asm_os(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->os;
+	return true;
+}
+
+static void core_update_syscall_db(RzCore *core) {
+	if (core->analysis->syscall->db) {
+		sdb_ns_set(core->sdb, "syscall", core->analysis->syscall->db);
+	} else {
+		sdb_ns_unset(core->sdb, "syscall", NULL);
+	}
+}
+
+static inline void core_update_asm_segoff(RzConfig *cfg, const char *arch, int bits) {
+	bool autoseg = bits == 16 && RZ_STR_EQ(arch, "x86");
+	rz_config_set_b(cfg, "asm.segoff", autoseg);
+}
+
+/* asm.os SET */
+static bool core_config_set_string_asm_os(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	if (RZ_STR_ISEMPTY(*value)) {
+		rz_analysis_set_os(core->analysis, RZ_SYS_OS);
+	} else {
+		rz_analysis_set_os(core->analysis, *value);
+	}
+
+	const char *asmarch = rz_config_get_s(core->config, "asm.arch");
+	const char *asmcpu = rz_config_get_s(core->config, "asm.cpu");
+	if (asmarch) {
+		rz_syscall_setup(core->analysis->syscall, core->sys_path, asmarch, core->analysis->bits, asmcpu, *value);
+		core_update_syscall_db(core);
+		core_update_asm_segoff(core->config, asmarch, core->analysis->bits);
+	}
+	rz_analysis_set_os(core->analysis, *value);
+	rz_core_analysis_cc_init(core);
+	return true;
+}
+
+/* asm.invhex GET */
+static bool core_config_get_bool_asm_invhex(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAsm
+	*value = core->rasm->invhex;
+	return true;
+}
+
+/* asm.invhex SET */
+static bool core_config_set_bool_asm_invhex(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAsm
+	core->rasm->invhex = *value;
+	return true;
+}
+
+/* asm.pcalign GET */
+static bool core_config_get_integer_asm_pcalign(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis & RzAsm
+	*value = core->rasm->pcalign;
+	return true;
+}
+
+/* asm.pcalign SET */
+static bool core_config_set_integer_asm_pcalign(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	if (rz_bits_count_ones_ut64(*value) != 1) {
+		RZ_LOG_ERROR("config: alignment is only defined for '>0' and 'n^2'. Is = %" PFMT64d "\n", *value);
+		return false;
+	}
+
+	// TODO: create set function in RzAnalysis & RzAsm
+	core->rasm->pcalign = *value;
+	core->analysis->pcalign = *value;
+	return true;
+}
+
+/* asm.immhash GET */
+static bool core_config_get_bool_asm_immhash(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAsm
+	*value = core->rasm->immdisp;
+	return true;
+}
+
+/* asm.immhash SET */
+static bool core_config_set_bool_asm_immhash(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAsm
+	core->rasm->immdisp = *value;
+	return true;
+}
+
+/* asm.flags.maxname GET */
+static bool core_config_get_integer_asm_flags_maxname(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzParser
+	*value = core->parser->maxflagnamelen;
+	return true;
+}
+
+/* asm.flags.maxname SET */
+static bool core_config_set_integer_asm_flags_maxname(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzParser
+	core->parser->maxflagnamelen = *value;
+	return true;
+}
+
+/* asm.flags.real GET */
+static bool core_config_get_bool_asm_flags_real(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzFlags
+	*value = core->flags->realnames;
+	return true;
+}
+
+/* asm.flags.real SET */
+static bool core_config_set_bool_asm_flags_real(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzFlags
+	core->flags->realnames = *value;
+	return true;
+}
+
+/* asm.lines.width GET */
+static bool core_config_get_integer_asm_lines_width(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->lineswidth;
+	return true;
+}
+
+/* asm.lines.width SET */
+static bool core_config_set_integer_asm_lines_width(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->lineswidth = *value;
+	return true;
+}
+
+/* asm.sub.varmin GET */
+static bool core_config_get_integer_asm_sub_varmin(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzParser
+	*value = core->parser->minval;
+	return true;
+}
+
+/* asm.sub.varmin SET */
+static bool core_config_set_integer_asm_sub_varmin(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzParser
+	core->parser->minval = *value;
+	return true;
+}
+
+/* asm.sub.tail GET */
+static bool core_config_get_bool_asm_sub_tail(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzParser
+	*value = core->parser->subtail;
+	return true;
+}
+
+/* asm.sub.tail SET */
+static bool core_config_set_bool_asm_sub_tail(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzParser
+	core->parser->subtail = *value;
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
 	return
+		/* asm binds */
+		rz_config_add_b_bind(cfg, "asm.flags.real", "Show flags' unfiltered realnames instead of names, except realnames from demangling", core_config_get_bool_asm_flags_real, core_config_set_bool_asm_flags_real) &&
+		rz_config_add_b_bind(cfg, "asm.imm.hash", "Hides the hashtag (#) char for immediates in various archs", core_config_get_bool_asm_immhash, core_config_set_bool_asm_immhash) &&
+		rz_config_add_b_bind(cfg, "asm.invhex", "Show invalid instructions as hexadecimal numbers", core_config_get_bool_asm_invhex, core_config_set_bool_asm_invhex) &&
+		rz_config_add_i_bind(cfg, "asm.flags.maxname", "Maximum length of flag name with smart chopping", core_config_get_integer_asm_flags_maxname, core_config_set_integer_asm_flags_maxname) &&
+		rz_config_add_i_bind(cfg, "asm.lines.width", "Number of columns for program flow arrows", core_config_get_integer_asm_lines_width, core_config_set_integer_asm_lines_width) &&
+		rz_config_add_i_bind(cfg, "asm.pcalign", "Only recognize as valid instructions aligned to this value", core_config_get_integer_asm_pcalign, core_config_set_integer_asm_pcalign) &&
+		rz_config_add_i_bind(cfg, "asm.sub.varmin", "Minimum value to substitute in instructions (asm.sub.var)", core_config_get_integer_asm_sub_varmin, core_config_set_integer_asm_sub_varmin) &&
+		rz_config_add_s_bind(cfg, "asm.os", "Select operating system (kernel)", core_config_get_string_asm_os, core_config_set_string_asm_os) &&
+		rz_config_add_b_bind(cfg, "asm.sub.tail", "Replace addresses with prefix .. syntax", core_config_get_bool_asm_sub_tail, core_config_set_bool_asm_sub_tail) &&
+
 		/* analysis binds */
 		rz_config_add_b_bind(cfg, "analysis.armthumb", "aae computes arm/thumb changes (lot of false positives ahead)", core_config_get_bool_analysis_armthumb, core_config_set_bool_analysis_armthumb) &&
 		rz_config_add_b_bind(cfg, "analysis.brokenrefs", "Follow function references even if function analysis has failed", core_config_get_bool_analysis_brokenrefs, core_config_set_bool_analysis_brokenrefs) &&
@@ -1075,6 +1298,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_b(cfg, "asm.xrefs.code", "Show the code xrefs (generated by jumps instead of calls)", true) &&
 		rz_config_add_i(cfg, "asm.cmt.col", "Column to align comments", 71) &&
 		rz_config_add_i(cfg, "asm.flags.limit", "Maximum number of flags to show in a single offset", 0) &&
+		rz_config_add_i(cfg, "asm.flags.middle", "Realign disassembly if there is a flag in the middle of an instruction (0 hide flag, 1 show but no-realign, 2 realign at middle flag, 3 realign at middle if symbol)", 2) &&
 		rz_config_add_i(cfg, "asm.hint.pos", "Shortcut hint position (-1, 0, 1)", 1) &&
 		rz_config_add_i(cfg, "asm.indentspace", "How many spaces to indent the code", 2) &&
 		rz_config_add_i(cfg, "asm.nbytes", "Number of bytes for each opcode at disassembly", 6) &&
@@ -1095,5 +1319,6 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_set_options(cfg, "analysis.syscc", rz_analysis_calling_conventions(core->analysis)) &&
 		rz_config_set_options(cfg, "analysis.in", rz_core_get_supported_search_maps()) &&
 		rz_config_set_options(cfg, "analysis.arch", rz_core_analysis_get_supported_archs(core)) &&
-		rz_config_set_options2(cfg, "analysis.cpp.abi", "itanium", "msvc", NULL);
+		rz_config_set_options2(cfg, "analysis.cpp.abi", "itanium", "msvc", NULL) &&
+		rz_config_set_options2(cfg, "asm.os", "ios", "dos", "darwin", "linux", "freebsd", "openbsd", "netbsd", "windows", "s110", "none", NULL);
 }

@@ -280,6 +280,9 @@ RZ_API RzAsm *rz_asm_new(void) {
 	if (!a) {
 		return NULL;
 	}
+	a->immdisp = true; // Hides hashtag (#) for immediates in archs
+	a->invhex = false; // show invalid instructions as hexadecimal numbers
+	a->pcalign = 1; // instruction alignment (must be a power of 2).
 	a->dataalign = 1;
 	a->bits = RZ_SYS_BITS << 3;
 	a->bitshift = 0;

@@ -1723,6 +1723,10 @@ RZ_API void rz_cons_set_utf8(bool b) {
 	I.use_utf8 = b;
 }
 
+RZ_API bool rz_cons_get_utf8(void) {
+	return I.use_utf8;
+}
+
 RZ_API void rz_cons_invert(int set, int color) {
 	rz_cons_strcat(RZ_CONS_INVERT(set, color));
 }

@@ -959,6 +959,7 @@ RZ_API void rz_cons_set_raw(bool b);
 RZ_API void rz_cons_set_interactive(bool b);
 RZ_API void rz_cons_set_last_interactive(void);
 RZ_API void rz_cons_set_utf8(bool b);
+RZ_API bool rz_cons_get_utf8(void);
 RZ_API void rz_cons_grep(const char *grep);
 
 /* output */

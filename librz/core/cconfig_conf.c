@@ -148,7 +148,7 @@ static bool core_config_add_cfg_variables(RzCore *core) {
 		rz_config_add_i(cfg, "cfg.seek.histsize", "Maximum size of the seek history", 63) &&
 		rz_config_add_s(cfg, "cfg.editor", "Select default editor program", preferred_editor) &&
 		rz_config_add_s(cfg, "cfg.prefixdump", "Filename prefix for automated dumps", "dump") &&
-		rz_config_add_s(cfg, "cfg.user", rz_str_get(whoami), "Set current username/pid") &&
+		rz_config_add_s(cfg, "cfg.user", "Set current username/pid", whoami) &&
 
 		/* cfg binds */
 		rz_config_add_b_bind(cfg, "cfg.bigendian", "Use little (false) or big (true) endianness.", core_config_get_bool_cfg_bigendian, core_config_set_bool_cfg_bigendian) &&

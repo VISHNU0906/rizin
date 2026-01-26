@@ -893,6 +893,26 @@ static bool core_config_set_string_analysis_cpp_abi(void *user, const void *data
 	return true;
 }
 
+/* analysis.lines.maxref GET */
+static bool core_config_get_integer_analysis_lines_maxref(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	ut64 *value = (ut64 *)data;
+
+	// TODO: create get function in RzAnalysis
+	*value = core->analysis->maxreflines;
+	return true;
+}
+
+/* analysis.lines.maxref SET */
+static bool core_config_set_integer_analysis_lines_maxref(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const ut64 *value = (const ut64 *)data;
+
+	// TODO: create set function in RzAnalysis
+	core->analysis->maxreflines = *value;
+	return true;
+}
+
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
@@ -933,6 +953,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_i_bind(cfg, "analysis.jmp.tblmaxoffset", "Maximum offset from the jump table jump instruction to consider it valid", core_config_get_integer_analysis_jmp_tblmaxoffset, core_config_set_integer_analysis_jmp_tblmaxoffset) &&
 		rz_config_add_i_bind(cfg, "analysis.limits.from", "Sets the lower limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_from, core_config_set_integer_analysis_limits_from) &&
 		rz_config_add_i_bind(cfg, "analysis.limits.to", "Sets the upper limit of the analysis range [analysis.limits.from : analysis.limits.to]", core_config_get_integer_analysis_limits_to, core_config_set_integer_analysis_limits_to) &&
+		rz_config_add_i_bind(cfg, "analysis.lines.maxref", "Maximum number of reflines to be analyzed and displayed in asm.lines with pd", core_config_get_integer_analysis_lines_maxref, core_config_set_integer_analysis_lines_maxref) &&
 		rz_config_add_i_bind(cfg, "analysis.nonull", "Do not analyze regions of N null bytes (0 is disabled)", core_config_get_integer_analysis_nonull, core_config_set_integer_analysis_nonull) &&
 		rz_config_add_l_bind(cfg, "analysis.roregs", "Comma separated list of register names to be readonly", core_config_get_list_analysis_roregs, core_config_set_list_analysis_roregs) &&
 		rz_config_add_s_bind(cfg, "analysis.arch", "Select the architecture to use", core_config_get_string_analysis_arch, core_config_set_string_analysis_arch) &&

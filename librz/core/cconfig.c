@@ -225,7 +225,7 @@ RZ_IPI void rz_core_config_print_all(RzConfig *cfg, const char *str, RzCmdStateO
 		break;
 	}
 
-	rz_config_iterate_vars(cfg, core_config_print_iterator, state);
+	rz_config_iterate_vars(cfg, core_config_print_iterator, &ccp);
 
 	if (state->mode == RZ_OUTPUT_MODE_LONG_JSON || state->mode == RZ_OUTPUT_MODE_JSON) {
 		pj_end(pj);

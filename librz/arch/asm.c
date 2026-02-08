@@ -280,11 +280,9 @@ RZ_API RzAsm *rz_asm_new(void) {
 	if (!a) {
 		return NULL;
 	}
-	a->immdisp = true; // Hides hashtag (#) for immediates in archs
 	a->invhex = false; // show invalid instructions as hexadecimal numbers
 	a->pcalign = 1; // instruction alignment (must be a power of 2).
 	a->dataalign = 1;
-	a->bits = RZ_SYS_BITS << 3;
 	a->bitshift = 0;
 	a->syntax = RZ_ASM_SYNTAX_INTEL;
 	a->sdb_opcodes_path = rz_path_new();
@@ -307,6 +305,8 @@ RZ_API RzAsm *rz_asm_new(void) {
 		}
 		rz_asm_plugin_add(a, plugin);
 	}
+
+	rz_asm_set_arch(a, RZ_SYS_ARCH, (RZ_SYS_BITS << 3));
 	return a;
 }
 
@@ -541,6 +541,15 @@ RZ_DEPRECATE RZ_API void rz_asm_set_cpu(RzAsm *a, const char *cpu) {
 		free(a->cpu);
 		a->cpu = rz_str_dup(cpu);
 	}
+}
+
+RZ_API RZ_OWN RzList /*<char *>*/ *rz_asm_get_cpus(RZ_NONNULL RzAsm *a) {
+	rz_return_val_if_fail(a, NULL);
+	if (!a->cur || !a->cur->cpus) {
+		return NULL;
+	}
+
+	return rz_str_split_duplist(a->cur->cpus, ",", true);
 }
 
 static bool has_bits(RzAsmPlugin *h, int bits) {

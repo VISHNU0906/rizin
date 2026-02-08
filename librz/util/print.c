@@ -81,7 +81,7 @@ RZ_API RzPrint *rz_print_new(void) {
 	p->vflush = true;
 	p->screen_bounds = 0;
 	p->esc_bslash = false;
-	p->strconv_mode = NULL;
+	p->strconv_mode = rz_str_dup("asciiesc");
 	memset(&p->consbind, 0, sizeof(p->consbind));
 	p->io_unalloc_ch = '.';
 	return p;

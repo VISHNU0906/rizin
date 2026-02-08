@@ -6,6 +6,113 @@
  * \file: contains all the variables linked to RzArch
  */
 
+static void core_update_syscall_db(RzCore *core) {
+	if (core->analysis->syscall->db) {
+		sdb_ns_set(core->sdb, "syscall", core->analysis->syscall->db);
+	} else {
+		sdb_ns_unset(core->sdb, "syscall", NULL);
+	}
+}
+
+static inline void core_update_asm_segoff(RzConfig *cfg, const char *arch, int bits) {
+	bool autoseg = bits == 16 && RZ_STR_EQ(arch, "x86");
+	rz_config_set_b(cfg, "asm.segoff", autoseg);
+}
+
+static bool core_arch_set_os(RzCore *core, const char *os) {
+	if (RZ_STR_ISEMPTY(os)) {
+		rz_analysis_set_os(core->analysis, RZ_SYS_OS);
+	} else {
+		rz_analysis_set_os(core->analysis, os);
+	}
+
+	const char *asmarch = rz_config_get_s(core->config, "asm.arch");
+	const char *asmcpu = rz_config_get_s(core->config, "asm.cpu");
+	if (asmarch) {
+		rz_syscall_setup(core->analysis->syscall, core->sys_path, asmarch, core->analysis->bits, asmcpu, os);
+		core_update_syscall_db(core);
+		core_update_asm_segoff(core->config, asmarch, core->analysis->bits);
+	}
+	rz_analysis_set_os(core->analysis, os);
+	rz_core_analysis_cc_init(core);
+
+	// finally update the cc
+	rz_config_set_options(core->config, "analysis.cc", rz_analysis_calling_conventions(core->analysis));
+	rz_config_set_options(core->config, "analysis.syscc", rz_analysis_calling_conventions(core->analysis));
+	return true;
+}
+
+static bool core_arch_set_cpu(RzCore *core, const char *cpu) {
+	rz_analysis_set_cpu(core->analysis, cpu);
+	rz_asm_set_cpu(core->rasm, cpu);
+
+	const char *arch = rz_config_get_s(core->config, "asm.arch");
+
+	char *cpus_dir = rz_path_system(core->sys_path, RZ_SDB_ARCH_CPUS);
+	if (!cpus_dir) {
+		return false;
+	}
+	rz_platform_profiles_init(core->analysis->arch_target, cpu, arch, cpus_dir);
+	free(cpus_dir);
+
+	const char *platform = rz_config_get_s(core->config, "asm.platform");
+	char *platforms_dir = rz_path_system(core->sys_path, RZ_SDB_ARCH_PLATFORMS);
+	if (!platforms_dir) {
+		return false;
+	}
+
+	rz_platform_target_index_init(core->analysis->platform_target, arch, cpu, platform, platforms_dir);
+	free(platforms_dir);
+	return true;
+}
+
+static bool core_arch_set_plugin(RzCore *core, const char *arch) {
+	if (RZ_STR_ISEMPTY(arch)) {
+		return false;
+	}
+	char asmparser[32] = { 0 };
+	rz_strf(asmparser, "%s.pseudo", arch);
+	ut32 bits = RZ_SYS_BITS << 3;
+	if (core && core->analysis && core->analysis->bits) {
+		bits = core->analysis->bits;
+	}
+
+	if (!rz_asm_set_arch(core->rasm, arch, bits)) {
+		RZ_LOG_ERROR("core: asm.arch: cannot set (%s)\n", arch);
+		return false;
+	}
+
+	if (!rz_analysis_use(core->analysis, arch) &&
+		!rz_analysis_set_bits(core->analysis, bits)) {
+		RZ_LOG_ERROR("core: analysis.arch: cannot set (%s)\n", arch);
+		return false;
+	}
+
+	// set the new options for asm.cpu
+	rz_config_set_options(core->config, "asm.cpu", rz_asm_get_cpus(core->rasm));
+
+	rz_egg_setup(core->egg, arch, bits, 0, RZ_SYS_OS);
+	rz_config_set_s(core->config, "asm.parser", asmparser);
+	rz_debug_set_arch(core->dbg, arch, bits);
+
+	const char *asmos = rz_config_get_s(core->config, "asm.os");
+	const char *asmcpu = rz_config_get_s(core->config, "asm.cpu");
+
+	core_arch_set_cpu(core, asmcpu);
+	core_update_asm_segoff(core->config, arch, bits);
+
+	// changing asm.arch changes analysis.arch
+	// changing analysis.arch sets types db
+	// so resetting is redundant and may lead to bugs
+	// 1 case this is usefull is when types is null
+	if (!core->analysis->typedb) {
+		rz_core_analysis_type_init(core);
+	}
+
+	core_arch_set_os(core, asmos);
+	return true;
+}
+
 /* analysis.cc GET */
 static bool core_config_get_string_analysis_cc(void *user, void *data) {
 	RzCore *core = (RzCore *)user;
@@ -473,22 +580,22 @@ static bool core_config_set_bool_analysis_hpskip(void *user, const void *data) {
 	return true;
 }
 
-/* analysis.arch GET */
-static bool core_config_get_string_analysis_arch(void *user, void *data) {
+/* analysis/asm.arch GET */
+static bool core_config_get_string_asm_arch(void *user, void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
-	if (!core->analysis->cur) {
+	if (!core->rasm->cur) {
 		rz_warn_if_reached();
 		return false;
 	}
 
-	*value = core->analysis->cur->name;
+	*value = core->rasm->cur->name;
 	return true;
 }
 
-/* analysis.arch SET */
-static bool core_config_set_string_analysis_arch(void *user, const void *data) {
+/* analysis/asm.arch SET */
+static bool core_config_set_string_asm_arch(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
@@ -500,22 +607,21 @@ static bool core_config_set_string_analysis_arch(void *user, const void *data) {
 	return rz_analysis_use(core->analysis, *value);
 }
 
-/* analysis.cpu GET */
-static bool core_config_get_string_analysis_cpu(void *user, void *data) {
+/* analysis/asm.cpu GET */
+static bool core_config_get_string_arch_cpu(void *user, void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
-	*value = core->analysis->cpu;
+	*value = core->rasm->cpu;
 	return true;
 }
 
-/* analysis.cpu SET */
-static bool core_config_set_string_analysis_cpu(void *user, const void *data) {
+/* analysis/asm.cpu SET */
+static bool core_config_set_string_arch_cpu(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
-	rz_analysis_set_cpu(core->analysis, *value);
-	return true;
+	return core_arch_set_cpu(core, *value);
 }
 
 /* analysis.recont GET */
@@ -923,40 +1029,12 @@ static bool core_config_get_string_asm_os(void *user, void *data) {
 	return true;
 }
 
-static void core_update_syscall_db(RzCore *core) {
-	if (core->analysis->syscall->db) {
-		sdb_ns_set(core->sdb, "syscall", core->analysis->syscall->db);
-	} else {
-		sdb_ns_unset(core->sdb, "syscall", NULL);
-	}
-}
-
-static inline void core_update_asm_segoff(RzConfig *cfg, const char *arch, int bits) {
-	bool autoseg = bits == 16 && RZ_STR_EQ(arch, "x86");
-	rz_config_set_b(cfg, "asm.segoff", autoseg);
-}
-
 /* asm.os SET */
 static bool core_config_set_string_asm_os(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
-	if (RZ_STR_ISEMPTY(*value)) {
-		rz_analysis_set_os(core->analysis, RZ_SYS_OS);
-	} else {
-		rz_analysis_set_os(core->analysis, *value);
-	}
-
-	const char *asmarch = rz_config_get_s(core->config, "asm.arch");
-	const char *asmcpu = rz_config_get_s(core->config, "asm.cpu");
-	if (asmarch) {
-		rz_syscall_setup(core->analysis->syscall, core->sys_path, asmarch, core->analysis->bits, asmcpu, *value);
-		core_update_syscall_db(core);
-		core_update_asm_segoff(core->config, asmarch, core->analysis->bits);
-	}
-	rz_analysis_set_os(core->analysis, *value);
-	rz_core_analysis_cc_init(core);
-	return true;
+	return core_arch_set_os(core, *value);
 }
 
 /* asm.invhex GET */
@@ -1125,20 +1203,91 @@ static bool core_config_set_bool_asm_sub_tail(void *user, const void *data) {
 	return true;
 }
 
+/* asm.sub.section GET */
+static bool core_config_get_bool_asm_sub_section(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzPrint
+	*value = core->print->flags & RZ_PRINT_FLAGS_SECSUB;
+	return true;
+}
+
+/* asm.sub.section SET */
+static bool core_config_set_bool_asm_sub_section(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	if (*value) {
+		core->print->flags |= RZ_PRINT_FLAGS_SECSUB;
+	} else {
+		core->print->flags &= (~RZ_PRINT_FLAGS_SECSUB);
+	}
+	rz_print_set_flags(core->print, core->print->flags);
+	return true;
+}
+
+/* asm.pseudo GET */
+static bool core_config_get_bool_asm_pseudo(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	bool *value = (bool *)data;
+
+	// TODO: create get function in RzAsm
+	*value = core->rasm->pseudo;
+	return true;
+}
+
+/* asm.pseudo SET */
+static bool core_config_set_bool_asm_pseudo(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const bool *value = (const bool *)data;
+
+	// TODO: create set function in RzAsm
+	core->rasm->pseudo = *value;
+	return true;
+}
+
+/* asm.assembler GET */
+static bool core_config_get_string_asm_assembler(void *user, void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	// TODO: create get function in RzAsm
+	if (core->rasm->acur) {
+		*value = core->rasm->acur->name;
+	} else {
+		*value = "";
+	}
+	return true;
+}
+
+/* asm.assembler SET */
+static bool core_config_set_string_asm_assembler(void *user, const void *data) {
+	RzCore *core = (RzCore *)user;
+	const char **value = (const char **)data;
+
+	rz_asm_use_assembler(core->rasm, *value);
+	return true;
+}
 static bool core_config_add_arch_variables(RzCore *core) {
 	RzConfig *cfg = core->config;
 
-	return
+	bool ok =
 		/* asm binds */
 		rz_config_add_b_bind(cfg, "asm.flags.real", "Show flags' unfiltered realnames instead of names, except realnames from demangling", core_config_get_bool_asm_flags_real, core_config_set_bool_asm_flags_real) &&
 		rz_config_add_b_bind(cfg, "asm.imm.hash", "Hides the hashtag (#) char for immediates in various archs", core_config_get_bool_asm_immhash, core_config_set_bool_asm_immhash) &&
 		rz_config_add_b_bind(cfg, "asm.invhex", "Show invalid instructions as hexadecimal numbers", core_config_get_bool_asm_invhex, core_config_set_bool_asm_invhex) &&
+		rz_config_add_b_bind(cfg, "asm.pseudo", "Enable pseudo syntax", core_config_get_bool_asm_pseudo, core_config_set_bool_asm_pseudo) &&
+		rz_config_add_b_bind(cfg, "asm.sub.section", "Show offsets in disasm prefixed with section/map name", core_config_get_bool_asm_sub_section, core_config_set_bool_asm_sub_section) &&
+		rz_config_add_b_bind(cfg, "asm.sub.tail", "Replace addresses with prefix .. syntax", core_config_get_bool_asm_sub_tail, core_config_set_bool_asm_sub_tail) &&
 		rz_config_add_i_bind(cfg, "asm.flags.maxname", "Maximum length of flag name with smart chopping", core_config_get_integer_asm_flags_maxname, core_config_set_integer_asm_flags_maxname) &&
 		rz_config_add_i_bind(cfg, "asm.lines.width", "Number of columns for program flow arrows", core_config_get_integer_asm_lines_width, core_config_set_integer_asm_lines_width) &&
 		rz_config_add_i_bind(cfg, "asm.pcalign", "Only recognize as valid instructions aligned to this value", core_config_get_integer_asm_pcalign, core_config_set_integer_asm_pcalign) &&
 		rz_config_add_i_bind(cfg, "asm.sub.varmin", "Minimum value to substitute in instructions (asm.sub.var)", core_config_get_integer_asm_sub_varmin, core_config_set_integer_asm_sub_varmin) &&
 		rz_config_add_s_bind(cfg, "asm.os", "Select operating system (kernel)", core_config_get_string_asm_os, core_config_set_string_asm_os) &&
-		rz_config_add_b_bind(cfg, "asm.sub.tail", "Replace addresses with prefix .. syntax", core_config_get_bool_asm_sub_tail, core_config_set_bool_asm_sub_tail) &&
+		rz_config_add_s_bind(cfg, "asm.assembler", "Set the plugin name to use when assembling", core_config_get_string_asm_assembler, core_config_set_string_asm_assembler) &&
+		rz_config_add_s_bind(cfg, "asm.cpu", "Set the kind of asm.arch cpu", core_config_get_string_arch_cpu, core_config_set_string_arch_cpu) &&
+		rz_config_add_s_bind(cfg, "asm.arch", "Set the arch to be used by asm", core_config_get_string_asm_arch, core_config_set_string_asm_arch) &&
 
 		/* analysis binds */
 		rz_config_add_b_bind(cfg, "analysis.armthumb", "aae computes arm/thumb changes (lot of false positives ahead)", core_config_get_bool_analysis_armthumb, core_config_set_bool_analysis_armthumb) &&
@@ -1179,10 +1328,10 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_i_bind(cfg, "analysis.lines.maxref", "Maximum number of reflines to be analyzed and displayed in asm.lines with pd", core_config_get_integer_analysis_lines_maxref, core_config_set_integer_analysis_lines_maxref) &&
 		rz_config_add_i_bind(cfg, "analysis.nonull", "Do not analyze regions of N null bytes (0 is disabled)", core_config_get_integer_analysis_nonull, core_config_set_integer_analysis_nonull) &&
 		rz_config_add_l_bind(cfg, "analysis.roregs", "Comma separated list of register names to be readonly", core_config_get_list_analysis_roregs, core_config_set_list_analysis_roregs) &&
-		rz_config_add_s_bind(cfg, "analysis.arch", "Select the architecture to use", core_config_get_string_analysis_arch, core_config_set_string_analysis_arch) &&
+		rz_config_add_s_bind(cfg, "analysis.arch", "Select the architecture to use", core_config_get_string_asm_arch, core_config_set_string_asm_arch) &&
 		rz_config_add_s_bind(cfg, "analysis.cc", "Specify default calling convention", core_config_get_string_analysis_cc, core_config_set_string_analysis_cc) &&
 		rz_config_add_s_bind(cfg, "analysis.cpp.abi", "Select C++ ABI (Compiler)", core_config_get_string_analysis_cpp_abi, core_config_set_string_analysis_cpp_abi) &&
-		rz_config_add_s_bind(cfg, "analysis.cpu", "Specify the analysis.cpu to use", core_config_get_string_analysis_cpu, core_config_set_string_analysis_cpu) &&
+		rz_config_add_s_bind(cfg, "analysis.cpu", "Specify the analysis.cpu to use", core_config_get_string_arch_cpu, core_config_set_string_arch_cpu) &&
 		rz_config_add_s_bind(cfg, "analysis.in", "Defines the search boundaries maps for analysis", core_config_get_string_analysis_in, core_config_set_string_analysis_in) &&
 		rz_config_add_s_bind(cfg, "analysis.syscc", "Specify default syscall calling convention", core_config_get_string_analysis_syscc, core_config_set_string_analysis_syscc) &&
 
@@ -1310,6 +1459,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_i(cfg, "asm.var.summary", "Show variables summary instead of full list in disasm (0, 1, 2)", 0) &&
 		rz_config_add_i(cfg, "asm.xrefs.fold", "Maximum number of xrefs to be displayed as list (use columns above)", 5) &&
 		rz_config_add_i(cfg, "asm.xrefs.max", "Maximum number of xrefs to be displayed without folding", 20) &&
+		rz_config_add_o(cfg, "asm.var.fold", "Fold same-typed variables", "none", "group", "hide", NULL) &&
 		rz_config_add_s(cfg, "asm.cmt.off", "Show offset comment in disasm (true, false, nodup)", "nodup") &&
 		rz_config_add_s(cfg, "asm.highlight", "Highlight current line", "") &&
 		rz_config_add_s(cfg, "asm.strip", "strip all instructions given comma separated types", "") &&
@@ -1319,6 +1469,11 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_set_options(cfg, "analysis.syscc", rz_analysis_calling_conventions(core->analysis)) &&
 		rz_config_set_options(cfg, "analysis.in", rz_core_get_supported_search_maps()) &&
 		rz_config_set_options(cfg, "analysis.arch", rz_core_analysis_get_supported_archs(core)) &&
+		rz_config_set_options(cfg, "asm.arch", rz_core_analysis_get_supported_archs(core)) &&
+		rz_config_set_options(cfg, "asm.cpu", rz_asm_get_cpus(core->rasm)) &&
 		rz_config_set_options2(cfg, "analysis.cpp.abi", "itanium", "msvc", NULL) &&
 		rz_config_set_options2(cfg, "asm.os", "ios", "dos", "darwin", "linux", "freebsd", "openbsd", "netbsd", "windows", "s110", "none", NULL);
+
+	// we need to call `core_arch_set_plugin` once.
+	return ok && core_arch_set_plugin(core, RZ_SYS_ARCH);
 }

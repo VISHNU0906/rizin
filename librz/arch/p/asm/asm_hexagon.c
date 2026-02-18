@@ -144,15 +144,6 @@ static bool hexagon_init(void **plugin_data) {
 	state->sdk = false;
 	state->reg_alias = true;
 
-	RzConfig *cfg = state->cfg = rz_config_new(state);
-	rz_return_val_if_fail(cfg, false);
-
-	// Add nodes
-	rz_config_add_b_bind(cfg, "plugins.hexagon.imm.hash", "Display ## before 32bit immediates and # before immidiates with other width.", hexagon_config_imm_hash_get, hexagon_config_imm_hash_set);
-	rz_config_add_b_bind(cfg, "plugins.hexagon.imm.sign", "True: Print them with sign. False: Print signed immediates in unsigned representation.", hexagon_config_imm_sign_get, hexagon_config_imm_sign_set);
-	rz_config_add_b_bind(cfg, "plugins.hexagon.sdk", "Print packet syntax in objdump style.", hexagon_config_sdk_get, hexagon_config_sdk_set);
-	rz_config_add_b_bind(cfg, "plugins.hexagon.reg.alias", "Print the alias of registers (Alias from C0 = SA0).", hexagon_config_reg_alias_get, hexagon_config_reg_alias_set);
-
 	if (!state->token_patterns) {
 		state->token_patterns = get_token_patterns();
 	}
@@ -165,7 +156,19 @@ static bool hexagon_init(void **plugin_data) {
 RZ_API RZ_OWN RzConfig *hexagon_get_config(void *plugin_data) {
 	rz_return_val_if_fail(plugin_data, NULL);
 	HexState *state = plugin_data;
-	return rz_config_clone(state->cfg);
+
+	RzConfig *cfg = rz_config_new(state);
+	if (!cfg) {
+		return NULL;
+	}
+
+	// Add nodes
+	rz_config_add_b_bind(cfg, "plugins.hexagon.imm.hash", "Display ## before 32bit immediates and # before immidiates with other width.", hexagon_config_imm_hash_get, hexagon_config_imm_hash_set);
+	rz_config_add_b_bind(cfg, "plugins.hexagon.imm.sign", "True: Print them with sign. False: Print signed immediates in unsigned representation.", hexagon_config_imm_sign_get, hexagon_config_imm_sign_set);
+	rz_config_add_b_bind(cfg, "plugins.hexagon.sdk", "Print packet syntax in objdump style.", hexagon_config_sdk_get, hexagon_config_sdk_set);
+	rz_config_add_b_bind(cfg, "plugins.hexagon.reg.alias", "Print the alias of registers (Alias from C0 = SA0).", hexagon_config_reg_alias_get, hexagon_config_reg_alias_set);
+
+	return cfg;
 }
 
 /**

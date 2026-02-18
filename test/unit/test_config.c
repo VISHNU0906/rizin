@@ -190,15 +190,15 @@ bool test_config_lists() {
 	mu_assert_eq(rz_list_length(list), 3, "List size is 3");
 
 	it = rz_list_head(list);
-	elem = rz_list_iter_get_data(it);
+	elem = rz_list_val(it);
 	mu_assert_streq(elem, "r1", "list[0] is r1");
 
 	it = rz_list_next(it);
-	elem = rz_list_iter_get_data(it);
+	elem = rz_list_val(it);
 	mu_assert_streq(elem, "r2", "list[1] is r2");
 
 	it = rz_list_next(it);
-	elem = rz_list_iter_get_data(it);
+	elem = rz_list_val(it);
 	mu_assert_streq(elem, "r3", "list[2] is r3");
 
 	ret = rz_config_set_list2(cfg, "thy.list", "x0", "x1", "x2", "x3", "x4", NULL);

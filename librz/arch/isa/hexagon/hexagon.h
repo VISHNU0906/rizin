@@ -266,7 +266,6 @@ typedef struct {
 	bool just_init; ///< Flag indicates if IL VM was just initialized.
 	HexPkt pkts[HEXAGON_STATE_PKTS]; // buffered instructions
 	RzList /*<HexConstExt *>*/ *const_ext_l; // Constant extender values.
-	RzConfig *cfg;
 	RzPVector /*<RzAsmTokenPattern *>*/ *token_patterns; ///< PVector with token patterns. Priority ordered.
 	bool utf8_enabled; ///< If set, print UTF-8 characters.
 	bool might_have_jumped; ///< Is set if a previous IL packet was a branch. Indicates the next decoded packet is valid.

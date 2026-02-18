@@ -2709,7 +2709,7 @@ RZ_API RzList /*<RzArenaListItem *>*/ *rz_heap_arenas_list(RzCore *core) {
 static inline bool init_glibc_config(RzCore *core, RzHeapConfig *config) {
 	ut8 ptr_size = rz_heap_ptr_size(core);
 	int glibc_version = core->dbg->glibc_version;
-	const char *version_cfg = rz_config_get(core->config, "dbg.glibc.version");
+	const char *version_cfg = rz_config_get_s(core->config, "dbg.glibc.version");
 	if (version_cfg && strcmp(version_cfg, "auto") != 0) {
 		double v = strtod(version_cfg, NULL);
 		if (v >= 2.0 && v < 3.0) {

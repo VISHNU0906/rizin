@@ -85,7 +85,7 @@ static void show_config_options(RzCore *core, const char *name) {
 	const RzListIter *iter;
 	RzStrBuf *sb = rz_strbuf_new(" Options: ");
 	rz_list_foreach (options, iter, item) {
-		rz_strbuf_appendf(sb, "%s%s", rz_list_iter_has_prev(iter) ? ", " : "", item);
+		rz_strbuf_appendf(sb, "%s%s", rz_list_val(iter) ? ", " : "", item);
 		if (rz_strbuf_length(sb) + 5 >= w) {
 			char *s = rz_strbuf_drain(sb);
 			rz_cons_println(s);

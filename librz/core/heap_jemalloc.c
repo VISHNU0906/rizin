@@ -121,24 +121,24 @@ static bool rz_resolve_jemalloc(RzCore *core, const char *symname, ut64 *symbol)
  */
 static bool rz_jemalloc_detect_version(RzCore *core) {
 	ut64 chunksize_addr;
-	const char *current_version = rz_config_get(core->config, "dbg.jemalloc.version");
+	const char *current_version = rz_config_get_s(core->config, "dbg.jemalloc.version");
 
 	// Try to resolve je_chunksize - only exists in jemalloc 4.5.0
 	if (rz_resolve_jemalloc(core, "je_chunksize", &chunksize_addr)) {
 		// je_chunksize found -> jemalloc 4.5.0
 		if (strcmp(current_version, "4.5.0") != 0) {
-			rz_config_set(core->config, "dbg.jemalloc.version", "4.5.0");
+			rz_config_set_s(core->config, "dbg.jemalloc.version", "4.5.0");
 			RZ_LOG_INFO("Detected jemalloc 4.5.0 (je_chunksize symbol found)\n");
 		}
 		return true;
 	} else if (rz_resolve_jemalloc(core, "je_arena_emap_global", &chunksize_addr)) {
 		if (strcmp(current_version, "5.3.0") != 0) {
-			rz_config_set(core->config, "dbg.jemalloc.version", "5.3.0");
+			rz_config_set_s(core->config, "dbg.jemalloc.version", "5.3.0");
 			RZ_LOG_INFO("Detected jemalloc 5.3.0 (je_arena_emap_global symbol found)\n");
 		}
 		return true;
 	} else {
-		rz_config_set(core->config, "dbg.jemalloc.version", "NULL");
+		rz_config_set_s(core->config, "dbg.jemalloc.version", "NULL");
 		RZ_LOG_WARN("jemalloc version cannot be determined\n");
 		return false;
 	}
@@ -938,7 +938,7 @@ static const char *detect_page_size_from_smaps(int pid) {
 }
 
 static const char *detect_page_size(RzCore *core, const char *arch, const char *os, int bits) {
-	const char *page_size = rz_config_get(core->config, "dbg.jemalloc.page_size");
+	const char *page_size = rz_config_get_s(core->config, "dbg.jemalloc.page_size");
 	if (page_size && strcmp(page_size, "auto") != 0) {
 		return page_size;
 	}
@@ -973,10 +973,10 @@ typedef enum {
 } JemallocVersion;
 
 static JemallocVersion jemalloc_get_version_kind(RzCore *core) {
-	const char *version = rz_config_get(core->config, "dbg.jemalloc.version");
+	const char *version = rz_config_get_s(core->config, "dbg.jemalloc.version");
 	if (!version || strcmp(version, "auto") == 0 || strcmp(version, "NULL") == 0 || version[0] == '\0') {
 		rz_jemalloc_detect_version(core);
-		version = rz_config_get(core->config, "dbg.jemalloc.version");
+		version = rz_config_get_s(core->config, "dbg.jemalloc.version");
 	}
 
 	if (version && strcmp(version, "4.5.0") == 0) {
@@ -990,8 +990,8 @@ static JemallocVersion jemalloc_get_version_kind(RzCore *core) {
 
 static bool jemalloc_get_common_params(RzCore *core, const char **arch, const char **os, int *bits,
 	const char **page_size, JemallocVersion *version) {
-	*arch = rz_config_get(core->config, "asm.arch");
-	*os = rz_config_get(core->config, "asm.os");
+	*arch = rz_config_get_s(core->config, "asm.arch");
+	*os = rz_config_get_s(core->config, "asm.os");
 	*bits = rz_config_get_i(core->config, "asm.bits");
 	*page_size = detect_page_size(core, *arch, *os, *bits);
 	*version = jemalloc_get_version_kind(core);

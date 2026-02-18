@@ -6,113 +6,6 @@
  * \file: contains all the variables linked to RzArch
  */
 
-static void core_update_syscall_db(RzCore *core) {
-	if (core->analysis->syscall->db) {
-		sdb_ns_set(core->sdb, "syscall", core->analysis->syscall->db);
-	} else {
-		sdb_ns_unset(core->sdb, "syscall", NULL);
-	}
-}
-
-static inline void core_update_asm_segoff(RzConfig *cfg, const char *arch, int bits) {
-	bool autoseg = bits == 16 && RZ_STR_EQ(arch, "x86");
-	rz_config_set_b(cfg, "asm.segoff", autoseg);
-}
-
-static bool core_arch_set_os(RzCore *core, const char *os) {
-	if (RZ_STR_ISEMPTY(os)) {
-		rz_analysis_set_os(core->analysis, RZ_SYS_OS);
-	} else {
-		rz_analysis_set_os(core->analysis, os);
-	}
-
-	const char *asmarch = rz_config_get_s(core->config, "asm.arch");
-	const char *asmcpu = rz_config_get_s(core->config, "asm.cpu");
-	if (asmarch) {
-		rz_syscall_setup(core->analysis->syscall, core->sys_path, asmarch, core->analysis->bits, asmcpu, os);
-		core_update_syscall_db(core);
-		core_update_asm_segoff(core->config, asmarch, core->analysis->bits);
-	}
-	rz_analysis_set_os(core->analysis, os);
-	rz_core_analysis_cc_init(core);
-
-	// finally update the cc
-	rz_config_set_options(core->config, "analysis.cc", rz_analysis_calling_conventions(core->analysis));
-	rz_config_set_options(core->config, "analysis.syscc", rz_analysis_calling_conventions(core->analysis));
-	return true;
-}
-
-static bool core_arch_set_cpu(RzCore *core, const char *cpu) {
-	rz_analysis_set_cpu(core->analysis, cpu);
-	rz_asm_set_cpu(core->rasm, cpu);
-
-	const char *arch = rz_config_get_s(core->config, "asm.arch");
-
-	char *cpus_dir = rz_path_system(core->sys_path, RZ_SDB_ARCH_CPUS);
-	if (!cpus_dir) {
-		return false;
-	}
-	rz_platform_profiles_init(core->analysis->arch_target, cpu, arch, cpus_dir);
-	free(cpus_dir);
-
-	const char *platform = rz_config_get_s(core->config, "asm.platform");
-	char *platforms_dir = rz_path_system(core->sys_path, RZ_SDB_ARCH_PLATFORMS);
-	if (!platforms_dir) {
-		return false;
-	}
-
-	rz_platform_target_index_init(core->analysis->platform_target, arch, cpu, platform, platforms_dir);
-	free(platforms_dir);
-	return true;
-}
-
-static bool core_arch_set_plugin(RzCore *core, const char *arch) {
-	if (RZ_STR_ISEMPTY(arch)) {
-		return false;
-	}
-	char asmparser[32] = { 0 };
-	rz_strf(asmparser, "%s.pseudo", arch);
-	ut32 bits = RZ_SYS_BITS << 3;
-	if (core && core->analysis && core->analysis->bits) {
-		bits = core->analysis->bits;
-	}
-
-	if (!rz_asm_set_arch(core->rasm, arch, bits)) {
-		RZ_LOG_ERROR("core: asm.arch: cannot set (%s)\n", arch);
-		return false;
-	}
-
-	if (!rz_analysis_use(core->analysis, arch) &&
-		!rz_analysis_set_bits(core->analysis, bits)) {
-		RZ_LOG_ERROR("core: analysis.arch: cannot set (%s)\n", arch);
-		return false;
-	}
-
-	// set the new options for asm.cpu
-	rz_config_set_options(core->config, "asm.cpu", rz_asm_get_cpus(core->rasm));
-
-	rz_egg_setup(core->egg, arch, bits, 0, RZ_SYS_OS);
-	rz_config_set_s(core->config, "asm.parser", asmparser);
-	rz_debug_set_arch(core->dbg, arch, bits);
-
-	const char *asmos = rz_config_get_s(core->config, "asm.os");
-	const char *asmcpu = rz_config_get_s(core->config, "asm.cpu");
-
-	core_arch_set_cpu(core, asmcpu);
-	core_update_asm_segoff(core->config, arch, bits);
-
-	// changing asm.arch changes analysis.arch
-	// changing analysis.arch sets types db
-	// so resetting is redundant and may lead to bugs
-	// 1 case this is usefull is when types is null
-	if (!core->analysis->typedb) {
-		rz_core_analysis_type_init(core);
-	}
-
-	core_arch_set_os(core, asmos);
-	return true;
-}
-
 /* analysis.cc GET */
 static bool core_config_get_string_analysis_cc(void *user, void *data) {
 	RzCore *core = (RzCore *)user;
@@ -604,7 +497,7 @@ static bool core_config_set_string_asm_arch(void *user, const void *data) {
 		return false;
 	}
 
-	return rz_analysis_use(core->analysis, *value);
+	return rz_core_arch_configure(core, /*arch*/ *value, /*bits*/ 0, /*cpu*/ NULL, /*os*/ NULL, /*platform*/ NULL);
 }
 
 /* analysis/asm.cpu GET */
@@ -621,7 +514,7 @@ static bool core_config_set_string_arch_cpu(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
-	return core_arch_set_cpu(core, *value);
+	return rz_core_arch_configure(core, /*arch*/ NULL, /*bits*/ 0, /*cpu*/ *value, /*os*/ NULL, /*platform*/ NULL);
 }
 
 /* analysis.recont GET */
@@ -1034,7 +927,7 @@ static bool core_config_set_string_asm_os(void *user, const void *data) {
 	RzCore *core = (RzCore *)user;
 	const char **value = (const char **)data;
 
-	return core_arch_set_os(core, *value);
+	return rz_core_arch_configure(core, /*arch*/ NULL, /*bits*/ 0, /*cpu*/ NULL, /*os*/ *value, /*platform*/ NULL);
 }
 
 /* asm.invhex GET */

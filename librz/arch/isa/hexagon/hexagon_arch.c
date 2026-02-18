@@ -27,7 +27,6 @@ RZ_IPI void hexagon_state_fini(RZ_NULLABLE HexState *state) {
 	if (!state) {
 		return;
 	}
-	rz_config_free(state->cfg);
 	rz_pvector_free(state->token_patterns);
 	rz_list_free(state->const_ext_l);
 	for (size_t i = 0; i < HEXAGON_STATE_PKTS; ++i) {

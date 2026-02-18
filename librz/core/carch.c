@@ -17,10 +17,6 @@
 #define CORE_DEFAULT_OS       RZ_SYS_OS
 #define CORE_DEFAULT_PARSER   RZ_SYS_ARCH ".pseudo"
 
-#define core_update_config_s core_update_config_node_without_callback_string
-#define core_update_config_i core_update_config_node_without_callback_int
-#define core_update_config_b core_update_config_node_without_callback_bool
-
 RZ_DEPRECATE RZ_IPI const char *rz_core_get_arch(RzCore *core) {
 	rz_return_val_if_fail(core && core->rasm, CORE_DEFAULT_ARCH);
 
@@ -93,92 +89,6 @@ RZ_DEPRECATE RZ_IPI const char *rz_core_get_parser(RzCore *core) {
 	return CORE_DEFAULT_PARSER;
 }
 
-// copied from cconfig.c & cleaned
-RZ_DEPRECATE static void core_update_config_bits_options(RzCore *core, const char *name) {
-	RzConfigNode *node = rz_config_node_get(core->config, name);
-	if (!node) {
-		return;
-	} else if (!core->rasm->cur) {
-		node->options->free = free;
-		rz_list_purge(node->options);
-		return;
-	}
-
-	node->options->free = free;
-	rz_list_purge(node->options);
-
-	ut32 bits = core->rasm->cur->bits;
-	for (ut32 i = 1; i <= bits; i <<= 1) {
-		if (i & bits) {
-			rz_list_append(node->options, rz_str_newf("%u", i));
-		}
-	}
-}
-
-RZ_DEPRECATE static void core_update_config_options(RzConfigNode *node, const char *list_comma_sep) {
-	node->options->free = free;
-	rz_list_purge(node->options);
-
-	if (RZ_STR_ISEMPTY(list_comma_sep)) {
-		return;
-	}
-
-	char *c = rz_str_dup(list_comma_sep);
-	if (!c) {
-		return;
-	}
-
-	size_t n = rz_str_split(c, ',');
-	for (size_t i = 0; i < n; i++) {
-		const char *word = rz_str_word_get0(c, i);
-		if (RZ_STR_ISNOTEMPTY(word)) {
-			rz_list_append(node->options, rz_str_dup(word));
-		}
-	}
-	free(c);
-}
-
-// copied from cconfig.c & cleaned
-RZ_DEPRECATE static void core_update_config_cpu_options(RzCore *core, const char *name) {
-	RzConfigNode *node = rz_config_node_get(core->config, name);
-	if (!node) {
-		return;
-	} else if (!core->rasm->cur) {
-		node->options->free = free;
-		rz_list_purge(node->options);
-		return;
-	}
-
-	core_update_config_options(node, core->rasm->cur->cpus);
-}
-
-// copied from cconfig.c & cleaned
-static void core_update_config_platform_options(RzCore *core, const char *name) {
-	RzConfigNode *node = rz_config_node_get(core->config, name);
-	if (!node) {
-		return;
-	} else if (!core->rasm->cur) {
-		node->options->free = free;
-		rz_list_purge(node->options);
-		return;
-	}
-
-	core_update_config_options(node, core->rasm->cur->platforms);
-}
-
-// copied from cconfig.c & cleaned
-static void core_update_config_features_options(RzCore *core, const char *name) {
-	RzConfigNode *node = rz_config_node_get(core->config, name);
-	if (!node) {
-		return;
-	} else if (!core->rasm->cur) {
-		node->options->free = free;
-		rz_list_purge(node->options);
-		return;
-	}
-
-	core_update_config_options(node, core->rasm->cur->features);
-}
 
 RZ_DEPRECATE static const RzBinInfo *core_arch_find_bin_info(RzCore *core, const char *arch) {
 	if (RZ_STR_ISEMPTY(arch)) {
@@ -401,96 +311,6 @@ RZ_DEPRECATE static bool core_update_arch(RzCore *core, const char *arch, ut32 b
 	return true;
 }
 
-// this is a ugly hack
-RZ_DEPRECATE static void core_update_config_node_without_callback_string(RzCore *core, const char *name, const char *value) {
-	RzConfigNode *node = rz_config_node_get(core->config, name);
-	if (!node) {
-		// the node does not exist yet and we can set stuff without worring about the callback
-		rz_config_set(core->config, name, value);
-		return;
-	}
-
-	if (node->value == value) {
-		// avoid setting itself.
-		return;
-	}
-
-	RzConfigCallback setter = node->setter;
-
-	node->setter = NULL;
-	rz_config_set(core->config, name, value);
-	node->setter = setter;
-}
-
-// this is a ugly hack
-RZ_DEPRECATE static void core_update_config_node_without_callback_int(RzCore *core, const char *name, ut64 value) {
-	RzConfigNode *node = rz_config_node_get(core->config, name);
-	if (!node) {
-		// the node does not exist yet and we can set stuff without worring about the callback
-		rz_config_set_i(core->config, name, value);
-		return;
-	}
-
-	RzConfigCallback setter = node->setter;
-
-	node->setter = NULL;
-	rz_config_set_i(core->config, name, value);
-	node->setter = setter;
-}
-
-// this is a ugly hack
-RZ_DEPRECATE static void core_update_config_node_without_callback_bool(RzCore *core, const char *name, bool value) {
-	RzConfigNode *node = rz_config_node_get(core->config, name);
-	if (!node) {
-		// the node does not exist yet and we can set stuff without worring about the callback
-		rz_config_set_b(core->config, name, value);
-		return;
-	}
-
-	RzConfigCallback setter = node->setter;
-
-	node->setter = NULL;
-	rz_config_set_b(core->config, name, value);
-	node->setter = setter;
-}
-
-RZ_DEPRECATE static void core_update_config_from_arch(RzCore *core, bool new_arch) {
-	// this is a terrible way to update the values but the current config
-	// does weird callback calls which should not be done in this way and
-	// instead rely on the actual store data in a structure.
-
-	const char *arch = rz_core_get_arch(core);
-	ut32 bits = rz_core_get_bits(core);
-	ut32 pcalign = rz_core_get_pc_align(core);
-	const char *cpu = rz_core_get_cpu(core);
-	const char *platform = rz_core_get_platform(core);
-	const char *features = rz_core_get_features(core);
-	const char *os = rz_core_get_os(core);
-	const char *parser = rz_core_get_parser(core);
-
-	core_update_config_s(core, "asm.arch", arch);
-	core_update_config_s(core, "asm.cpu", cpu);
-	core_update_config_s(core, "asm.os", os);
-	core_update_config_i(core, "asm.bits", bits);
-	core_update_config_s(core, "asm.platform", platform);
-	core_update_config_s(core, "asm.features", features);
-	core_update_config_s(core, "asm.parser", parser);
-	core_update_config_i(core, "asm.pcalign", pcalign);
-	core_update_config_s(core, "analysis.arch", arch);
-	core_update_config_s(core, "analysis.cpu", cpu);
-	core_update_config_i(core, "analysis.bits", bits);
-	core_update_config_b(core, "cfg.bigendian", core->rasm->big_endian);
-
-	if (new_arch) {
-		core_update_config_bits_options(core, "asm.bits");
-		core_update_config_bits_options(core, "analysis.bits");
-		core_update_config_cpu_options(core, "asm.cpu");
-		core_update_config_cpu_options(core, "analysis.cpu");
-		core_update_config_platform_options(core, "asm.platform");
-		core_update_config_features_options(core, "asm.features");
-	}
-}
-
 static bool core_can_update_value(const char *new_val, const char *old_val) {
 	if (old_val && RZ_STR_ISNOTEMPTY(new_val)) {
 		return true;
@@ -550,14 +370,7 @@ RZ_DEPRECATE RZ_API bool rz_core_arch_configure(RZ_NONNULL RzCore *core, RZ_NULL
 		return true;
 	}
 
-	bool is_new_arch = RZ_STR_ISNOTEMPTY(arch);
-
-	if (!core_update_arch(core, arch, bits, cpu, os, platform)) {
-		return false;
-	}
-
-	core_update_config_from_arch(core, is_new_arch);
-	return true;
+	return core_update_arch(core, arch, bits, cpu, os, platform);
 }
 
 /**
@@ -582,6 +395,5 @@ RZ_DEPRECATE RZ_API bool rz_core_set_endianness(RZ_NONNULL RzCore *core, bool bi
 	}
 
 	core_set_endianness(core, big_endian);
-	core_update_config_b(core, "cfg.bigendian", core->rasm->big_endian);
 	return true;
 }

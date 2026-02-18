@@ -610,7 +610,7 @@ static const char *config_find_option(const RzList /*<char *>*/ *options, const 
 		return NULL;
 	}
 
-	safe_val = rz_list_iter_get_data(found);
+	safe_val = rz_list_val(found);
 	if (!safe_val) {
 		safe_val = "";
 	}

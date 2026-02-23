@@ -16,6 +16,7 @@ typedef struct log_config_s {
 #endif
 	bool show_sources;
 	FILE *file;
+	char *filename;
 	const char **tags;
 	RzThreadLock *lock;
 } log_config_t;
@@ -57,6 +58,71 @@ static void log_init() {
 }
 
 /**
+ * \brief      Returns the equivalent name to the given RzLogLevel
+ *
+ * \param[in]  level  The level to convert to string
+ *
+ * \return     On success returns a valid string, otherwise NULL.
+ */
+RZ_API const char *rz_log_level_to_string(RzLogLevel level) {
+	switch (level) {
+	case RZ_LOGLVL_DEBUG:
+		return "debug";
+	case RZ_LOGLVL_VERBOSE:
+		return "verbose";
+	case RZ_LOGLVL_INFO:
+		return "info";
+	case RZ_LOGLVL_WARN:
+		return "warning";
+	case RZ_LOGLVL_ERROR:
+		return "error";
+	case RZ_LOGLVL_FATAL:
+		return "fatal";
+	default:
+		return NULL;
+	}
+}
+
+/**
+ * \brief      Returns the equivalent RzLogLevel to the given name; when NULL is passed returns the default log level.
+ *
+ * \param[in]  level  The level to convert from string
+ *
+ * \return     The equivalent RzLogLevel.
+ */
+RZ_API RzLogLevel rz_log_level_from_string(RZ_NULLABLE const char *level) {
+	if (RZ_STR_ISEMPTY(level)) {
+		return RZ_DEFAULT_LOGLVL;
+	} else if (!rz_str_casecmp(level, "debug")) {
+		return RZ_LOGLVL_DEBUG;
+	} else if (!rz_str_casecmp(level, "verbose")) {
+		return RZ_LOGLVL_VERBOSE;
+	} else if (!rz_str_casecmp(level, "info")) {
+		return RZ_LOGLVL_INFO;
+	} else if (!rz_str_casecmp(level, "warning")) {
+		return RZ_LOGLVL_WARN;
+	} else if (!rz_str_casecmp(level, "error")) {
+		return RZ_LOGLVL_ERROR;
+	} else if (!rz_str_casecmp(level, "fatal")) {
+		return RZ_LOGLVL_FATAL;
+	}
+	return RZ_DEFAULT_LOGLVL;
+}
+
+/**
+ * \brief      Gets the current log level
+ *
+ * \return     The current log level.
+ */
+RZ_API RzLogLevel rz_log_get_level(void) {
+	log_init();
+	rz_th_lock_enter(logcfg.lock);
+	RzLogLevel level = logcfg.level;
+	rz_th_lock_leave(logcfg.lock);
+	return level;
+}
+
+/**
  * \brief      Sets the log level
  *
  * \param[in]  level  The log level to set.
@@ -69,13 +135,20 @@ RZ_API void rz_log_set_level(RzLogLevel level) {
 }
 
 /**
- * \brief      Gets the log level
+ * \brief      Gets the current log level
  *
- * \param[in]  level  The current log level.
+ * \return     The current log level.
  */
-RZ_API RzLogLevel rz_log_get_level() {
+RZ_API RzLogLevel rz_log_get_abortlevel(void) {
 	log_init();
-	return logcfg.level;
+#if RZ_BUILD_DEBUG
+	rz_th_lock_enter(logcfg.lock);
+	RzLogLevel level = logcfg.abortlevel;
+	rz_th_lock_leave(logcfg.lock);
+	return level;
+#else
+	return RZ_LOGLVL_FATAL;
+#endif
 }
 
 /**
@@ -95,6 +168,18 @@ RZ_API void rz_log_set_abortlevel(RzLogLevel level) {
 }
 
 /**
+ * \brief      Returns the current log filename
+ *
+ * \return     On success returns a valid string, otherwise NULL
+ */
+RZ_API const char *rz_log_get_file(void) {
+	rz_th_lock_enter(logcfg.lock);
+	const char *p = logcfg.filename;
+	rz_th_lock_leave(logcfg.lock);
+	return p;
+}
+
+/**
  * \brief      When not empty, enable logging to a file.
  * This method allows to enable or disable logging to a file.
  * To enable logging, just pass a filename to write to and to
@@ -110,6 +195,7 @@ RZ_API bool rz_log_set_file(RZ_NULLABLE const char *filename) {
 		// if already open, then close the file handler.
 		fclose(logcfg.file);
 		logcfg.file = NULL;
+		RZ_FREE(logcfg.filename);
 	}
 
 	if (RZ_STR_ISEMPTY(filename)) {
@@ -123,6 +209,7 @@ RZ_API bool rz_log_set_file(RZ_NULLABLE const char *filename) {
 	}
 	if (file) {
 		logcfg.file = file;
+		logcfg.filename = rz_str_dup(filename);
 	} else {
 		// failed to open the file.
 		ret = false;
@@ -146,6 +233,19 @@ RZ_API void rz_log_set_show_sources(bool show_sources) {
 }
 
 /**
+ * \brief      Returns if the log shows the function name and the source lines in the logs.
+ *
+ * \return     Returns a boolean
+ */
+RZ_API bool rz_log_get_show_sources(void) {
+	log_init();
+	rz_th_lock_enter(logcfg.lock);
+	bool show_sources = logcfg.show_sources;
+	rz_th_lock_leave(logcfg.lock);
+	return show_sources;
+}
+
+/**
  * \brief      Enables colored logs.
  *
  * \param[in]  show_colors  Sets the pointer to colored or not colored tags.
@@ -155,6 +255,19 @@ RZ_API void rz_log_set_colors(bool show_colors) {
 	rz_th_lock_enter(logcfg.lock);
 	logcfg.tags = show_colors ? level_tags_colors : level_tags_no_colors;
 	rz_th_lock_leave(logcfg.lock);
+}
+
+/**
+ * \brief      Returns if the log are colored or not.
+ *
+ * \return     Returns a boolean
+ */
+RZ_API bool rz_log_get_colors(void) {
+	log_init();
+	rz_th_lock_enter(logcfg.lock);
+	bool colors = logcfg.tags == level_tags_colors;
+	rz_th_lock_leave(logcfg.lock);
+	return colors;
 }
 
 /**

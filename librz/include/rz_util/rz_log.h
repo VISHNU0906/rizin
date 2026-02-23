@@ -60,11 +60,17 @@ extern "C" {
 #endif
 
 // Called by rz_core to set the configuration variables
-RZ_API RzLogLevel rz_log_get_level();
+RZ_API const char *rz_log_level_to_string(RzLogLevel level);
+RZ_API RzLogLevel rz_log_level_from_string(RZ_NULLABLE const char *level);
+RZ_API RzLogLevel rz_log_get_level(void);
 RZ_API void rz_log_set_level(RzLogLevel level);
+RZ_API RzLogLevel rz_log_get_abortlevel(void);
 RZ_API void rz_log_set_abortlevel(RzLogLevel level);
+RZ_API const char *rz_log_get_file(void);
 RZ_API bool rz_log_set_file(RZ_NULLABLE const char *filename);
+RZ_API bool rz_log_get_show_sources(void);
 RZ_API void rz_log_set_show_sources(bool show_sources);
+RZ_API bool rz_log_get_colors(void);
 RZ_API void rz_log_set_colors(bool show_colors);
 
 // Functions for adding log callbacks

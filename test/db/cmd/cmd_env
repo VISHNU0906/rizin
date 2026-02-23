@@ -12,11 +12,11 @@ RUN
 NAME=int/str values
 FILE==
 CMDS=<<EOF
-e log.level=1
+e log.level=verbose
 e log.level
-e log.level=0
+e log.level=debug
 e log.level
-e log.level=4
+e log.level=error
 e log.level
 e asm.cmt.off=nodup
 e asm.cmt.off
@@ -24,23 +24,23 @@ e asm.cmt.off=false
 e asm.cmt.off
 e asm.cmt.off=true
 e asm.cmt.off
-e asm.cmt.off=0
-e asm.cmt.off
-e asm.cmt.off=1
-e asm.cmt.off
-e asm.cmt.off=
-e asm.cmt.off
+e magic.depth=0
+e magic.depth
+e magic.depth=100
+e magic.depth
+e magic.depth=
+e magic.depth
 EOF
 EXPECT=<<EOF
-1
-0
-4
+verbose
+debug
+error
 nodup
 false
 true
-false
-true
-false
+0
+100
+0
 EOF
 RUN
 

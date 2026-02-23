@@ -1527,7 +1527,7 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_add_i(cfg, "asm.xrefs.fold", "Maximum number of xrefs to be displayed as list (use columns above)", 5) &&
 		rz_config_add_i(cfg, "asm.xrefs.max", "Maximum number of xrefs to be displayed without folding", 20) &&
 		rz_config_add_o(cfg, "asm.var.fold", "Fold same-typed variables", "none", "group", "hide", NULL) &&
-		rz_config_add_s(cfg, "asm.cmt.off", "Show offset comment in disasm (true, false, nodup)", "nodup") &&
+		rz_config_add_o(cfg, "asm.cmt.off", "Show offset comment in disasm", "nodup", "true", "false", NULL) &&
 		rz_config_add_s(cfg, "asm.highlight", "Highlight current line", "") &&
 		rz_config_add_s(cfg, "asm.strip", "strip all instructions given comma separated types", "") &&
 

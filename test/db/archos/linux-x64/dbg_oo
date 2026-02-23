@@ -94,7 +94,7 @@ RUN
 
 NAME=dm flags after ood
 FILE=bins/elf/analysis/x86-helloworld-gcc
-ARGS=-e log.level=4
+ARGS=-e log.level=error
 CMDS=<<EOF
 . scripts/map_clean.rz
 ood

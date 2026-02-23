@@ -57,6 +57,7 @@ static bool core_config_disabled_set(void *user, const void *data) {
 #include "cconfig_elf.c"
 #include "cconfig_file.c"
 #include "cconfig_key.c"
+#include "cconfig_log.c"
 #include "cconfig_pdb.c"
 #include "cconfig_prj.c"
 #include "cconfig_rop.c"
@@ -265,6 +266,7 @@ RZ_API int rz_core_config_init(RzCore *core) {
 	return core_config_add_dir_variables(core) &&
 		core_config_add_cfg_variables(core) &&
 		core_config_add_scr_variables(core) &&
+		core_config_add_log_variables(core) &&
 		core_config_add_arch_variables(core) &&
 		core_config_add_pdb_variables(core) &&
 		core_config_add_elf_variables(core) &&

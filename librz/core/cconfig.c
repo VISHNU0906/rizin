@@ -43,6 +43,7 @@ static RZ_OWN RzList /*<char *>*/ *core_config_string_list_dup(RZ_NULLABLE const
 #include "cconfig_elf.c"
 #include "cconfig_pdb.c"
 #include "cconfig_prj.c"
+#include "cconfig_rzil.c"
 #include "cconfig_screen.c"
 #include "cconfig_sign.c"
 
@@ -250,6 +251,7 @@ RZ_API int rz_core_config_init(RzCore *core) {
 		core_config_add_elf_variables(core) &&
 		core_config_add_dbg_variables(core) &&
 		core_config_add_prj_variables(core) &&
+		core_config_add_rzil_variables(core) &&
 		core_config_add_sign_variables(core);
 }
 

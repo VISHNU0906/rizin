@@ -556,9 +556,9 @@ RZ_API bool rz_core_bin_apply_config(RzCore *r, RzBinFile *binfile) {
 	if (!info) {
 		return false;
 	}
-	rz_config_set(r->config, "file.type", rz_str_get(info->rclass));
-	rz_config_set(r->config, "bin.lang", rz_str_get(info->lang));
-	if (info->rclass && !strcmp(info->rclass, "pe")) {
+	rz_config_set_s(r->config, "file.type", info->rclass);
+	rz_config_set_s(r->config, "bin.lang", info->lang);
+	if (info->rclass && RZ_STR_EQ(info->rclass, "pe")) {
 		rz_config_set_s(r->config, "analysis.cpp.abi", "msvc");
 	} else {
 		rz_config_set_s(r->config, "analysis.cpp.abi", "itanium");

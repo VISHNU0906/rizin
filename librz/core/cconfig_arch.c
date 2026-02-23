@@ -1367,6 +1367,6 @@ static bool core_config_add_arch_variables(RzCore *core) {
 		rz_config_set_options2(cfg, "analysis.cpp.abi", "itanium", "msvc", NULL) &&
 		rz_config_set_options2(cfg, "asm.os", "ios", "dos", "darwin", "linux", "freebsd", "openbsd", "netbsd", "windows", "s110", "none", NULL);
 
-	// we need to call `core_arch_set_plugin` once.
-	return ok && core_arch_set_plugin(core, RZ_SYS_ARCH);
+	// we need to call `rz_core_arch_configure` once.
+	return ok && rz_core_arch_configure(core, /*arch*/ RZ_SYS_ARCH, /*bits*/ 0, /*cpu*/ NULL, /*os*/ NULL, /*platform*/ NULL);
 }

@@ -36,11 +36,26 @@ static RZ_OWN RzList /*<char *>*/ *core_config_string_list_dup(RZ_NULLABLE const
 	return dup;
 }
 
+static const RzBinInfo *core_config_get_bin_info(RzCore *core) {
+	RzBinObject *obj = rz_bin_cur_object(core->bin);
+	if (!obj) {
+		return NULL;
+	}
+
+	return rz_bin_object_get_info(obj);
+}
+
+static bool core_config_disabled_set(void *user, const void *data) {
+	return false;
+}
+
 #include "cconfig_arch.c"
+#include "cconfig_basefind.c"
 #include "cconfig_conf.c"
 #include "cconfig_dbg.c"
 #include "cconfig_dir.c"
 #include "cconfig_elf.c"
+#include "cconfig_file.c"
 #include "cconfig_pdb.c"
 #include "cconfig_prj.c"
 #include "cconfig_rzil.c"
@@ -251,7 +266,9 @@ RZ_API int rz_core_config_init(RzCore *core) {
 		core_config_add_elf_variables(core) &&
 		core_config_add_dbg_variables(core) &&
 		core_config_add_prj_variables(core) &&
+		core_config_add_basefind_variables(core) &&
 		core_config_add_rzil_variables(core) &&
+		core_config_add_file_variables(core) &&
 		core_config_add_sign_variables(core);
 }
 

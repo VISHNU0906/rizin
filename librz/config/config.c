@@ -625,7 +625,7 @@ static const char *config_find_option(const RzList /*<char *>*/ *options, const 
 
 RZ_IPI bool rz_config_node_set_string(RzConfig *cfg, RzConfigNode *node, RZ_NULLABLE const char *value) {
 	if (!(node->flags & RZ_CONFIG_VAR_STR)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as string but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as string but is %s\n", node->name, config_node_get_type(node));
 #if RZ_CHECKS_LEVEL != 0
 		// needs to be removed.
 		if (node->flags & RZ_CONFIG_VAR_BOOL) {
@@ -665,7 +665,7 @@ RZ_IPI bool rz_config_node_set_string(RzConfig *cfg, RzConfigNode *node, RZ_NULL
 
 RZ_IPI bool rz_config_node_set_integer(RzConfig *cfg, RzConfigNode *node, ut64 value) {
 	if (!(node->flags & RZ_CONFIG_VAR_INT)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as integer but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as integer but is %s\n", node->name, config_node_get_type(node));
 #if RZ_CHECKS_LEVEL != 0
 		// needs to be removed.
 		if (node->flags & RZ_CONFIG_VAR_BOOL) {
@@ -685,7 +685,7 @@ RZ_IPI bool rz_config_node_set_integer(RzConfig *cfg, RzConfigNode *node, ut64 v
 
 RZ_IPI bool rz_config_node_set_bool(RzConfig *cfg, RzConfigNode *node, bool value) {
 	if (!(node->flags & RZ_CONFIG_VAR_BOOL)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as boolean but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as boolean but is %s\n", node->name, config_node_get_type(node));
 		return false;
 	}
 
@@ -699,7 +699,7 @@ RZ_IPI bool rz_config_node_set_bool(RzConfig *cfg, RzConfigNode *node, bool valu
 
 RZ_IPI bool rz_config_node_set_list(RzConfig *cfg, RzConfigNode *node, RZ_NULLABLE const RzList /*<char *>*/ *value) {
 	if (!(node->flags & RZ_CONFIG_VAR_LIST)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as string list but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as string list but is %s\n", node->name, config_node_get_type(node));
 		return false;
 	}
 
@@ -739,7 +739,7 @@ RZ_API bool rz_config_set_string(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
+		RZ_LOG_ERROR("config: variable '%s' is readonly\n", node->name);
 		return false;
 	}
 
@@ -766,7 +766,7 @@ RZ_API bool rz_config_set_integer(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
+		RZ_LOG_ERROR("config: variable '%s' is readonly\n", node->name);
 		return false;
 	}
 
@@ -788,7 +788,7 @@ RZ_API bool rz_config_set_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
+		RZ_LOG_ERROR("config: variable '%s' is readonly\n", node->name);
 		return false;
 	}
 
@@ -810,7 +810,7 @@ RZ_API bool rz_config_set_list(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
+		RZ_LOG_ERROR("config: variable '%s' is readonly\n", node->name);
 		return false;
 	}
 
@@ -832,10 +832,10 @@ RZ_API bool rz_config_set_list2(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char 
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
+		RZ_LOG_ERROR("config: variable '%s' is readonly\n", node->name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_LIST)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as string list but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as string list but is %s\n", node->name, config_node_get_type(node));
 		return false;
 	}
 
@@ -879,7 +879,7 @@ RZ_API bool rz_config_set_any(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *n
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly.\n", node->name);
+		RZ_LOG_ERROR("config: variable '%s' is readonly.\n", node->name);
 		return false;
 	}
 
@@ -912,10 +912,10 @@ RZ_API bool rz_config_toggle_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
+		RZ_LOG_ERROR("config: variable '%s' is readonly\n", node->name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_BOOL)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as boolean but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as boolean but is %s\n", node->name, config_node_get_type(node));
 		return false;
 	}
 
@@ -925,7 +925,7 @@ RZ_API bool rz_config_toggle_bool(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const cha
 
 RZ_IPI const char *rz_config_node_get_string(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_STR)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as string but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as string but is %s\n", node->name, config_node_get_type(node));
 #if RZ_CHECKS_LEVEL != 0
 		// needs to be removed.
 		if (node->flags & RZ_CONFIG_VAR_BOOL) {
@@ -947,7 +947,7 @@ RZ_IPI const char *rz_config_node_get_string(const RzConfig *cfg, const RzConfig
 
 RZ_IPI ut64 rz_config_node_get_integer(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_INT)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as integer but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as integer but is %s\n", node->name, config_node_get_type(node));
 #if RZ_CHECKS_LEVEL != 0
 		// needs to be removed.
 		if (node->flags & RZ_CONFIG_VAR_BOOL) {
@@ -968,7 +968,7 @@ RZ_IPI ut64 rz_config_node_get_integer(const RzConfig *cfg, const RzConfigNode *
 
 RZ_IPI bool rz_config_node_get_bool(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_BOOL)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as boolean but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as boolean but is %s\n", node->name, config_node_get_type(node));
 		return 0;
 	}
 
@@ -983,7 +983,7 @@ RZ_IPI bool rz_config_node_get_bool(const RzConfig *cfg, const RzConfigNode *nod
 
 RZ_IPI const RzList /*<char *>*/ *rz_config_node_get_list(const RzConfig *cfg, const RzConfigNode *node) {
 	if (!(node->flags & RZ_CONFIG_VAR_LIST)) {
-		RZ_LOG_ERROR("config: variable %s was accessed as list but is %s\n", node->name, config_node_get_type(node));
+		RZ_LOG_ERROR("config: variable '%s' was accessed as list but is %s\n", node->name, config_node_get_type(node));
 		return NULL;
 	}
 

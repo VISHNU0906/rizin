@@ -1223,9 +1223,6 @@ RZ_API RZ_BORROW RzCoreFile *rz_core_file_open(RZ_NONNULL RzCore *r, RZ_NONNULL 
 		if (cp && *cp) {
 			rz_core_cmd(r, cp, 0);
 		}
-		char *absfile = rz_file_abspath(file);
-		rz_config_set_s(r->config, "file.path", absfile);
-		free(absfile);
 	}
 
 	r->file = fh;

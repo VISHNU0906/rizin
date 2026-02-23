@@ -656,7 +656,6 @@ RZ_API int rz_main_rizin(int argc, const char **argv) {
 		case 'm':
 			mapaddr = rz_num_math(r->num, opt.arg);
 			s_seek = opt.arg;
-			rz_config_set_i(r->config, "file.offset", mapaddr);
 			break;
 		case 'M':
 			rz_config_set_b(r->config, "bin.demangle", false);

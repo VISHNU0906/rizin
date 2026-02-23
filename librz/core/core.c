@@ -1622,8 +1622,6 @@ RZ_API bool rz_core_init(RzCore *core) {
 	core->print->get_section_name = get_section_name;
 	core->print->use_comments = false;
 	core->print->flags &= ~RZ_PRINT_FLAGS_SECSUB; // Show offsets in disasm prefixed with section/map name (disabled by default)
-	rz_str_ncpy(core->print->datefmt, "%Y-%m-%d %H:%M:%S %z", sizeof(core->print->datefmt));
-	core->print->datezone = 0;
 	rz_core_rtr_init(core);
 	core->rtr_n = 0;
 	core->blocksize_max = RZ_CORE_BLOCKSIZE_MAX;

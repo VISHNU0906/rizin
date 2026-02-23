@@ -104,8 +104,6 @@ typedef struct rz_print_t {
 	bool pava;
 	RzCoreBind coreb;
 	const char *cfmt;
-	char datefmt[32];
-	int datezone;
 	int (*write)(const unsigned char *buf, int len);
 	PrintfCallback cb_printf;
 	char *(*cb_color)(int idx, int last, bool bg);

@@ -50,7 +50,6 @@ RZ_API RzPrint *rz_print_new(void) {
 	if (!p) {
 		return NULL;
 	}
-	strcpy(p->datefmt, "%Y-%m-%d %H:%M:%S %z");
 	rz_io_bind_init(p->iob);
 	p->pairs = true;
 	p->resetbg = true;
@@ -60,7 +59,6 @@ RZ_API RzPrint *rz_print_new(void) {
 	p->stride = 0;
 	p->bytespace = 0;
 	p->big_endian = false;
-	p->datezone = 0;
 	p->col = 0;
 	p->width = 78;
 	p->cols = 16;

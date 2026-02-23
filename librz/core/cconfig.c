@@ -63,6 +63,7 @@ static bool core_config_disabled_set(void *user, const void *data) {
 #include "cconfig_rzil.c"
 #include "cconfig_screen.c"
 #include "cconfig_sign.c"
+#include "cconfig_various.c"
 #include "cconfig_zoom.c"
 
 typedef struct core_config_print_s {
@@ -275,7 +276,8 @@ RZ_API int rz_core_config_init(RzCore *core) {
 		core_config_add_rop_variables(core) &&
 		core_config_add_sign_variables(core) &&
 		core_config_add_key_variables(core) &&
-		core_config_add_zoom_variables(core);
+		core_config_add_zoom_variables(core) &&
+		core_config_add_various_variables(core);
 }
 
 RZ_API void rz_core_parse_rizinrc(RzCore *r) {

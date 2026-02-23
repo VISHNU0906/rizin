@@ -122,8 +122,12 @@ typedef struct rz_asm_t {
 	bool immdisp; // Display immediates with # symbol (for arm architectures). false = show hashs
 	bool utf8; // Flag for plugins: Use utf-8 characters.
 	HtSS *flags;
-	int seggrn;
+	ut32 seggrn;
 	bool pseudo;
+	RzList /*<const char *>*/ *supported_bits; ///< Supported bits of the selected plugin
+	RzList /*<char *>*/ *supported_cpus; ///< Supported CPU of the selected plugin
+	RzList /*<char *>*/ *supported_features; ///< Supported CPU features of the selected plugin
+	RzList /*<char *>*/ *supported_platforms; ///< Supported platforms of the selected plugin
 } RzAsm;
 
 typedef struct rz_asm_plugin_t {
@@ -174,15 +178,24 @@ RZ_API bool rz_asm_setup(RzAsm *a, const char *arch, int bits, int big_endian);
 RZ_API bool rz_asm_is_valid(RzAsm *a, const char *name);
 RZ_API bool rz_asm_use(RzAsm *a, RZ_NULLABLE const char *name);
 RZ_API bool rz_asm_use_assembler(RzAsm *a, const char *name);
+RZ_API bool rz_asm_set_features(RZ_NONNULL RzAsm *a, RZ_NULLABLE const char *features);
 RZ_API bool rz_asm_set_arch(RzAsm *a, const char *name, int bits);
-RZ_DEPRECATE RZ_API int rz_asm_set_bits(RzAsm *a, int bits);
-RZ_DEPRECATE RZ_API void rz_asm_set_cpu(RzAsm *a, const char *cpu);
-RZ_API RZ_OWN RzList /*<char *>*/ *rz_asm_get_cpus(RZ_NONNULL RzAsm *a);
+RZ_DEPRECATE RZ_API bool rz_asm_set_bits(RZ_NONNULL RzAsm *a, int bits);
+RZ_DEPRECATE RZ_API int rz_asm_get_bits(RZ_NONNULL RzAsm *a);
+RZ_DEPRECATE RZ_API void rz_asm_set_cpu(RZ_NONNULL RzAsm *a, RZ_NULLABLE const char *cpu);
+RZ_DEPRECATE RZ_API const char *rz_asm_get_cpu(RZ_NONNULL RzAsm *a);
+RZ_API RZ_OWN RzList /*<char *>*/ *rz_asm_plugin_cpus(RZ_NONNULL RzAsm *a);
+RZ_API RZ_OWN RzList /*<char *>*/ *rz_asm_plugin_features(RZ_NONNULL RzAsm *a);
+RZ_API RZ_OWN RzList /*<char *>*/ *rz_asm_plugin_platforms(RZ_NONNULL RzAsm *a);
+RZ_API RZ_OWN RzList /*<const char *>*/ *rz_asm_plugin_bits(RZ_NONNULL RzAsm *a);
 RZ_API ut32 rz_asm_get_endianness(RzAsm *a);
 RZ_API bool rz_asm_support_endianness(RzAsm *a, ut32 endian);
 RZ_API bool rz_asm_set_big_endian(RzAsm *a, bool big_endian);
-RZ_API bool rz_asm_set_syntax(RzAsm *a, int syntax);
-RZ_API int rz_asm_syntax_from_string(const char *name);
+RZ_API bool rz_asm_get_big_endian(RZ_NONNULL RzAsm *a);
+RZ_API bool rz_asm_set_syntax(RZ_NONNULL RzAsm *a, int syntax);
+RZ_API int rz_asm_get_syntax(RZ_NONNULL RzAsm *a);
+RZ_API int rz_asm_syntax_from_string(RZ_NULLABLE const char *name);
+RZ_API const char *rz_asm_syntax_to_string(int syntax);
 RZ_API int rz_asm_set_pc(RzAsm *a, ut64 pc);
 RZ_API int rz_asm_disassemble(RzAsm *a, RzAsmOp *op, const ut8 *buf, int len);
 RZ_API int rz_asm_assemble(RzAsm *a, RzAsmOp *op, const char *buf);

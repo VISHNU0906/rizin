@@ -283,12 +283,18 @@ static RzConfigNode *config_node_new_bool(const char *name, const char *desc, bo
 
 	node->name = rz_str_dup(name);
 	node->desc = rz_str_dup(desc);
-	node->flags = RZ_CONFIG_VAR_WRITABLE | RZ_CONFIG_VAR_BOOL;
-	node->value.boolean = value;
-	if (!node->name) {
+	node->options = rz_list_new();
+	if (!node->name ||
+		!node->options) {
 		config_node_free(node);
 		return NULL;
 	}
+	node->flags = RZ_CONFIG_VAR_WRITABLE | RZ_CONFIG_VAR_BOOL;
+	node->value.boolean = value;
+
+	rz_list_append(node->options, "false");
+	rz_list_append(node->options, "true");
+
 	return node;
 }
 
@@ -873,13 +879,17 @@ RZ_API bool rz_config_set_any(RZ_NONNULL RzConfig *cfg, RZ_NONNULL const char *n
 		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
 		return false;
 	} else if (!(node->flags & RZ_CONFIG_VAR_WRITABLE)) {
-		RZ_LOG_ERROR("config: variable %s is readonly\n", node->name);
+		RZ_LOG_ERROR("config: variable %s is readonly.\n", node->name);
 		return false;
 	}
 
 	if (node->flags & (RZ_CONFIG_VAR_LIST | RZ_CONFIG_VAR_STR)) {
 		return rz_config_node_set_string(cfg, node, value);
 	} else if (node->flags & RZ_CONFIG_VAR_BOOL) {
+		if (!rz_str_is_bool(value)) {
+			RZ_LOG_ERROR("config: value '%s' is not a valid boolean (accepted: yes/no, on/off, true/false, 1/0).\n", value);
+			return false;
+		}
 		bool boolean = rz_str_is_true(value);
 		return rz_config_node_set_bool(cfg, node, boolean);
 	}
@@ -1169,6 +1179,27 @@ RZ_API bool rz_config_set_options2(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL co
 		rz_list_free(options);
 		return false;
 	}
+	return true;
+}
+
+/**
+ * \brief      Sets the getopt of a given variable of the config
+ *
+ * \param      cfg      The RzConfig to modify
+ * \param[in]  name     The name of the variable
+ * \param[in]  getopt   The callback getopt of the variable to set
+ *
+ * \return     On success returns true, otherwise false
+ */
+RZ_API bool rz_config_set_options3(RZ_NONNULL const RzConfig *cfg, RZ_NONNULL const char *name, RZ_NONNULL RzConfigCallbackOpt getopt) {
+	RzConfigNode *node = rz_config_node_get(cfg, name);
+	if (!node) {
+		RZ_LOG_ERROR("config: variable '%s' does not exists.\n", name);
+		return false;
+	}
+
+	node->getopt = getopt;
+	RZ_FREE_CUSTOM(node->options, rz_list_free);
 	return true;
 }
 

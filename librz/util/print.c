@@ -102,9 +102,38 @@ RZ_API RzPrint *rz_print_free(RzPrint *p) {
 	return NULL;
 }
 
-// dummy setter can be removed
-RZ_API void rz_print_set_flags(RzPrint *p, int _flags) {
-	p->flags = _flags;
+/**
+ * \brief      Adds additional flags to RzPrint
+ *
+ * \param      p          The RzPrint structure to update
+ * \param[in]  add_flags  The flags to add
+ */
+RZ_API void rz_print_add_flags(RZ_NONNULL RzPrint *p, ut32 add_flags) {
+	rz_return_if_fail(p);
+	p->flags |= add_flags;
+}
+
+/**
+ * \brief      Removes additional flags to RzPrint
+ *
+ * \param      p          The RzPrint structure to update
+ * \param[in]  rem_flags  The flags to remove
+ */
+RZ_API void rz_print_remove_flags(RZ_NONNULL RzPrint *p, ut32 rem_flags) {
+	rz_return_if_fail(p);
+	p->flags &= ~rem_flags;
+}
+
+/**
+ * \brief      Checks if the given flags are set in the RzPrint structure
+ *
+ * \param      p          The RzPrint structure to use
+ * \param[in]  has_flags  The flags to test
+ */
+RZ_API bool rz_print_has_flags(RZ_NONNULL RzPrint *p, ut32 has_flags) {
+	rz_return_val_if_fail(p, false);
+	ut32 diff = p->flags & has_flags;
+	return diff == has_flags;
 }
 
 RZ_API void rz_print_set_cursor(RzPrint *p, int enable, int ocursor, int cursor) {

@@ -142,6 +142,7 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->maxreflines = 0; // maximum number of reflines to be analyzed
 	analysis->pcalign = 1; // instruction alignment (must be a power of 2).
 	analysis->lineswidth = 7; // number of columns for program flow arrows
+	analysis->seggrn = 4; // segment granularity in bits (x86-16)
 	// RzAnalysisOptions
 	analysis->opt.afterjmp = true; // continue analysis after jmp/ujmp
 	analysis->opt.aftertrap = false; // continue analysis after trap instructions

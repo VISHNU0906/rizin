@@ -124,17 +124,15 @@ RZ_IPI void rz_core_visual_toggle_decompiler_disasm(RzCore *core, bool for_graph
 }
 
 static void setcursor(RzCore *core, bool cur) {
-	int flags = core->print->flags;
 	if (core->print->cur_enabled) {
-		flags |= RZ_PRINT_FLAGS_CURSOR;
+		rz_print_add_flags(core->print, RZ_PRINT_FLAGS_CURSOR);
 	} else {
-		flags &= ~(RZ_PRINT_FLAGS_CURSOR);
+		rz_print_remove_flags(core->print, RZ_PRINT_FLAGS_CURSOR);
 	}
 	core->print->cur_enabled = cur;
 	if (core->print->cur == -1) {
 		core->print->cur = 0;
 	}
-	rz_print_set_flags(core->print, flags);
 	core->print->col = core->print->cur_enabled ? 1 : 0;
 }
 
@@ -3779,7 +3777,7 @@ static void flush_stdin(void) {
 RZ_IPI int rz_core_visual(RzCore *core, const char *input) {
 	const char *teefile;
 	ut64 scrseek;
-	int flags, ch;
+	int ch;
 	bool skip;
 	char arg[2] = {
 		input[0], 0
@@ -3850,16 +3848,13 @@ RZ_IPI int rz_core_visual(RzCore *core, const char *input) {
 		core->cons->event_resize = NULL; // avoid running old event with new data
 		core->cons->event_data = core;
 		core->cons->event_resize = (RzConsEvent)visual_refresh_oneshot;
-		flags = core->print->flags;
 		visual->color = rz_config_get_i(core->config, "scr.color");
 		if (visual->color) {
-			flags |= RZ_PRINT_FLAGS_COLOR;
+			rz_print_add_flags(core->print, RZ_PRINT_FLAGS_COLOR);
 		}
 		visual->debug = rz_config_get_b(core->config, "cfg.debug");
-		flags |= RZ_PRINT_FLAGS_HEADER;
-		rz_print_set_flags(core->print, flags);
-		scrseek = rz_num_math(core->num,
-			rz_config_get_s(core->config, "scr.seek"));
+		rz_print_add_flags(core->print, RZ_PRINT_FLAGS_HEADER);
+		scrseek = rz_num_math(core->num, rz_config_get_s(core->config, "scr.seek"));
 		if (scrseek != 0LL) {
 			rz_core_seek(core, scrseek, true);
 		}

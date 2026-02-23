@@ -76,7 +76,7 @@ static char *download(struct SPDBDownloader *pd) {
 		return abspath_to_file;
 	}
 
-	if (opt->extract == 0) {
+	if (!opt->extract == 0) {
 		char *extractor_cmd = NULL;
 		char *archive_name = rz_str_dup(opt->dbg_file);
 		archive_name[strlen(archive_name) - 1] = '_';

@@ -16,7 +16,7 @@ static RzCore *fake_core_new(void) {
 	// the endianness to a value not supported by the arch.
 	// ARM can be LE and BE, so we change the arch first
 	// then change the endianness.
-	rz_config_set(core->config, "asm.arch", "arm");
+	rz_config_set_s(core->config, "asm.arch", "arm");
 	rz_config_set_b(core->config, "cfg.bigendian", false);
 	return core;
 }

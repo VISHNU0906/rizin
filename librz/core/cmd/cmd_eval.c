@@ -485,17 +485,18 @@ static void eval_config_print_options(RzConfig *cfg, const char *key) {
 }
 
 RZ_IPI RzCmdStatus rz_eval_getset_handler(RzCore *core, int argc, const char **argv) {
-	int i;
-	for (i = 1; i < argc; i++) {
+	for (int i = 1; i < argc; i++) {
 		RzList *l = rz_str_split_duplist_n(argv[i], "=", 1, false);
 		if (!l) {
 			return RZ_CMD_STATUS_ERROR;
 		}
 		size_t llen = rz_list_length(l);
 		if (!llen) {
+			rz_list_free(l);
 			return RZ_CMD_STATUS_ERROR;
 		}
-		char *key = rz_list_get_n(l, 0);
+
+		const char *key = rz_list_get_n(l, 0);
 		if (RZ_STR_ISEMPTY(key)) {
 			RZ_LOG_ERROR("core: No string specified before `=`. Make sure to use the format <key>=<value> without spaces.\n");
 			rz_list_free(l);
@@ -525,7 +526,7 @@ RZ_IPI RzCmdStatus rz_eval_getset_handler(RzCore *core, int argc, const char **a
 			rz_cons_printf("%s\n", v);
 			free(v);
 		} else if (llen == 2) {
-			char *value = rz_list_get_n(l, 1);
+			const char *value = rz_list_get_n(l, 1);
 			if (RZ_STR_EQ(value, "?")) {
 				eval_config_print_options(cfg, key);
 			} else {

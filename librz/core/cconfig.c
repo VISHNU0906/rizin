@@ -38,9 +38,13 @@ static RZ_OWN RzList /*<char *>*/ *core_config_string_list_dup(RZ_NULLABLE const
 
 #include "cconfig_arch.c"
 #include "cconfig_conf.c"
+#include "cconfig_dbg.c"
 #include "cconfig_dir.c"
-#include "cconfig_sign.c"
+#include "cconfig_elf.c"
+#include "cconfig_pdb.c"
+#include "cconfig_prj.c"
 #include "cconfig_screen.c"
+#include "cconfig_sign.c"
 
 typedef struct core_config_print_s {
 	RzCmdStateOutput *state;
@@ -242,6 +246,10 @@ RZ_API int rz_core_config_init(RzCore *core) {
 		core_config_add_cfg_variables(core) &&
 		core_config_add_scr_variables(core) &&
 		core_config_add_arch_variables(core) &&
+		core_config_add_pdb_variables(core) &&
+		core_config_add_elf_variables(core) &&
+		core_config_add_dbg_variables(core) &&
+		core_config_add_prj_variables(core) &&
 		core_config_add_sign_variables(core);
 }
 

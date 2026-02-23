@@ -71,7 +71,6 @@ RZ_API RzPrint *rz_print_new(void) {
 		RZ_PRINT_FLAGS_OFFSET |
 		RZ_PRINT_FLAGS_HEADER;
 	p->seggrn = 4;
-	p->zoom = RZ_NEW0(RzPrintZoom);
 	p->reg = NULL;
 	p->get_register = NULL;
 	p->get_register_value = NULL;
@@ -92,11 +91,6 @@ RZ_API RzPrint *rz_print_free(RzPrint *p) {
 		return NULL;
 	}
 	RZ_FREE(p->strconv_mode);
-	if (p->zoom) {
-		free(p->zoom->buf);
-		free(p->zoom);
-		p->zoom = NULL;
-	}
 	RZ_FREE(p->row_offsets);
 	free(p);
 	return NULL;

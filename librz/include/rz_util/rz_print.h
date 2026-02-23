@@ -98,14 +98,6 @@ typedef struct {
 	ut64 hl_addr; ///< Address which should be highlighted. Usually the function address.
 } RzPrintAsmColorOpts;
 
-typedef struct rz_print_zoom_t {
-	ut8 *buf;
-	ut64 from;
-	ut64 to;
-	int size;
-	int mode;
-} RzPrintZoom;
-
 typedef struct rz_print_t {
 	void *user;
 	RzIOBind iob;
@@ -141,7 +133,6 @@ typedef struct rz_print_t {
 	int bytespace;
 	int pairs;
 	bool resetbg;
-	RzPrintZoom *zoom;
 	RzPrintNameCallback offname;
 	RzPrintSizeCallback offsize;
 	RzPrintColorFor colorfor;

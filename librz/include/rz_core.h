@@ -379,7 +379,6 @@ struct rz_core_t {
 	int maxtab;
 	RzEvent *ev;
 	RzList /*<RzCoreGadget *>*/ *gadgets;
-	bool scr_gadgets;
 	bool log_events; // core.c:cb_event_handler : log actions from events if cfg.log.events is set
 	RzList /*<char *>*/ *ropchain;
 	RzCoreSeekHistory seek_history;

@@ -114,7 +114,6 @@ typedef struct rz_print_t {
 	int width;
 	int limit;
 	int bits;
-	bool histblock;
 	// true if the cursor is enabled, false otherwise
 	bool cur_enabled;
 	// offset of the selected byte from the first displayed one
@@ -147,7 +146,7 @@ typedef struct rz_print_t {
 	bool (*exists_var)(struct rz_print_t *print, ut64 func_addr, char *str);
 	bool esc_bslash;
 	bool wide_offsets;
-	const char *strconv_mode;
+	char *strconv_mode;
 	char io_unalloc_ch;
 	bool show_offset;
 

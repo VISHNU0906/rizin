@@ -263,11 +263,11 @@ RZ_API int rz_core_config_init(RzCore *core) {
 		return 0;
 	}
 
-	return core_config_add_dir_variables(core) &&
+	bool ok = core_config_add_dir_variables(core) &&
 		core_config_add_cfg_variables(core) &&
-		core_config_add_scr_variables(core) &&
 		core_config_add_log_variables(core) &&
 		core_config_add_arch_variables(core) &&
+		core_config_add_scr_variables(core) &&
 		core_config_add_pdb_variables(core) &&
 		core_config_add_elf_variables(core) &&
 		core_config_add_dbg_variables(core) &&
@@ -280,6 +280,11 @@ RZ_API int rz_core_config_init(RzCore *core) {
 		core_config_add_key_variables(core) &&
 		core_config_add_zoom_variables(core) &&
 		core_config_add_various_variables(core);
+	if (!ok) {
+		RZ_LOG_ERROR("failed to initialize core config\n");
+		return false;
+	}
+	return true;
 }
 
 RZ_API void rz_core_parse_rizinrc(RzCore *r) {

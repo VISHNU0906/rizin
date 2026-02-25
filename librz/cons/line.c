@@ -24,6 +24,7 @@ RZ_API RZ_OWN RzLine *rz_line_new(void) {
 	if (!line) {
 		return NULL;
 	}
+	line->echo = true;
 	line->prompt = rz_str_dup("> ");
 	line->kill_ring = rz_list_newf(free);
 	line->kill_ring_ptr = -1;

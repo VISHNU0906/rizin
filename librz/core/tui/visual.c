@@ -17,6 +17,7 @@ RZ_IPI RZ_OWN RzCoreVisual *rz_core_visual_new() {
 	if (!visual) {
 		return NULL;
 	}
+	visual->printidx = RZ_CORE_VISUAL_MODE_PX;
 	visual->autoblocksize = true;
 	visual->color = 1;
 	visual->debug = 1;
@@ -396,6 +397,8 @@ RZ_IPI void rz_core_visual_showcursor(RzCore *core, int x) {
 static void printFormat(RzCore *core, const int next) {
 	RzCoreVisual *visual = core->visual;
 	switch (visual->printidx) {
+	default:
+		/* fall-thru */
 	case RZ_CORE_VISUAL_MODE_PX: // 0 // xc
 		visual->hexMode += next;
 		rz_core_visual_applyHexMode(core, visual->hexMode);
@@ -3144,6 +3147,8 @@ RZ_IPI void rz_core_visual_title(RzCore *core, int color) {
 	int pc, hexcols = rz_config_get_i(core->config, "hex.cols");
 	if (visual->autoblocksize) {
 		switch (visual->printidx) {
+		default:
+			/* fall-thru */
 		case RZ_CORE_VISUAL_MODE_PX: // x
 			if (visual->currentFormat == 3 || visual->currentFormat == 9 || visual->currentFormat == 5) { // prx
 				rz_core_block_size(core, (int)(core->cons->rows * hexcols * 4));
@@ -3775,10 +3780,10 @@ static void flush_stdin(void) {
 #endif
 
 RZ_IPI int rz_core_visual(RzCore *core, const char *input) {
-	const char *teefile;
-	ut64 scrseek;
-	int ch;
-	bool skip;
+	char *teefile = NULL;
+	ut64 scrseek = 0;
+	int ch = 0;
+	bool skip = false;
 	char arg[2] = {
 		input[0], 0
 	};
@@ -3804,7 +3809,7 @@ RZ_IPI int rz_core_visual(RzCore *core, const char *input) {
 
 	// disable tee in cons
 	teefile = rz_cons_singleton()->teefile;
-	rz_cons_singleton()->teefile = "";
+	rz_cons_singleton()->teefile = NULL;
 
 	do {
 	dodo:

@@ -262,10 +262,12 @@ static inline RzCmdStatus bool2status(bool val) {
 
 typedef enum {
 	RZ_CORE_VISUAL_MODE_PX = 0, ///< Hexadecimal view
-	RZ_CORE_VISUAL_MODE_PD = 1, ///< Disassembly view
-	RZ_CORE_VISUAL_MODE_DB = 2, ///< Debug mode
-	RZ_CORE_VISUAL_MODE_OV = 3, ///< Color blocks (entropy)
-	RZ_CORE_VISUAL_MODE_CD = 4 ///< Print in string format
+	RZ_CORE_VISUAL_MODE_PD, ///< Disassembly view
+	RZ_CORE_VISUAL_MODE_DB, ///< Debug mode
+	RZ_CORE_VISUAL_MODE_OV, ///< Color blocks (entropy)
+	RZ_CORE_VISUAL_MODE_CD, ///< Print in string format
+	/* enum size */
+	RZ_CORE_VISUAL_MODE_ENUM_SIZE
 } RzCoreVisualMode;
 
 typedef struct rz_core_visual_tab_t {

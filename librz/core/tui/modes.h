@@ -4,7 +4,7 @@
 #include <rz_core.h>
 #include "../core_private.h"
 
-#define NPF  5
+#define NPF  RZ_CORE_VISUAL_MODE_ENUM_SIZE
 #define PIDX (RZ_ABS(((RzCoreVisual *)core->visual)->printidx % NPF))
 
 #define CMD_REGISTERS      "%== true `e cfg.debug`; %! dr=; %% ar=" // select dr= or ar= depending on cfg.debug

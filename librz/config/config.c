@@ -942,7 +942,7 @@ RZ_IPI const char *rz_config_node_get_string(const RzConfig *cfg, const RzConfig
 		safe_val = node->value.string;
 	}
 
-	return safe_val ? safe_val : "";
+	return rz_str_get(safe_val);
 }
 
 RZ_IPI ut64 rz_config_node_get_integer(const RzConfig *cfg, const RzConfigNode *node) {

@@ -59,6 +59,7 @@ RZ_API RzPrint *rz_print_new(void) {
 	p->stride = 0;
 	p->bytespace = 0;
 	p->big_endian = false;
+	p->scr_prompt = true;
 	p->col = 0;
 	p->width = 78;
 	p->cols = 16;

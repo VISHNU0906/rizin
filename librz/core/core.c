@@ -1870,11 +1870,9 @@ RZ_API void rz_core_fini(RzCore *c) {
 	RZ_FREE_CUSTOM(c->lang, rz_lang_free);
 	RZ_FREE_CUSTOM(c->dbg, rz_debug_free);
 	RZ_FREE_CUSTOM(c->config, rz_config_free);
-	/* after rz_config_free, the value of I.teefile is trashed */
 	/* rconfig doesnt knows how to deinitialize vars, so we
 	should probably need to add a rz_config_free_payload callback */
 	rz_cons_free();
-	rz_cons_singleton()->teefile = NULL; // HACK
 	RZ_FREE(c->search_map);
 	RZ_FREE_CUSTOM(c->search, rz_search_free);
 	RZ_FREE_CUSTOM(c->flags, rz_flag_free);

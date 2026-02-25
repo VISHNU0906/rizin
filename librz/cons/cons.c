@@ -113,9 +113,9 @@ static void cons_context_init(RzConsContext *context, RZ_NULLABLE RzConsContext 
 	context->cmd_depth = RZ_CONS_CMD_DEPTH + 1;
 	context->buffer = NULL;
 	context->buffer_sz = 0;
-	context->lastEnabled = true;
+	context->last_enabled = true;
 	context->buffer_len = 0;
-	context->is_interactive = false;
+	context->is_interactive = true;
 	context->cons_stack = rz_stack_newf(6, cons_stack_free);
 	context->break_stack = rz_stack_newf(6, break_stack_free);
 	context->event_interrupt = NULL;
@@ -123,7 +123,6 @@ static void cons_context_init(RzConsContext *context, RZ_NULLABLE RzConsContext 
 	context->pageable = true;
 	context->log_callback = NULL;
 	context->noflush = false;
-
 	if (parent) {
 		context->color_mode = parent->color_mode;
 		rz_cons_pal_copy(context, parent);
@@ -612,8 +611,6 @@ RZ_API RzCons *rz_cons_new(void) {
 	I.is_wine = -1;
 	I.blankline = true;
 	I.teefile = NULL;
-	I.fix_columns = 0;
-	I.fix_rows = 0;
 	I.mouse_event = MOUSE_NONE;
 	I.force_rows = 0;
 	I.force_columns = 0;
@@ -625,6 +622,7 @@ RZ_API RzCons *rz_cons_new(void) {
 	I.break_lines = false;
 	I.lines = 0;
 	I.oldraw = -1;
+	I.flush = false;
 
 	I.input = RZ_NEW0(RzConsInputContext);
 	I.input->bufactive = true;
@@ -667,6 +665,10 @@ RZ_API RzCons *rz_cons_new(void) {
 
 	rz_print_set_is_interrupted_cb(rz_cons_is_breaked);
 
+	I.use_utf8_curvy = false;
+	I.grep_color = false;
+	I.echo = false;
+
 	return &I;
 }
 
@@ -693,6 +695,7 @@ RZ_API RzCons *rz_cons_free(void) {
 	rz_strbuf_free(I.echobuf);
 	I.echobuf = NULL;
 	RZ_FREE(I.pager);
+	RZ_FREE(I.teefile);
 	return NULL;
 }
 
@@ -947,7 +950,7 @@ RZ_API void rz_cons_context_break(RzConsContext *context) {
 }
 
 RZ_API void rz_cons_last(void) {
-	if (!CTX(lastEnabled)) {
+	if (!CTX(last_enabled)) {
 		return;
 	}
 	CTX(lastMode) = true;
@@ -955,7 +958,7 @@ RZ_API void rz_cons_last(void) {
 }
 
 static bool lastMatters(void) {
-	return (CTX(buffer_len) > 0) && (CTX(lastEnabled) && !I.filter && CTX(grep).nstrings < 1 && !CTX(grep).tokens_used && !CTX(grep).less && !CTX(grep).json && !I.is_html);
+	return (CTX(buffer_len) > 0) && (CTX(last_enabled) && !I.filter && CTX(grep).nstrings < 1 && !CTX(grep).tokens_used && !CTX(grep).less && !CTX(grep).json && !I.is_html);
 }
 
 RZ_API void rz_cons_echo(const char *msg) {
@@ -1521,15 +1524,6 @@ RZ_API int rz_cons_get_size(int *rows) {
 		I.rows = 23;
 	}
 #endif
-#if SIMULATE_ADB_SHELL
-	I.rows = 0;
-	I.columns = 0;
-#endif
-#if SIMULATE_MAYHEM
-	// expect tons of crashes
-	I.rows = -1;
-	I.columns = -1;
-#endif
 	if (I.rows < 0) {
 		I.rows = 0;
 	}
@@ -1541,12 +1535,6 @@ RZ_API int rz_cons_get_size(int *rows) {
 	}
 	if (I.force_rows) {
 		I.rows = I.force_rows;
-	}
-	if (I.fix_columns) {
-		I.columns += I.fix_columns;
-	}
-	if (I.fix_rows) {
-		I.rows += I.fix_rows;
 	}
 	if (rows) {
 		*rows = I.rows;

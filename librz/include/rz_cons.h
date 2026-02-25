@@ -489,7 +489,7 @@ typedef struct rz_cons_context_t {
 	char *lastOutput;
 	int lastLength;
 	bool lastMode;
-	bool lastEnabled;
+	bool last_enabled;
 	bool is_interactive;
 	bool last_interactive_option; ///< To be deprecated for a push/pop behavior
 	bool pageable;
@@ -531,13 +531,11 @@ typedef struct rz_cons_t {
 	int columns;
 	int force_rows;
 	int force_columns;
-	int fix_rows;
-	int fix_columns;
 	bool break_lines;
 	bool show_autocomplete_widget;
 	FILE *fdin; // FILE? and then int ??
 	int fdout; // only used in pipe.c :?? remove?
-	const char *teefile;
+	char *teefile;
 	int (*user_fgets)(char *buf, int len, void *user);
 	void *user_fgets_user;
 	RzConsEvent event_resize;

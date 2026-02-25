@@ -85,6 +85,7 @@ typedef int (*RzStrRangeCallback)(void *, int);
 #define rz_str_array(x, y)   ((y >= 0 && y < (sizeof(x) / sizeof(*x))) ? x[y] : "")
 RZ_API const char *rz_str_enc_as_string(RzStrEnc enc);
 RZ_API RzStrEnc rz_str_enc_string_as_type(RZ_NULLABLE const char *enc);
+RZ_API RzList /*<const char*>*/ *rz_str_enc_string_as_list(void);
 RZ_API RZ_OWN char *rz_str_repeat(const char *str, ut16 times);
 RZ_API RZ_OWN char *rz_str_pad(const char ch, ssize_t len);
 RZ_API const char *rz_str_rstr(const char *base, const char *p);

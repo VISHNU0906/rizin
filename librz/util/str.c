@@ -121,6 +121,35 @@ RZ_API RzStrEnc rz_str_enc_string_as_type(RZ_NULLABLE const char *encoding) {
 	return RZ_STRING_ENC_GUESS;
 }
 
+/**
+ * \brief      Returns a list of names of all supported RzStrEnc values
+ *
+ * \return     On success returns a valid pointer, otherwise NULL.
+ */
+RZ_API RzList /*<const char*>*/ *rz_str_enc_string_as_list(void) {
+	RzList *list = rz_list_new();
+	if (!list) {
+		return NULL;
+	}
+
+	rz_list_append(list, "8bit");
+	rz_list_append(list, "ascii");
+	rz_list_append(list, "ebcdices");
+	rz_list_append(list, "ebcdicuk");
+	rz_list_append(list, "ebcdicus");
+	rz_list_append(list, "guess");
+	rz_list_append(list, "ibm037");
+	rz_list_append(list, "ibm290");
+	rz_list_append(list, "mutf8");
+	rz_list_append(list, "utf16be");
+	rz_list_append(list, "utf16le");
+	rz_list_append(list, "utf32be");
+	rz_list_append(list, "utf32le");
+	rz_list_append(list, "utf8");
+
+	return list;
+}
+
 RZ_API int rz_str_casecmp(const char *s1, const char *s2) {
 #ifdef _MSC_VER
 	return stricmp(s1, s2);

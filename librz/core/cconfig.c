@@ -45,12 +45,23 @@ static const RzBinInfo *core_config_get_bin_info(RzCore *core) {
 	return rz_bin_object_get_info(obj);
 }
 
+static void check_reload_bin_str_search(RzCore *core) {
+	if (!core->bin || !rz_config_get_b(core->config, "str.search.reload")) {
+		return;
+	}
+
+	RzBinFile *bf = rz_bin_cur(core->bin);
+	if (bf && bf->o) {
+		rz_bin_object_reset_strings(core->bin, bf, bf->o);
+	}
+}
 static bool core_config_disabled_set(void *user, const void *data) {
 	return false;
 }
 
 #include "cconfig_arch.c"
 #include "cconfig_basefind.c"
+#include "cconfig_cmd.c"
 #include "cconfig_conf.c"
 #include "cconfig_dbg.c"
 #include "cconfig_dir.c"
@@ -271,6 +282,7 @@ RZ_API int rz_core_config_init(RzCore *core) {
 		core_config_add_pdb_variables(core) &&
 		core_config_add_elf_variables(core) &&
 		core_config_add_dbg_variables(core) &&
+		core_config_add_cmd_variables(core) &&
 		core_config_add_prj_variables(core) &&
 		core_config_add_basefind_variables(core) &&
 		core_config_add_rzil_variables(core) &&

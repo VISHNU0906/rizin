@@ -611,7 +611,7 @@ static RzDisasmState *ds_init(RzCore *core) {
 	ds->show_varaccess = rz_config_get_b(core->config, "asm.var.access");
 	ds->maxrefs = rz_config_get_i(core->config, "asm.xrefs.max");
 	ds->maxflags = rz_config_get_i(core->config, "asm.flags.limit");
-	ds->flags_inline = rz_config_get_i(core->config, "asm.flags.inline");
+	ds->flags_inline = rz_config_get_b(core->config, "asm.flags.inline");
 	ds->asm_types = rz_config_get_i(core->config, "asm.types");
 	ds->foldxrefs = rz_config_get_i(core->config, "asm.xrefs.fold");
 	ds->show_lines = rz_config_get_b(core->config, "asm.lines");

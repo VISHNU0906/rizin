@@ -896,7 +896,7 @@ static bool cmd_aea(RzCore *core, int mode, ut64 addr, int length) {
 	int noNULL = rz_config_get_i(core->config, "esil.noNULL");
 	unsigned int addrsize = rz_config_get_i(core->config, "esil.addr.size");
 	esil = rz_analysis_esil_new(stacksize, iotrap, addrsize);
-	rz_analysis_esil_setup(esil, core->analysis, romem, stats1, noNULL); // setup io
+	rz_analysis_esil_setup(esil, core->analysis, romem, stats1, noNULL, core); // setup io
 #define hasNext(x) (x & 1) ? (addr < addr_end) : (ops < ops_end)
 
 	ESILISTATE->memreads = rz_list_new();
@@ -1632,11 +1632,11 @@ RZ_IPI RzCmdStatus rz_analysis_virtual_xrefs_handler(RzCore *core, int argc, con
 	const char *vfunc_name = argv[1];
 	switch (state->mode) {
 	case RZ_OUTPUT_MODE_STANDARD:
-		rz_analysis_virtual_xrefs_print(core->analysis, vfunc_name);
+		rz_core_analysis_virtual_xrefs_print(core, vfunc_name);
 		break;
 	case RZ_OUTPUT_MODE_TABLE: {
 		rz_cmd_state_output_set_columnsf(state, "X", "from");
-		rz_analysis_virtual_xrefs_print_table(core->analysis, vfunc_name, state->d.t);
+		rz_core_analysis_virtual_xrefs_print_table(core, vfunc_name, state->d.t);
 		break;
 	}
 	default:
@@ -4244,7 +4244,7 @@ RZ_IPI RzCmdStatus rz_il_vm_initialize_handler(RzCore *core, int argc, const cha
 
 RZ_IPI RzCmdStatus rz_il_vm_step_handler(RzCore *core, int argc, const char **argv) {
 	ut64 repeat_times = argc == 1 ? 1 : rz_num_math(NULL, argv[1]);
-	rz_core_il_step(core, repeat_times);
+	rz_core_il_step(core->analysis, repeat_times);
 	return RZ_CMD_STATUS_OK;
 }
 
@@ -4274,13 +4274,13 @@ RZ_IPI RzCmdStatus rz_il_vm_step_with_events_handler(RzCore *core, int argc, con
 
 RZ_IPI RzCmdStatus rz_il_vm_step_until_addr_handler(RzCore *core, int argc, const char **argv) {
 	ut64 address = rz_num_math(core->num, argv[1]);
-	rz_core_il_step_until(core, address);
+	rz_core_il_step_until(core->analysis, address);
 	return RZ_CMD_STATUS_OK;
 }
 
 RZ_IPI RzCmdStatus rz_il_vm_step_until_addr_with_events_handler(RzCore *core, int argc, const char **argv) {
 	ut64 address = rz_num_math(core->num, argv[1]);
-	rz_core_il_step_until_with_events(core, address);
+	rz_core_il_step_until_with_events(core->analysis, address);
 	return RZ_CMD_STATUS_OK;
 }
 
@@ -6049,11 +6049,11 @@ RZ_IPI RzCmdStatus rz_analysis_devirtualize_handler(RzCore *core, int argc, cons
 	}
 	switch (obj->lang) {
 	case RZ_BIN_LANGUAGE_CXX:
-		rz_analysis_devirtualize_cxx_methods(core->analysis);
+		rz_core_analysis_devirtualize_cxx_methods(core);
 		break;
 	case RZ_BIN_LANGUAGE_OBJC:
 	case RZ_BIN_LANGUAGE_SWIFT:
-		rz_analysis_devirtualize_objc_methods(core);
+		rz_core_analysis_devirtualize_objc_methods(core);
 		break;
 	default:
 		RZ_LOG_ERROR("Devirtualization is only supported for C++ and Objective-C binaries.\n");
@@ -6192,7 +6192,7 @@ static RzCmdStatus emulate_esil_expr(RzCore *core, const char *expr) {
 		RZ_LOG_ERROR("Failed to init ESIL VM.\n");
 		return RZ_CMD_STATUS_ERROR;
 	}
-	rz_analysis_esil_setup(esil, core->analysis, romem, stats, noNULL); // setup io
+	rz_analysis_esil_setup(esil, core->analysis, romem, stats, noNULL, core); // setup io
 	rz_analysis_esil_set_pc(esil, core->offset);
 	rz_analysis_esil_parse(esil, expr);
 	rz_core_esil_dumpstack(esil);

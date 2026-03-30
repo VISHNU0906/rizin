@@ -2138,8 +2138,8 @@ static void core_diff_show(RzCore *core_a, RzCore *core_b, const char *addr_a, D
 	}
 
 	rz_list_sort(result->matches, (RzListComparator)comparePairFunctions, NULL);
-	rz_list_sort(result->unmatch_a, core_a->analysis->columnSort, NULL);
-	rz_list_sort(result->unmatch_b, core_b->analysis->columnSort, NULL);
+	rz_list_sort(result->unmatch_a, rz_analysis_get_column_sort(core_a->analysis), NULL);
+	rz_list_sort(result->unmatch_b, rz_analysis_get_column_sort(core_b->analysis), NULL);
 
 	if (mode == DIFF_MODE_JSON) {
 		pj = pj_new();

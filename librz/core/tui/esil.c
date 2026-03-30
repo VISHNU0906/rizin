@@ -49,6 +49,7 @@ RZ_IPI bool rz_core_visual_esil(RzCore *core) {
 	}
 	memcpy(buf, core->block, sizeof(ut64));
 	RzAnalysisEsil *esil = rz_analysis_esil_new(20, 0, addrsize);
+	esil->core = core;
 	esil->analysis = core->analysis;
 	rz_analysis_esil_set_pc(esil, core->offset);
 	for (;;) {

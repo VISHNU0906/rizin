@@ -820,7 +820,6 @@ static ut32 decode_one_opcode_size(GoStrRecover *ctx) {
 	static GoAsmPattern go_asm_pattern_name(arch, bits, mnemonic) = { (const ut8 *)pattern, (const ut8 *)mask, (sizeof(pattern) - 1), set_xref }
 
 static bool decode_from_table(RzCore *core, GoStrInfo *info, ut64 pc, const ut8 *buffer, const ut32 size) {
-	RzAnalysis *analysis = core->analysis;
 	ut8 tmp[16];
 	if (0 > rz_io_nread_at(core->io, info->addr, tmp, sizeof(tmp))) {
 		return false;

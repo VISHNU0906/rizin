@@ -172,7 +172,6 @@ RZ_API RzAnalysis *rz_analysis_new(RZ_NULLABLE const char *sdb_types_path) {
 	analysis->ht_global_var = ht_sp_new(HT_STR_DUP, NULL, (HtSPFreeValue)rz_analysis_var_global_free);
 	analysis->ht_rop_semantics = NULL;
 	analysis->ht_rop = NULL;
-	analysis->is_rop_analysis = false;
 	analysis->global_var_tree = NULL;
 	analysis->il_vm = NULL;
 	analysis->hash = rz_hash_new();
@@ -508,6 +507,16 @@ RZ_API RZ_BORROW HtUP *rz_analysis_get_xrefs_to(RZ_NONNULL RzAnalysis *analysis)
 RZ_API void rz_analysis_set_xrefs_to(RZ_NONNULL RzAnalysis *analysis, HtUP *xrefs_to) {
 	rz_return_if_fail(analysis);
 	analysis->ht_xrefs_to = xrefs_to;
+}
+
+RZ_API RZ_BORROW HtUP *rz_analysis_get_rop_semantics(RZ_NONNULL RzAnalysis *analysis) {
+	rz_return_val_if_fail(analysis, NULL);
+	return analysis->ht_rop_semantics;
+}
+
+RZ_API void rz_analysis_set_rop_semantics(RZ_NONNULL RzAnalysis *analysis, HtUP *rop_semantics) {
+	rz_return_if_fail(analysis);
+	analysis->ht_rop_semantics = rop_semantics;
 }
 
 RZ_API RZ_BORROW RzAnalysisCallbacks *rz_analysis_get_callbacks(RZ_NONNULL RzAnalysis *analysis) {
